@@ -36,6 +36,7 @@ import com.example.roadsos.theme.PrimaryRed
 import com.example.roadsos.theme.TextGray
 import com.example.roadsos.theme.TextWhite
 import androidx.activity.compose.BackHandler
+import com.example.roadsos.models.EmergencyService
 
 @Composable
 fun ServiceDetailScreen(
@@ -239,7 +240,7 @@ fun ServiceDetailScreen(
                         Spacer(modifier = Modifier.width(10.dp))
 
                         Text(
-                            text = "${service.eta} away",
+                            text = "${"Live"} away",
                             color = Color.White,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -304,13 +305,13 @@ fun ServiceDetailScreen(
 
                     DetailInfoCard(
                         title = "Distance",
-                        value = service.distance,
+                        value = "${service.distance_km} km",
                         modifier = Modifier.weight(1f)
                     )
 
                     DetailInfoCard(
                         title = "ETA",
-                        value = service.eta,
+                        value = "Live",
                         modifier = Modifier.weight(1f)
                     )
 

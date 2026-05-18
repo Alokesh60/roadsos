@@ -9,7 +9,7 @@ import com.example.roadsos.screens.contacts.AddContactScreen
 import com.example.roadsos.screens.contacts.ContactsScreen
 import com.example.roadsos.screens.contacts.EmergencyContact
 import com.example.roadsos.screens.home.HomeScreen
-import com.example.roadsos.screens.services.EmergencyService
+import com.example.roadsos.models.EmergencyService
 import com.example.roadsos.screens.services.ServiceDetailScreen
 import com.example.roadsos.screens.services.ServicesScreen
 import com.example.roadsos.screens.profile.ProfileScreen

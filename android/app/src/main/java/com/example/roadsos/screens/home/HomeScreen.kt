@@ -45,6 +45,8 @@ import com.example.roadsos.theme.TextWhite
 import com.example.roadsos.ui.components.NoInternetBanner
 import com.example.roadsos.ui.components.ErrorBanner
 import androidx.compose.runtime.LaunchedEffect
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.roadsos.viewmodel.ServiceViewModel
 import kotlinx.coroutines.delay
 
 @Composable
@@ -936,6 +938,15 @@ fun SOSSection() {
 @Composable
 fun NearbyServicesSection() {
 
+    val viewModel: ServiceViewModel = viewModel()
+
+    val services by viewModel.services.collectAsState()
+
+    LaunchedEffect(Unit) {
+
+        viewModel.fetchNearbyServices()
+    }
+
     Text(
         text = "Nearby Services",
         color = TextWhite,
@@ -945,13 +956,15 @@ fun NearbyServicesSection() {
 
     Spacer(modifier = Modifier.height(20.dp))
 
-    NearbyCard("AIIMS Trauma Centre", "0.8 km")
-    Spacer(modifier = Modifier.height(14.dp))
+    services.take(3).forEach { service ->
 
-    NearbyCard("City Ambulance 108", "1.2 km")
-    Spacer(modifier = Modifier.height(14.dp))
+        NearbyCard(
+            service.name,
+            "${service.distance_km} km"
+        )
 
-    NearbyCard("Police Station", "1.5 km")
+        Spacer(modifier = Modifier.height(14.dp))
+    }
 }
 
 @Composable

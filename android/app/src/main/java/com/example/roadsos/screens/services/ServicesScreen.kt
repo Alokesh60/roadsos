@@ -39,17 +39,22 @@ import com.example.roadsos.theme.DarkBackground
 import com.example.roadsos.theme.PrimaryRed
 import com.example.roadsos.theme.TextGray
 import com.example.roadsos.theme.TextWhite
+import com.example.roadsos.models.EmergencyService
+import androidx.lifecycle.viewmodel.compose.viewModel
+
+import com.example.roadsos.viewmodel.ServiceViewModel
 
 import com.example.roadsos.ui.components.EmptyStateCard
 
-data class EmergencyService(
-    val name: String,
-    val type: String,
-    val distance: String,
-    val eta: String,
-    val rating: String,
-    val icon: ImageVector
-)
+
+//data class EmergencyService(
+//    val name: String,
+//    val type: String,
+//    val distance: String,
+//    val eta: String,
+//    val rating: String,
+//    val icon: ImageVector
+//)
 
 @Composable
 fun ServicesScreen(
@@ -66,44 +71,54 @@ fun ServicesScreen(
         mutableStateOf("All")
     }
 
-    val services = listOf(
+    val viewModel: ServiceViewModel =
+        viewModel()
 
-        EmergencyService(
-            "AIIMS Trauma Centre",
-            "Hospital",
-            "0.8 km",
-            "4 min",
-            "4.8",
-            Icons.Default.LocalHospital
-        ),
+    val services by
+    viewModel.services.collectAsState()
+    LaunchedEffect(Unit) {
 
-        EmergencyService(
-            "City Ambulance 108",
-            "Ambulance",
-            "1.2 km",
-            "6 min",
-            "4.6",
-            Icons.Default.Call
-        ),
+        viewModel.fetchNearbyServices()
+    }
 
-        EmergencyService(
-            "Police Station",
-            "Police",
-            "1.5 km",
-            "5 min",
-            "4.5",
-            Icons.Default.LocalPolice
-        ),
-
-        EmergencyService(
-            "Rapid Tow Service",
-            "Towing",
-            "2.1 km",
-            "8 min",
-            "4.4",
-            Icons.Default.DirectionsCar
-        )
-    )
+//    val services = listOf(
+//
+//        EmergencyService(
+//            "AIIMS Trauma Centre",
+//            "Hospital",
+//            "0.8 km",
+//            "4 min",
+//            "4.8",
+//            Icons.Default.LocalHospital
+//        ),
+//
+//        EmergencyService(
+//            "City Ambulance 108",
+//            "Ambulance",
+//            "1.2 km",
+//            "6 min",
+//            "4.6",
+//            Icons.Default.Call
+//        ),
+//
+//        EmergencyService(
+//            "Police Station",
+//            "Police",
+//            "1.5 km",
+//            "5 min",
+//            "4.5",
+//            Icons.Default.LocalPolice
+//        ),
+//
+//        EmergencyService(
+//            "Rapid Tow Service",
+//            "Towing",
+//            "2.1 km",
+//            "8 min",
+//            "4.4",
+//            Icons.Default.DirectionsCar
+//        )
+//    )
 
     val filteredServices = services.filter { service ->
 
@@ -117,7 +132,10 @@ fun ServicesScreen(
         val matchesFilter =
 
             selectedFilter == "All" ||
-                    service.type == selectedFilter
+                    service.type.equals(
+                        selectedFilter,
+                        ignoreCase=true
+                    )
 
         matchesSearch && matchesFilter
     }
@@ -355,7 +373,19 @@ fun ServiceCard(
             ) {
 
                 Icon(
-                    imageVector = service.icon,
+                    imageVector = when(service.type.lowercase()) {
+                        "hospital"->
+                            Icons.Default.LocalHospital
+
+                        "ambulance"->
+                            Icons.Default.Call
+
+                        "police"->
+                            Icons.Default.LocalPolice
+
+                        else ->
+                            Icons.Default.DirectionsCar
+                    },
                     contentDescription = null,
                     tint = PrimaryRed,
                     modifier = Modifier.size(30.dp)
@@ -365,7 +395,6 @@ fun ServiceCard(
             Spacer(modifier = Modifier.width(16.dp))
 
             // INFO
-
             Column(
                 modifier = Modifier.weight(1f)
             ) {
@@ -391,11 +420,11 @@ fun ServiceCard(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
 
-                    InfoPill(service.distance)
+                    InfoPill("${service.distance_km}km")
 
                     Spacer(modifier = Modifier.width(8.dp))
 
-                    InfoPill(service.eta)
+                    InfoPill("Live")
 
                     Spacer(modifier = Modifier.width(8.dp))
 
@@ -413,7 +442,7 @@ fun ServiceCard(
                         Spacer(modifier = Modifier.width(4.dp))
 
                         Text(
-                            text = service.rating,
+                            text = service.rating.toString(),
                             color = TextGray,
                             fontSize = 12.sp
                         )
