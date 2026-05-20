@@ -22,7 +22,10 @@ class ServiceViewModel : ViewModel() {
             StateFlow<List<EmergencyService>>
             = _services
 
-    fun fetchNearbyServices() {
+    fun fetchNearbyServices(
+        lat: Double = 26.1445,
+        lon: Double = 91.7362
+    ) {
 
         viewModelScope.launch {
 
@@ -30,17 +33,14 @@ class ServiceViewModel : ViewModel() {
 
                 val response =
                     repository.getNearbyServices(
-                        lat = 26.1445,
-                        lon = 91.7362,
-                        radius = 10,
-                        type = "hospital"
+                        lat,
+                        lon,
+                        5000,
+                        null
                     )
 
-                if (response.isSuccessful) {
-
-                    _services.value =
-                        response.body()?.data
-                            ?: emptyList()
+                response.body()?.let {
+                    _services.value = it.data
                 }
 
             } catch (e: Exception) {

@@ -48,6 +48,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roadsos.viewmodel.ServiceViewModel
 import kotlinx.coroutines.delay
+import androidx.compose.ui.platform.LocalContext
+import com.example.roadsos.LocationUtils
 
 @Composable
 fun HomeScreen(
@@ -55,8 +57,17 @@ fun HomeScreen(
     onTabSelected: (BottomNavScreen) -> Unit
 ) {
 
+
     var showNotifications by remember {
         mutableStateOf(false)
+    }
+
+    var latitude by remember {
+        mutableStateOf(0.0)
+    }
+
+    var longitude by remember {
+        mutableStateOf(0.0)
     }
 
     var showSOSDialog by remember {
@@ -942,10 +953,28 @@ fun NearbyServicesSection() {
 
     val services by viewModel.services.collectAsState()
 
+    val context = LocalContext.current
+
+    var latitude by remember { mutableStateOf(0.0) }
+    var longitude by remember { mutableStateOf(0.0) }
+
     LaunchedEffect(Unit) {
 
-        viewModel.fetchNearbyServices()
+        LocationUtils.getCurrentLocation(
+            context = context
+        ) { latitude, longitude ->
+
+            viewModel.fetchNearbyServices(
+                lat = latitude,
+                lon = longitude
+            )
+        }
     }
+
+    Text(
+        text = "Lat: $latitude\nLon: $longitude",
+        color = Color.White
+    )
 
     Text(
         text = "Nearby Services",
