@@ -2,14 +2,13 @@ from typing import Optional
 
 from fastapi import APIRouter, Query, Depends
 
-from app.services.supabase_service import get_all_services
+from app.services.sqlite_service import get_all_services
 from app.services.distance_service import calculate_distance
 from app.services.maps_service import fetch_live_services
 from app.schemas.nearby_schema import NearbyResponseSchema
 from app.dependencies import verify_token
 
 router = APIRouter()
-
 
 @router.get("/nearby",
             response_model=NearbyResponseSchema)
@@ -18,7 +17,7 @@ async def nearby_services(
     lon: float = Query(...),
     radius: float = Query(10),
     type: Optional[str] = Query(None),
-    user=Depends(verify_token),
+    # user=Depends(verify_token),
 ):
 
     services = get_all_services()

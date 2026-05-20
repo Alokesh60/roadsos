@@ -10,27 +10,27 @@ class EmergencyServiceSchema(BaseModel):
 
     type: str
 
-    phone: Optional[str]
+    phone: Optional[str] = None
 
-    address: Optional[str]
+    address: Optional[str] = None
 
-    city: Optional[str]
+    city: Optional[str] = None
 
-    state: Optional[str]
+    state: Optional[str] = None
 
-    country: Optional[str]
+    country: Optional[str] = None
 
     latitude: float
 
     longitude: float
 
-    rating: Optional[float]
+    rating: Optional[float] = None
 
-    availability: Optional[bool]
+    availability: Optional[bool] = None
 
-    verified: Optional[bool]
+    verified: Optional[bool] = None
 
-    source: Optional[str]
+    source: Optional[str] = None
 
     distance_km: Optional[float] = None
 
