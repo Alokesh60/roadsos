@@ -2,7 +2,7 @@
 ai/.env
 
 # Databases
-#*.db
+*.db
 
 # Chroma vector DB
 chroma_db/
