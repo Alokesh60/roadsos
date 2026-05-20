@@ -121,54 +121,40 @@ def build_index(facilities: list[dict]) -> int:
         return 0
 
     collection = _get_collection()
-    model      = _get_model()
+    model = _get_model()
 
     # Clear existing data for a clean rebuild
-    collection.delete(where={"_dummy": {"$ne": "x"}}) if collection.count() > 0 else None
+    if collection.count() > 0:
+        collection.delete(where={"_dummy": {"$ne": "x"}})
 
-    texts    = [_build_embed_text(f) for f in facilities]
-    ids      = [_make_doc_id(f) for f in facilities]
-    # Store full facility as metadata (JSON string) for retrieval
+    texts = [_build_embed_text(f) for f in facilities]
+    ids = [_make_doc_id(f) for f in facilities]
     metadatas = [{"raw": json.dumps(f)} for f in facilities]
 
     embeddings = model.encode(texts, show_progress_bar=False).tolist()
 
-    collection.add(
-        ids=ids,
-        embeddings=embeddings,
-        documents=texts,
-        metadatas=metadatas
-    )
+    # ---------------- BATCH INSERT FIX ----------------
+    BATCH_SIZE = 5000
+    total = 0
 
-    print(f"[chroma] Indexed {len(facilities)} facilities.")
-    return len(facilities)
+    for i in range(0, len(facilities), BATCH_SIZE):
+        batch_ids = ids[i:i+BATCH_SIZE]
+        batch_embeddings = embeddings[i:i+BATCH_SIZE]
+        batch_texts = texts[i:i+BATCH_SIZE]
+        batch_metadatas = metadatas[i:i+BATCH_SIZE]
 
+        collection.add(
+            ids=batch_ids,
+            embeddings=batch_embeddings,
+            documents=batch_texts,
+            metadatas=batch_metadatas
+        )
 
-def add_facilities(facilities: list[dict]) -> int:
-    """
-    Add new facilities without rebuilding the entire index.
-    Skips duplicates (same ID = upsert).
-    """
-    if not facilities:
-        return 0
+        total += len(batch_ids)
+        print(f"[chroma] Indexed batch {i} to {i + len(batch_ids)}")
 
-    collection = _get_collection()
-    model      = _get_model()
-
-    texts      = [_build_embed_text(f) for f in facilities]
-    ids        = [_make_doc_id(f) for f in facilities]
-    metadatas  = [{"raw": json.dumps(f)} for f in facilities]
-    embeddings = model.encode(texts, show_progress_bar=False).tolist()
-
-    collection.upsert(
-        ids=ids,
-        embeddings=embeddings,
-        documents=texts,
-        metadatas=metadatas
-    )
-
-    print(f"[chroma] Upserted {len(facilities)} facilities.")
-    return len(facilities)
+    print(f"[chroma] Indexed {total} facilities.")
+    return total
 
 
 def semantic_search(query: str, top_k: int = 5) -> list[dict]:
