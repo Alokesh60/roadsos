@@ -2,6 +2,8 @@
 RoadSoS — Emergency Facilities Database Builder
 ================================================
 Uses OSM Overpass API (free, no key needed).
+Nominatim reverse geocoding fills city/state when OSM tags are missing.
+
 Run: python build_db.py
 
 Output: roadsos.db (SQLite) — ready for scorer.py and chroma_setup.py
@@ -21,8 +23,18 @@ OVERPASS_MIRRORS = [
     "https://overpass.kumi.systems/api/interpreter",
 ]
 
+NOMINATIM_URL = "https://nominatim.openstreetmap.org/reverse"
+
 DB_PATH = "roadsos.db"
 TODAY = date.today().isoformat()
+
+# Nominatim hard limit: 1 request/second.
+# We batch geocode after OSM fetch to avoid slowing down each element loop.
+# This cache prevents re-querying the same coordinates.
+_geocode_cache = {}
+
+# Track last Nominatim call time for rate limiting
+_last_nominatim_call = 0.0
 
 STATIC_AMBULANCE = {
     "Guwahati":    {"name": "Assam 108 Ambulance", "phone": "108"},
@@ -43,6 +55,11 @@ HEADERS = {
     "User-Agent": "RoadSoS-HackathonApp/1.0 (road safety emergency services research)",
     "Accept": "application/json",
     "Content-Type": "application/x-www-form-urlencoded",
+}
+
+NOMINATIM_HEADERS = {
+    # Nominatim requires a descriptive User-Agent — bare script names get throttled
+    "User-Agent": "RoadSoS-HackathonApp/1.0 (road safety research; contact: roadsos@example.com)",
 }
 
 CITIES = [
@@ -102,6 +119,66 @@ def rotate_mirror():
     print(f"    ↪ Switching to mirror: {new}")
     return new
 
+# ── Nominatim reverse geocoding ────────────────────────────────────────────────
+
+def reverse_geocode(lat, lon):
+    """
+    Given lat/lon, return (city, state, full_address) via Nominatim.
+    Returns ("Unknown", "Unknown", None) on any failure.
+
+    Results are cached by (round(lat,3), round(lon,3)) to avoid
+    re-querying facilities that are very close together.
+
+    Rate limit: enforces >= 1.1s between calls (Nominatim policy).
+    """
+    global _last_nominatim_call
+
+    # Round to ~100m precision for cache key — nearby facilities share a result
+    cache_key = (round(lat, 3), round(lon, 3))
+    if cache_key in _geocode_cache:
+        return _geocode_cache[cache_key]
+
+    # Enforce rate limit
+    elapsed = time.time() - _last_nominatim_call
+    if elapsed < 1.1:
+        time.sleep(1.1 - elapsed)
+
+    try:
+        resp = requests.get(
+            NOMINATIM_URL,
+            params={"lat": lat, "lon": lon, "format": "json"},
+            headers=NOMINATIM_HEADERS,
+            timeout=10,
+        )
+        _last_nominatim_call = time.time()
+
+        if resp.status_code != 200:
+            _geocode_cache[cache_key] = ("Unknown", "Unknown", None)
+            return ("Unknown", "Unknown", None)
+
+        data = resp.json()
+        addr = data.get("address", {})
+
+        # Nominatim uses different keys depending on settlement size
+        city = (
+            addr.get("city")
+            or addr.get("town")
+            or addr.get("village")
+            or addr.get("county")
+            or "Unknown"
+        )
+        state   = addr.get("state", "Unknown")
+        full    = data.get("display_name")  # full human-readable address string
+
+        result = (city, state, full)
+        _geocode_cache[cache_key] = result
+        return result
+
+    except Exception:
+        _last_nominatim_call = time.time()
+        _geocode_cache[cache_key] = ("Unknown", "Unknown", None)
+        return ("Unknown", "Unknown", None)
+
 # ── Database setup ─────────────────────────────────────────────────────────────
 
 def init_db(conn):
@@ -114,6 +191,8 @@ def init_db(conn):
             longitude         REAL NOT NULL,
             phone             TEXT,
             address           TEXT,
+            city              TEXT DEFAULT 'Unknown',
+            state             TEXT DEFAULT 'Unknown',
             country           TEXT DEFAULT 'India',
             rating            REAL,
             response_time_min INTEGER,
@@ -209,13 +288,17 @@ def inject_static_ambulance(city_name, lat, lon):
     if not data:
         return None
 
+    geo_city, geo_state, geo_full = reverse_geocode(lat, lon)
+
     return {
         "name": data["name"],
         "facility_type": "ambulance",
         "latitude": lat,
         "longitude": lon,
         "phone": data["phone"],
-        "address": city_name,
+        "address": geo_full or city_name,
+        "city": geo_city,
+        "state": geo_state,
         "country": _infer_country(lat, lon),
         "rating": None,
         "response_time_min": 10,
@@ -243,18 +326,44 @@ def element_to_row(el, facility_type, default_services):
         f"Emergency {facility_type.title()}"
     )
 
-    addr_parts = [
+    # --- What changed from the original ---
+    # Before: addr_parts assembled from OSM tags only.
+    #         If OSM didn't include addr:city / addr:state, they were blank
+    #         and the DB stored NULL / "Unknown".
+    #
+    # Now: we still use OSM tags first (they're fast, already in memory).
+    #      Only when city or state is missing do we call Nominatim once
+    #      to fill the gap. The result is cached, so nearby facilities
+    #      (same ~100m grid cell) don't each trigger a new HTTP call.
+    # ----------------------------------------
+
+    osm_city    = tags.get("addr:city", "").strip()
+    osm_state   = tags.get("addr:state", "").strip()
+    osm_street  = ", ".join(filter(None, [
         tags.get("addr:housenumber", ""),
         tags.get("addr:street", ""),
         tags.get("addr:suburb", ""),
-        tags.get("addr:city", ""),
-        tags.get("addr:state", ""),
-    ]
+    ]))
 
-    address = ", ".join(p for p in addr_parts if p).strip(", ") or None
-    phone = _clean_phone(tags.get("phone") or tags.get("contact:phone") or tags.get("contact:mobile"))
+    if osm_city and osm_state:
+        # OSM gave us everything — no Nominatim call needed
+        city    = osm_city
+        state   = osm_state
+        address = ", ".join(filter(None, [osm_street, osm_city, osm_state])) or None
+    else:
+        # OSM is missing city or state — reverse geocode to fill the gap
+        geo_city, geo_state, geo_full = reverse_geocode(lat, lon)
+        city    = osm_city  or geo_city
+        state   = osm_state or geo_state
+        # Prefer OSM street-level detail + geocoded city/state over raw display_name
+        if osm_street:
+            address = ", ".join(filter(None, [osm_street, city, state]))
+        else:
+            address = geo_full  # Nominatim's full display_name as fallback
+
+    phone    = _clean_phone(tags.get("phone") or tags.get("contact:phone") or tags.get("contact:mobile"))
     services = tags.get("description") or tags.get("service") or default_services
-    country = _infer_country(lat, lon)
+    country  = _infer_country(lat, lon)
 
     return {
         "name": name,
@@ -263,6 +372,8 @@ def element_to_row(el, facility_type, default_services):
         "longitude": lon,
         "phone": phone,
         "address": address,
+        "city": city,
+        "state": state,
         "country": country,
         "rating": None,
         "response_time_min": _infer_response_time(facility_type),
@@ -341,11 +452,11 @@ def insert_rows(conn, rows):
     cursor.executemany("""
         INSERT INTO facilities
             (name, facility_type, latitude, longitude, phone, address,
-             country, rating, response_time_min, is_available,
+             city, state, country, rating, response_time_min, is_available,
              services_offered, last_verified)
         VALUES
             (:name, :facility_type, :latitude, :longitude, :phone, :address,
-             :country, :rating, :response_time_min, :is_available,
+             :city, :state, :country, :rating, :response_time_min, :is_available,
              :services_offered, :last_verified)
     """, rows)
     conn.commit()
@@ -377,9 +488,19 @@ def print_report(conn):
     with_phone = conn.execute(
         "SELECT COUNT(*) FROM facilities WHERE phone IS NOT NULL"
     ).fetchone()[0]
-
     pct = (100 * with_phone // total) if total else 0
     print(f"    {with_phone}/{total} entries have phone numbers ({pct}%)")
+
+    # NEW: city/state coverage report
+    print("\n  City/State coverage:")
+    unknown_city = conn.execute(
+        "SELECT COUNT(*) FROM facilities WHERE city = 'Unknown' OR city IS NULL"
+    ).fetchone()[0]
+    unknown_state = conn.execute(
+        "SELECT COUNT(*) FROM facilities WHERE state = 'Unknown' OR state IS NULL"
+    ).fetchone()[0]
+    print(f"    city  Unknown : {unknown_city}/{total}")
+    print(f"    state Unknown : {unknown_state}/{total}")
 
     print("═"*55)
     print(f"\n  Saved to: {DB_PATH}")
