@@ -1,6 +1,6 @@
-import sqlite3
+from sqlite_db import get_connection
 
-conn = sqlite3.connect("roadsos.db")
+conn = get_connection()
 
 cursor = conn.cursor()
 
@@ -8,65 +8,96 @@ cursor = conn.cursor()
 
 try:
     cursor.execute("""
-    ALTER TABLE emergency_services
-    ADD COLUMN city TEXT
+        ALTER TABLE emergency_services
+        ADD COLUMN country TEXT DEFAULT 'India'
     """)
 except:
     pass
 
 try:
     cursor.execute("""
-    ALTER TABLE emergency_services
-    ADD COLUMN state TEXT
+        ALTER TABLE emergency_services
+        ADD COLUMN city TEXT
     """)
 except:
     pass
 
 try:
     cursor.execute("""
-    ALTER TABLE emergency_services
-    ADD COLUMN country TEXT
+        ALTER TABLE emergency_services
+        ADD COLUMN state TEXT
     """)
 except:
     pass
 
 try:
     cursor.execute("""
-    ALTER TABLE emergency_services
-    ADD COLUMN rating REAL
+        ALTER TABLE emergency_services
+        ADD COLUMN rating REAL
     """)
 except:
     pass
 
 try:
     cursor.execute("""
-    ALTER TABLE emergency_services
-    ADD COLUMN response_time_min INTEGER
+        ALTER TABLE emergency_services
+        ADD COLUMN response_time_min INTEGER
     """)
 except:
     pass
 
 try:
     cursor.execute("""
-    ALTER TABLE emergency_services
-    ADD COLUMN is_available INTEGER DEFAULT 1
+        ALTER TABLE emergency_services
+        ADD COLUMN is_available INTEGER DEFAULT 1
     """)
 except:
     pass
 
 try:
     cursor.execute("""
-    ALTER TABLE emergency_services
-    ADD COLUMN services_offered TEXT
+        ALTER TABLE emergency_services
+        ADD COLUMN services_offered TEXT
     """)
 except:
     pass
 
 try:
     cursor.execute("""
-    ALTER TABLE emergency_services
-    ADD COLUMN last_verified TEXT
+        ALTER TABLE emergency_services
+        ADD COLUMN last_verified TEXT
     """)
+except:
+    pass
+
+try:
+
+    cursor.execute("""
+
+    CREATE TABLE IF NOT EXISTS emergency_logs (
+
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+        message TEXT,
+
+        detected_type TEXT,
+
+        priority TEXT,
+
+        confidence REAL,
+
+        country TEXT,
+
+        classification_status TEXT,
+
+        recommended_service TEXT,
+
+        created_at TEXT
+
+    )
+
+    """)
+
 except:
     pass
 
