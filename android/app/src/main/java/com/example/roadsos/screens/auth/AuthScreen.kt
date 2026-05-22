@@ -30,11 +30,35 @@ import com.example.roadsos.theme.TextGray
 import com.example.roadsos.theme.TextWhite
 
 
+
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+data class CountryCode(
+    val flag: String,
+    val name: String,
+    val code: String
+)
+
+val countryCodes = listOf(
+
+    CountryCode("🇮🇳","India","+91"),
+    CountryCode("🇺🇸","USA","+1"),
+    CountryCode("🇬🇧","UK","+44"),
+    CountryCode("🇨🇦","Canada","+1"),
+    CountryCode("🇦🇺","Australia","+61"),
+    CountryCode("🇩🇪","Germany","+49"),
+    CountryCode("🇫🇷","France","+33"),
+    CountryCode("🇯🇵","Japan","+81"),
+    CountryCode("🇨🇳","China","+86"),
+    CountryCode("🇸🇬","Singapore","+65"),
+    CountryCode("🇧🇷","Brazil","+55"),
+    CountryCode("🇷🇺","Russia","+7"),
+    CountryCode("🇿🇦","South Africa","+27")
+)
 @Composable
 fun AuthScreen(
     onLoginSuccess: () -> Unit,
@@ -51,6 +75,17 @@ fun AuthScreen(
 
     var phone by remember {
         mutableStateOf("")
+    }
+    var expanded by remember {
+
+        mutableStateOf(false)
+    }
+
+    var selectedCountry by remember {
+
+        mutableStateOf(
+            countryCodes[0]
+        )
     }
 
     var otp by remember {
@@ -207,14 +242,106 @@ fun AuthScreen(
 
             // PHONE FIELD
 
-            AuthInputField(
-                value = phone,
-                placeholder = "Phone Number",
-                icon = Icons.Default.Phone,
-                keyboardType = KeyboardType.Phone
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+
+                verticalAlignment =
+                    Alignment.CenterVertically
             ) {
 
-                phone = it
+                // COUNTRY DROPDOWN
+
+                Box(
+                    modifier =
+                        Modifier.width(105.dp)
+                ) {
+
+                    OutlinedButton(
+
+                        onClick = {
+
+                            expanded = true
+                        },
+
+                        modifier =
+                            Modifier.height(58.dp),
+
+                        shape =
+                            RoundedCornerShape(22.dp),
+
+                        colors =
+                            ButtonDefaults.outlinedButtonColors(
+
+                                containerColor =
+                                    Color(0xFF161B24),
+
+                                contentColor =
+                                    TextWhite
+                            )
+                    ) {
+
+                        Text(
+
+                            text =
+                                "${selectedCountry.flag} ${selectedCountry.code}"
+                        )
+                    }
+
+                    DropdownMenu(
+
+                        expanded = expanded,
+
+                        onDismissRequest = {
+
+                            expanded = false
+                        }
+                    ) {
+
+                        countryCodes.forEach {
+
+                            DropdownMenuItem(
+
+                                text = {
+
+                                    Text(
+                                        "${it.flag} ${it.name} (${it.code})"
+                                    )
+                                },
+
+                                onClick = {
+
+                                    selectedCountry = it
+
+                                    expanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Spacer(
+                    modifier = Modifier.width(6.dp)
+                )
+
+                // PHONE FIELD
+
+                AuthInputField(
+
+                    value = phone,
+
+                    placeholder = "Phone Number",
+
+                    icon = Icons.Default.Phone,
+
+                    modifier =
+                        Modifier.weight(1f),
+
+                    keyboardType =
+                        KeyboardType.Phone
+                ) {
+
+                    phone = it
+                }
             }
 
             Spacer(modifier = Modifier.height(18.dp))
@@ -409,6 +536,7 @@ fun AuthInputField(
     value: String,
     placeholder: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier,
     keyboardType: KeyboardType = KeyboardType.Text,
     onValueChange: (String) -> Unit
 ) {
@@ -418,7 +546,7 @@ fun AuthInputField(
 
         onValueChange = onValueChange,
 
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
 
         singleLine = true,
 

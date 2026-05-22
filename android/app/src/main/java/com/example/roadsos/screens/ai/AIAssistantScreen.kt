@@ -37,6 +37,11 @@ import com.example.roadsos.theme.TextWhite
 import androidx.compose.foundation.layout.imePadding
 
 import com.example.roadsos.ui.components.ErrorBanner
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+
 
 data class AIChatMessage(
     val text: String,
@@ -44,6 +49,7 @@ data class AIChatMessage(
     val time: String
 )
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AIAssistantScreen(
     onBack: () -> Unit
@@ -57,29 +63,58 @@ fun AIAssistantScreen(
         mutableStateOf("")
     }
 
+    var aiError by remember {
+        mutableStateOf("")
+    }
+
     val messages = remember {
 
         mutableStateListOf(
 
             AIChatMessage(
-                text = "Hello 👋\nI’m your RoadSOS AI assistant.\nHow can I help you today?",
+                text =
+                    "Hello 👋\nI’m your RoadSOS AI assistant.\nHow can I help you today?",
                 isUser = false,
                 time = "9:41 AM"
             )
         )
     }
-    var aiError by remember {
-        mutableStateOf("")
+
+    val listState =
+        rememberLazyListState()
+
+    val keyboardVisible =
+        WindowInsets.isImeVisible
+
+    // AUTO SCROLL
+
+    LaunchedEffect(
+        messages.size,
+        keyboardVisible
+    ) {
+
+        if (
+            messages.isNotEmpty()
+        ) {
+
+            listState.animateScrollToItem(
+                messages.lastIndex
+            )
+        }
     }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(ChatBackgroundBrush)
+            .background(
+                ChatBackgroundBrush
+            )
     ) {
 
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .imePadding()
         ) {
 
             // TOP BAR
@@ -89,10 +124,11 @@ fun AIAssistantScreen(
                     .fillMaxWidth()
                     .padding(
                         horizontal = 16.dp,
-                        vertical = 54.dp
+                        vertical = 38.dp
                     ),
 
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment =
+                    Alignment.CenterVertically
             ) {
 
                 IconButton(
@@ -100,7 +136,8 @@ fun AIAssistantScreen(
                 ) {
 
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector =
+                            Icons.Default.ArrowBack,
                         contentDescription = null,
                         tint = Color.White
                     )
@@ -119,18 +156,23 @@ fun AIAssistantScreen(
                             )
                         ),
 
-                    contentAlignment = Alignment.Center
+                    contentAlignment =
+                        Alignment.Center
                 ) {
 
                     Text(
                         text = "AI",
                         color = Color.White,
-                        fontWeight = FontWeight.Bold,
+                        fontWeight =
+                            FontWeight.Bold,
                         fontSize = 18.sp
                     )
                 }
 
-                Spacer(modifier = Modifier.width(14.dp))
+                Spacer(
+                    modifier =
+                        Modifier.width(12.dp)
+                )
 
                 Column {
 
@@ -138,13 +180,15 @@ fun AIAssistantScreen(
                         text = "RoadSOS AI",
                         color = TextWhite,
                         fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight =
+                            FontWeight.Bold
                     )
 
                     Text(
                         text = "Online",
-                        color = Color(0xFF4DFF88),
-                        fontSize = 14.sp
+                        color =
+                            Color(0xFF4DFF88),
+                        fontSize = 13.sp
                     )
                 }
             }
@@ -154,30 +198,48 @@ fun AIAssistantScreen(
             Card(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 18.dp),
+                    .padding(
+                        horizontal = 18.dp
+                    ),
 
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF101B2A)
-                ),
+                colors =
+                    CardDefaults.cardColors(
+                        containerColor =
+                            Color(0xFF101B2A)
+                    ),
 
-                shape = RoundedCornerShape(22.dp)
+                shape =
+                    RoundedCornerShape(
+                        22.dp
+                    )
             ) {
 
                 Row(
-                    modifier = Modifier.padding(18.dp),
+                    modifier =
+                        Modifier.padding(
+                            16.dp
+                        ),
 
-                    verticalAlignment = Alignment.CenterVertically
+                    verticalAlignment =
+                        Alignment.CenterVertically
                 ) {
 
                     Box(
-                        modifier = Modifier
-                            .size(42.dp)
-                            .clip(CircleShape)
-                            .background(
-                                PrimaryRed.copy(alpha = 0.15f)
-                            ),
+                        modifier =
+                            Modifier
+                                .size(40.dp)
+                                .clip(
+                                    CircleShape
+                                )
+                                .background(
+                                    PrimaryRed.copy(
+                                        alpha =
+                                            0.15f
+                                    )
+                                ),
 
-                        contentAlignment = Alignment.Center
+                        contentAlignment =
+                            Alignment.Center
                     ) {
 
                         Text(
@@ -186,176 +248,101 @@ fun AIAssistantScreen(
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(14.dp))
+                    Spacer(
+                        modifier =
+                            Modifier.width(
+                                12.dp
+                            )
+                    )
 
                     Column {
 
                         Text(
-                            text = "Emergency AI is active",
-                            color = TextWhite,
-                            fontWeight = FontWeight.SemiBold
+                            text =
+                                "Emergency AI is active",
+                            color =
+                                TextWhite,
+                            fontWeight =
+                                FontWeight.SemiBold
                         )
 
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(
+                            modifier =
+                                Modifier.height(
+                                    2.dp
+                                )
+                        )
 
                         Text(
-                            text = "Do not share sensitive personal data.",
-                            color = TextGray,
+                            text =
+                                "Do not share sensitive personal data.",
+                            color =
+                                TextGray,
                             fontSize = 13.sp
                         )
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(18.dp))
+            Spacer(
+                modifier =
+                    Modifier.height(
+                        10.dp
+                    )
+            )
 
-            // CHAT AREA
-            if (aiError.isNotEmpty()) {
-
-                ErrorBanner(
-                    message = aiError
-                )
-
-                Spacer(modifier = Modifier.height(12.dp))
-            }
-
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-
-                contentPadding = PaddingValues(
-                    horizontal = 18.dp,
-                    vertical = 12.dp
-                ),
-
-                verticalArrangement =
-                    Arrangement.spacedBy(18.dp)
+            if (
+                aiError.isNotEmpty()
             ) {
 
-                items(messages) { message ->
+                ErrorBanner(
+                    message =
+                        aiError
+                )
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
+                Spacer(
+                    modifier =
+                        Modifier.height(
+                            10.dp
+                        )
+                )
+            }
 
-                        horizontalArrangement =
-                            if (message.isUser)
-                                Arrangement.End
-                            else
-                                Arrangement.Start,
+            // CHAT AREA
 
-                        verticalAlignment = Alignment.Bottom
-                    ) {
+            LazyColumn(
 
-                        // AI PROFILE
+                state =
+                    listState,
 
-                        if (!message.isUser) {
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
 
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(
-                                        Brush.radialGradient(
-                                            colors = listOf(
-                                                Color(0xFFFF6464),
-                                                PrimaryRed
-                                            )
-                                        )
-                                    ),
+                contentPadding =
+                    PaddingValues(
+                        horizontal =
+                            18.dp,
+                        vertical =
+                            12.dp
+                    ),
 
-                                contentAlignment = Alignment.Center
-                            ) {
+                verticalArrangement =
+                    Arrangement.spacedBy(
+                        18.dp
+                    )
+            ) {
 
-                                Text(
-                                    text = "AI",
-                                    color = Color.White,
-                                    fontSize = 10.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
-                            }
+                items(
+                    messages
+                ) {
 
-                            Spacer(modifier = Modifier.width(10.dp))
-                        }
+                        message ->
 
-                        Column(
-                            horizontalAlignment =
-                                if (message.isUser)
-                                    Alignment.End
-                                else
-                                    Alignment.Start
-                        ) {
-
-                            Card(
-                                modifier = Modifier.widthIn(max = 280.dp),
-
-                                colors = CardDefaults.cardColors(
-                                    containerColor =
-                                        if (message.isUser)
-                                            PrimaryRed
-                                        else
-                                            Color(0xFF111C2B)
-                                ),
-
-                                shape = RoundedCornerShape(
-                                    topStart = 22.dp,
-                                    topEnd = 22.dp,
-
-                                    bottomStart =
-                                        if (message.isUser) 22.dp else 6.dp,
-
-                                    bottomEnd =
-                                        if (message.isUser) 6.dp else 22.dp
-                                )
-                            ) {
-
-                                Column(
-                                    modifier = Modifier.padding(
-                                        horizontal = 18.dp,
-                                        vertical = 14.dp
-                                    )
-                                ) {
-
-                                    Text(
-                                        text = message.text,
-                                        color = Color.White,
-                                        fontSize = 15.sp,
-                                        lineHeight = 24.sp
-                                    )
-
-                                    Spacer(modifier = Modifier.height(6.dp))
-
-                                    Text(
-                                        text = message.time,
-                                        color = Color.White.copy(alpha = 0.65f),
-                                        fontSize = 11.sp
-                                    )
-                                }
-                            }
-                        }
-
-                        // USER PROFILE
-
-                        if (message.isUser) {
-
-                            Spacer(modifier = Modifier.width(10.dp))
-
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(Color(0xFF2A3955)),
-
-                                contentAlignment = Alignment.Center
-                            ) {
-
-                                Icon(
-                                    imageVector = Icons.Default.Person,
-                                    contentDescription = null,
-                                    tint = Color.White,
-                                    modifier = Modifier.size(16.dp)
-                                )
-                            }
-                        }
-                    }
+                    ChatMessageItem(
+                        message
+                    )
                 }
             }
 
@@ -364,127 +351,357 @@ fun AIAssistantScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .imePadding()
                     .padding(
-                        horizontal = 16.dp,
-                        vertical = 14.dp
+                        horizontal =
+                            16.dp,
+                        vertical =
+                            12.dp
                     ),
 
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment =
+                    Alignment.CenterVertically
             ) {
 
                 OutlinedTextField(
-                    value = messageText,
+
+                    value =
+                        messageText,
 
                     onValueChange = {
 
-                        messageText = it
+                        messageText =
+                            it
                     },
 
-                    modifier = Modifier.weight(1f),
+                    modifier =
+                        Modifier.weight(
+                            1f
+                        ),
 
                     placeholder = {
 
                         Text(
-                            text = "Type a message...",
-                            color = TextGray
+                            text =
+                                "Type a message...",
+                            color =
+                                TextGray
                         )
                     },
 
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text
-                    ),
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType =
+                                KeyboardType.Text
+                        ),
 
-                    shape = RoundedCornerShape(30.dp),
+                    shape =
+                        RoundedCornerShape(
+                            30.dp
+                        ),
 
-                    colors = OutlinedTextFieldDefaults.colors(
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
 
-                        focusedContainerColor =
-                            Color(0xFF101B2A),
+                            focusedContainerColor =
+                                Color(0xFF101B2A),
 
-                        unfocusedContainerColor =
-                            Color(0xFF101B2A),
+                            unfocusedContainerColor =
+                                Color(0xFF101B2A),
 
-                        focusedBorderColor =
-                            PrimaryRed,
+                            focusedBorderColor =
+                                PrimaryRed,
 
-                        unfocusedBorderColor =
-                            Color.Transparent,
+                            unfocusedBorderColor =
+                                Color.Transparent,
 
-                        focusedTextColor =
-                            Color.White,
+                            focusedTextColor =
+                                Color.White,
 
-                        unfocusedTextColor =
-                            Color.White,
+                            unfocusedTextColor =
+                                Color.White,
 
-                        cursorColor =
-                            PrimaryRed
-                    )
+                            cursorColor =
+                                PrimaryRed
+                        )
                 )
 
-                Spacer(modifier = Modifier.width(14.dp))
-
-                // SEND BUTTON
+                Spacer(
+                    modifier =
+                        Modifier.width(
+                            12.dp
+                        )
+                )
 
                 IconButton(
 
                     onClick = {
 
-                        if (messageText.isNotBlank()) {
+                        if (
+                            messageText.isNotBlank()
+                        ) {
 
-                            val userMessage = messageText
+                            val userMessage =
+                                messageText
 
                             messages.add(
+
                                 AIChatMessage(
-                                    text = userMessage,
-                                    isUser = true,
-                                    time = "Now"
+                                    text =
+                                        userMessage,
+                                    isUser =
+                                        true,
+                                    time =
+                                        "Now"
                                 )
                             )
 
                             messageText = ""
 
-                            // DUMMY AI RESPONSE
-                            aiError = "AI service temporarily unavailable"
+                            aiError =
+                                "AI service temporarily unavailable"
+
                             messages.add(
 
                                 AIChatMessage(
-                                    text = "RoadSOS AI received your message:\n\"$userMessage\"\n\nEmergency assistance suggestions will appear here.",
-                                    isUser = false,
-                                    time = "Now"
+                                    text =
+                                        "RoadSOS AI received your message:\n\"$userMessage\"\n\nEmergency assistance suggestions will appear here.",
+                                    isUser =
+                                        false,
+                                    time =
+                                        "Now"
                                 )
                             )
                         }
                     }
-
                 ) {
 
                     Box(
-                        modifier = Modifier
-                            .size(58.dp)
-                            .clip(CircleShape)
-                            .background(
-                                Brush.radialGradient(
-                                    colors = listOf(
-                                        Color(0xFFFF6464),
-                                        PrimaryRed
-                                    )
+                        modifier =
+                            Modifier
+                                .size(58.dp)
+                                .clip(
+                                    CircleShape
                                 )
-                            ),
+                                .background(
+                                    Brush.radialGradient(
+                                        colors =
+                                            listOf(
+                                                Color(
+                                                    0xFFFF6464
+                                                ),
+                                                PrimaryRed
+                                            )
+                                    )
+                                ),
 
-                        contentAlignment = Alignment.Center
+                        contentAlignment =
+                            Alignment.Center
                     ) {
 
                         Icon(
-                            imageVector = Icons.Default.Send,
-                            contentDescription = null,
-                            tint = Color.White
+                            imageVector =
+                                Icons.Default.Send,
+                            contentDescription =
+                                null,
+                            tint =
+                                Color.White
                         )
                     }
                 }
             }
+        }
+    }
+}
+@Composable
+fun ChatMessageItem(
+    message: AIChatMessage
+) {
 
-            Spacer(modifier = Modifier.height(14.dp))
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+
+        horizontalArrangement =
+            if (message.isUser)
+                Arrangement.End
+            else
+                Arrangement.Start,
+
+        verticalAlignment =
+            Alignment.Bottom
+    ) {
+
+        // AI AVATAR
+
+        if (!message.isUser) {
+
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(CircleShape)
+                    .background(
+                        Brush.radialGradient(
+                            colors = listOf(
+                                Color(0xFFFF6464),
+                                PrimaryRed
+                            )
+                        )
+                    ),
+
+                contentAlignment =
+                    Alignment.Center
+            ) {
+
+                Text(
+                    text = "AI",
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    fontWeight =
+                        FontWeight.Bold
+                )
+            }
+
+            Spacer(
+                modifier =
+                    Modifier.width(10.dp)
+            )
+        }
+
+        Column(
+            horizontalAlignment =
+                if (message.isUser)
+                    Alignment.End
+                else
+                    Alignment.Start
+        ) {
+
+            Card(
+                modifier =
+                    Modifier.widthIn(
+                        max = 280.dp
+                    ),
+
+                colors =
+                    CardDefaults.cardColors(
+
+                        containerColor =
+                            if (message.isUser)
+                                PrimaryRed
+                            else
+                                Color(0xFF111C2B)
+                    ),
+
+                shape =
+                    RoundedCornerShape(
+
+                        topStart = 22.dp,
+                        topEnd = 22.dp,
+
+                        bottomStart =
+                            if (message.isUser)
+                                22.dp
+                            else
+                                6.dp,
+
+                        bottomEnd =
+                            if (message.isUser)
+                                6.dp
+                            else
+                                22.dp
+                    )
+            ) {
+
+                Column(
+                    modifier =
+                        Modifier.padding(
+
+                            horizontal =
+                                18.dp,
+
+                            vertical =
+                                14.dp
+                        )
+                ) {
+
+                    Text(
+                        text =
+                            message.text,
+
+                        color =
+                            Color.White,
+
+                        fontSize =
+                            15.sp,
+
+                        lineHeight =
+                            24.sp
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(
+                                6.dp
+                            )
+                    )
+
+                    Text(
+                        text =
+                            message.time,
+
+                        color =
+                            Color.White.copy(
+                                alpha =
+                                    0.65f
+                            ),
+
+                        fontSize =
+                            11.sp
+                    )
+                }
+            }
+        }
+
+        // USER AVATAR
+
+        if (message.isUser) {
+
+            Spacer(
+                modifier =
+                    Modifier.width(10.dp)
+            )
+
+            Box(
+                modifier =
+                    Modifier
+                        .size(32.dp)
+                        .clip(
+                            CircleShape
+                        )
+                        .background(
+                            Color(
+                                0xFF2A3955
+                            )
+                        ),
+
+                contentAlignment =
+                    Alignment.Center
+            ) {
+
+                Icon(
+                    imageVector =
+                        Icons.Default.Person,
+
+                    contentDescription =
+                        null,
+
+                    tint =
+                        Color.White,
+
+                    modifier =
+                        Modifier.size(
+                            16.dp
+                        )
+                )
+            }
         }
     }
 }
