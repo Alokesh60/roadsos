@@ -31,10 +31,9 @@ from app.services.sqlite_service import (
     get_all_services
 )
 
-from app.services.chroma_service import (
-    semantic_search
+from ai.embeddings.chroma_setup import (
+    semantic_search 
 )
-
 
 def process_emergency_chatbot(
     message: str,
@@ -79,16 +78,13 @@ def process_emergency_chatbot(
 
     semantic_ids = set()
 
-    try:
+    for result in semantic_results:
 
-        for result_id in semantic_results["ids"][0]:
+        if "id" in result:
 
             semantic_ids.add(
-                int(result_id)
+                int(result["id"])
             )
-
-    except:
-        pass
 
     filtered = []
 
