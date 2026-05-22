@@ -1,7 +1,16 @@
 import sqlite3
+import os
 
-DATABASE_NAME = "roadsos.db"
+BASE_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.dirname(__file__)
+    )
+)
 
+DATABASE_NAME = os.path.join(
+    BASE_DIR,
+    "roadsos.db"
+)
 
 def get_connection():
 

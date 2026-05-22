@@ -29,7 +29,7 @@ async def emergency_handler(
     request: EmergencyRequest
 ):
 
-    emergency_type, priority = (
+    emergency_type, priority,confidence = (
         detect_emergency_type(
             request.message
         )
@@ -69,5 +69,6 @@ async def emergency_handler(
     return {
         "detected_type": emergency_type,
         "priority": priority,
+        "confidence": confidence,
         "recommended_service": recommended
     }

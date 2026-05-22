@@ -16,4 +16,6 @@ class EmergencyResponse(BaseModel):
 
     priority: str
 
+    confidence: float
+
     recommended_service: dict

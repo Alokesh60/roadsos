@@ -1,3 +1,8 @@
+from app.utils.facility_mapper import (
+    normalize_facility_type
+)
+
+
 def detect_emergency_type(text: str):
 
     text = text.lower()
@@ -28,28 +33,34 @@ def detect_emergency_type(text: str):
 
     if any(word in text for word in trauma_keywords):
 
-        return (
-            "hospital",
-            "high"
-        )
+        emergency_type = "hospital"
+        priority = "high"
+        confidence = 0.95
 
     elif any(word in text for word in fire_keywords):
 
-        return (
-            "fire_station",
-            "high"
-        )
+        emergency_type = "fire_station"
+        priority = "high"
+        confidence = 0.93
 
     elif any(word in text for word in crime_keywords):
 
-        return (
-            "police",
-            "medium"
-        )
+        emergency_type = "police"
+        priority = "medium"
+        confidence = 0.88
 
     else:
 
-        return (
-            "ambulance",
-            "low"
-        )
+        emergency_type = "ambulance"
+        priority = "low"
+        confidence = 0.60
+
+    emergency_type = normalize_facility_type(
+        emergency_type
+    )
+
+    return (
+        emergency_type,
+        priority,
+        confidence
+    )
