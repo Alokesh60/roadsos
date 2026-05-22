@@ -17,3 +17,5 @@ ai/verify.py
 # Virtual env
 ai/venv/
 ai/.venv/
+
+.env

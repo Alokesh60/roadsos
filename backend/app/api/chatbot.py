@@ -17,7 +17,7 @@ async def chatbot_handler(
     request: EmergencyRequest
 ):
 
-    result = process_emergency_chatbot(
+    result = await process_emergency_chatbot(
 
         request.message,
         request.latitude,

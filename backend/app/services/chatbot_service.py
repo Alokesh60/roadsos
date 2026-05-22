@@ -1,185 +1,287 @@
-﻿import sys
+"""
+backend/app/services/chatbot_service.py  —  Windows-compatible, Pathway-architecture
+
+Imports — real AI modules are the source of truth:
+    - ai.utils.classifier        → classify_emergency
+    - ai.embeddings.chroma_setup → semantic_search
+    - ai.ranking.scorer          → score_facilities, get_weights, to_api_response
+    - app.services.sqlite_service   → get_all_services (geo filtering done here)
+    - app.services.distance_service → calculate_distance (haversine)
+
+Pathway RAGOrchestrator structure preserved exactly.
+Argument order fixed: process_emergency_chatbot(message, lat, lon)
+"""
+
 import os
-import math
-import sqlite3
+import sys
+import logging
+from typing import Optional
 
-REPO_ROOT = r"D:\Roadsafety\roadsos"
-if REPO_ROOT not in sys.path:
-    sys.path.insert(0, REPO_ROOT)
+# ---------------------------------------------------------------------------
+# Repo-root path injection — allows importing ai.* from anywhere the server
+# is launched, as long as cwd is backend/ (uvicorn app.main:app --reload).
+# ---------------------------------------------------------------------------
+_REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../"))
+if _REPO_ROOT not in sys.path:
+    sys.path.insert(0, _REPO_ROOT)
 
-from ai.utils.classifier import classify_emergency, detect_severity, get_canned_test_response, get_suspicious_warning
+# Real AI modules (source of truth)
+from ai.utils.classifier import classify_emergency, detect_severity
 from ai.embeddings.chroma_setup import semantic_search
-from ai.ranking.scorer import score_facilities, to_api_response, get_weights
-from ai.chatbot.chain import get_chat_response
+from ai.ranking.scorer import score_facilities, get_weights, to_api_response
 
-# ---------------------------------------------------------------------------
-# Constants
-# ---------------------------------------------------------------------------
-DB_PATH        = r"D:\Roadsafety\roadsos\ai\roadsos.db"
+# Backend helpers — geo only, no AI logic here
+from app.services.sqlite_service import get_all_services
+from app.services.distance_service import calculate_distance
+
+logger = logging.getLogger(__name__)
+
 MAX_RADIUS_KM  = 100
 WIDE_RADIUS_KM = 500
-MAX_CANDIDATES = 50
 
-MEDICAL_KEYWORDS = {
-    "accident", "crash", "injured", "injury", "bleeding", "hurt", "pain",
-    "unconscious", "ambulance", "hospital", "medical", "emergency", "fire",
-    "broke", "broken", "fracture", "wound", "burn", "stroke", "heart",
-    "seizure", "faint", "fainted", "trapped", "stuck",
-}
-
-MEDICAL_FACILITY_TYPES = {"ambulance", "hospital", "police"}
-
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
-    R = 6371
-    d_lat = math.radians(lat2 - lat1)
-    d_lon = math.radians(lon2 - lon1)
-    a = (
-        math.sin(d_lat / 2) ** 2
-        + math.cos(math.radians(lat1))
-        * math.cos(math.radians(lat2))
-        * math.sin(d_lon / 2) ** 2
-    )
-    return R * 2 * math.asin(math.sqrt(a))
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+GROQ_MODEL   = "llama-3.1-8b-instant"
 
 
-def _get_local_facilities(lat: float, lon: float, radius_km: float = MAX_RADIUS_KM) -> list:
-    """
-    Bounding-box pre-filter from SQLite, then exact haversine trim.
-    Returns rows sorted nearest-first.
-    """
-    deg = radius_km / 111.0
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    rows = conn.execute(
-        """
-        SELECT * FROM facilities
-        WHERE latitude  BETWEEN ? AND ?
-          AND longitude BETWEEN ? AND ?
-        """,
-        (lat - deg, lat + deg, lon - deg, lon + deg),
-    ).fetchall()
-    conn.close()
+# -- Geo helpers (replaces app.utils.geo) -------------------------------------
 
-    facilities = [dict(r) for r in rows]
-    facilities = [
-        f for f in facilities
-        if _haversine_km(lat, lon, f["latitude"], f["longitude"]) <= radius_km
+def _bounding_box_query(lat: float, lon: float, radius_km: float) -> list:
+    """Filter all services by a lat/lon bounding box approximation."""
+    deg = radius_km / 111.0          # 1 degree ˜ 111 km
+    all_services = get_all_services()
+    return [
+        s for s in all_services
+        if abs(s.get("latitude", 0) - lat) <= deg
+        and abs(s.get("longitude", 0) - lon) <= deg
     ]
-    facilities.sort(key=lambda f: _haversine_km(lat, lon, f["latitude"], f["longitude"]))
-    return facilities
 
 
-def _enrich_with_semantic_scores(facilities: list, message: str) -> list:
-    """
-    Fetch semantic scores from ChromaDB and attach them to each facility.
-    Facilities not returned by semantic search get score 0.0.
-    """
-    semantic = semantic_search(message, top_k=30)
-    score_map = {f["id"]: f.get("semantic_score", 0.0) for f in semantic}
+def _haversine_filter(facilities: list, lat: float, lon: float, radius_km: float) -> list:
+    """Attach distance_km and drop facilities beyond radius."""
+    result = []
     for f in facilities:
-        f["semantic_score"] = score_map.get(f["id"], 0.0)
-    return facilities
+        dist = calculate_distance(lat, lon, f.get("latitude", 0), f.get("longitude", 0))
+        if dist <= radius_km:
+            f["distance_km"] = round(dist, 2)
+            result.append(f)
+    return result
 
 
-def _is_medical_emergency(message: str) -> bool:
-    """Returns True if the message contains medical/injury keywords."""
-    words = set(message.lower().split())
-    return bool(words & MEDICAL_KEYWORDS)
+# -- Scoring helper — delegates to ai/ranking/scorer.py ----------------------
 
-
-def _filter_by_type(facilities: list, message: str) -> list:
+def _score_facilities(facilities: list, severity: str, user_lat: float, user_lon: float) -> list:
     """
-    For medical emergencies, push non-medical facility types to the rear.
-    Never drops facilities — just reorders so scoring still has all options.
+    Delegate scoring to the real scorer in ai/ranking/scorer.py.
+
+    score_facilities(facilities, user_lat, user_lon, weights) returns a list
+    of ScoredFacility dataclasses (raw, distance_km, score, breakdown).
+    We flatten them back to dicts via to_api_response() so the rest of the
+    pipeline (top5 selection, LLM prompt) continues to work with plain dicts.
     """
-    if not _is_medical_emergency(message):
-        return facilities
-
-    primary, secondary = [], []
-    for f in facilities:
-        ftype = (f.get("facility_type") or "").lower()
-        if any(med in ftype for med in MEDICAL_FACILITY_TYPES):
-            primary.append(f)
-        else:
-            secondary.append(f)
-
-    return primary + secondary
+    weights = get_weights(severity)                              # severity: 'minor' | 'serious' | 'default'
+    scored  = score_facilities(facilities, user_lat, user_lon, weights=weights)  # list[ScoredFacility]
+    return to_api_response(scored)                               # list[dict], sorted best → worst
 
 
-# ---------------------------------------------------------------------------
-# Main public API
-# ---------------------------------------------------------------------------
-def process_emergency(message: str, lat: float, lon: float) -> dict:
+# -- Severity helper — delegates to ai/utils/classifier.detect_severity() ------
+
+def _derive_severity(message: str) -> str:
+    """
+    Derive severity from the raw message text using keyword detection.
+    Uses ai.utils.classifier.detect_severity() — no extra API call.
+    Returns: 'serious' | 'minor' | 'default'
+    """
+    return detect_severity(message)
+
+
+# -- LLM guidance (replaces app.chatbot.chain) ------------------------------- 
+
+def _generate_guidance(message: str, top5: list, severity: str) -> str:
+    """
+    Call Groq LLM to generate emergency guidance.
+    Only uses phone numbers from the facility data — never invented.
+    Falls back to a static string if Groq is unavailable.
+    """
+    if not GROQ_API_KEY:
+        return _static_guidance(top5, severity)
+
     try:
-        classification = classify_emergency(message)
+        import httpx
 
-        if classification.get("status") == "TEST" or not classification.get("proceed", True):
-            return {
-                "success": False,
-                "status": classification.get("status", "TEST"),
-                "guidance": get_canned_test_response(),
-                "facilities": [],
-            }
-
-        severity = detect_severity(message)
-
-        # Stage 1: geo-first retrieval from SQLite
-        candidates = _get_local_facilities(lat, lon, MAX_RADIUS_KM)
-        if not candidates:
-            candidates = _get_local_facilities(lat, lon, WIDE_RADIUS_KM)
-
-        # Stage 2: attach semantic scores for scorer tie-breaking
-        if candidates:
-            candidates = _enrich_with_semantic_scores(candidates, message)
-
-        # Stage 3: deprioritise irrelevant facility types for medical emergencies
-        candidates = _filter_by_type(candidates, message)
-
-        if not candidates:
-            guidance = get_chat_response(
-                message=message,
-                lat=lat,
-                lon=lon,
-                nearby_facilities=[],
-                severity=severity,
-            )
-            return {
-                "success": True,
-                "status": classification.get("status", "REAL"),
-                "severity": severity,
-                "guidance": guidance,
-                "facilities": [],
-            }
-
-        scored = score_facilities(candidates[:MAX_CANDIDATES], lat, lon, get_weights(severity))
-        api_facilities = to_api_response(scored)
-
-        guidance = get_chat_response(
-            message=message,
-            lat=lat,
-            lon=lon,
-            nearby_facilities=api_facilities[:5],
-            severity=severity,
+        facility_lines = "\n".join(
+            f"- {f.get('name','?')} ({f.get('type','?')}) | "
+            f"{f.get('distance_km','?')} km | "
+            f"Phone: {f.get('phone', 'unavailable')}"
+            for f in top5
         )
 
-        if classification.get("status") == "SUSPICIOUS":
-            guidance += "\n\n" + get_suspicious_warning()
+        system_prompt = (
+            "You are RoadSoS, an emergency assistant for road accidents in India. "
+            "Give concise, calm, actionable guidance. "
+            "NEVER invent phone numbers — only use numbers from the facility list provided. "
+            "If no phone is listed, say 'call 108'."
+        )
 
-        return {
-            "success": True,
-            "status": classification.get("status", "REAL"),
-            "severity": severity,
-            "guidance": guidance,
-            "facilities": api_facilities,
-        }
+        user_prompt = (
+            f"Emergency message: {message}\n"
+            f"Severity: {severity}\n\n"
+            f"Nearby facilities:\n{facility_lines}\n\n"
+            "Provide step-by-step guidance."
+        )
+
+        response = httpx.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {GROQ_API_KEY}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": GROQ_MODEL,
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user",   "content": user_prompt},
+                ],
+                "max_tokens": 400,
+            },
+            timeout=15,
+        )
+        response.raise_for_status()
+        return response.json()["choices"][0]["message"]["content"].strip()
 
     except Exception as e:
+        logger.warning(f"[Groq] LLM call failed: {e} — using static fallback")
+        return _static_guidance(top5, severity)
+
+
+def _static_guidance(top5: list, severity: str) -> str:
+    """Offline fallback guidance when Groq is unreachable."""
+    if not top5:
+        return "Emergency detected. Please call 108 immediately."
+    nearest = top5[0]
+    phone   = nearest.get("phone", "108")
+    name    = nearest.get("name", "nearest facility")
+    return (
+        f"{'SEVERE emergency' if severity == 'high' else 'Emergency'} detected. "
+        f"Nearest help: {name} — call {phone}. "
+        "Stay calm, do not move injured persons unless there is immediate danger."
+    )
+
+
+# -----------------------------------------------------------------------------
+# Pathway RAG Orchestrator
+# -----------------------------------------------------------------------------
+
+class PathwayRAGOrchestrator:
+    """
+    Orchestrates the three-stage retrieval pipeline.
+
+    System diagram:
+        Android App
+            ?  POST /chatbot
+        FastAPI  (main.py — unchanged)
+            ?
+        PathwayRAGOrchestrator   ? this class
+            +-- Stage 1: SQLite bounding box + haversine  (geo_retrieval)
+            +-- Stage 2: Vector index semantic scores     (semantic_enrichment)
+            +-- Stage 3: Type filter ? scorer ? Groq LLM (rank_and_respond)
+    """
+
+    def process(self, message: str, lat: float, lon: float) -> dict:
+        """Main entry point. Called by process_emergency_chatbot()."""
+
+        # -- Stage 1: Geo Retrieval --------------------------------------------
+        candidates = _bounding_box_query(lat, lon, radius_km=MAX_RADIUS_KM)
+        if not candidates:
+            logger.info("[RAG Stage 1] Empty at 100km — widening to 500km")
+            candidates = _bounding_box_query(lat, lon, radius_km=WIDE_RADIUS_KM)
+
+        candidates = _haversine_filter(candidates, lat, lon, radius_km=MAX_RADIUS_KM)
+        candidates.sort(key=lambda f: f.get("distance_km", float("inf")))
+        logger.info(f"[RAG Stage 1] {len(candidates)} facilities in range")
+
+        # -- Stage 2: Semantic Enrichment --------------------------------------
+        semantic_results = semantic_search(message)           # chroma_service signature: (query: str)
+        semantic_map     = {r["name"]: r["semantic_score"] for r in semantic_results}
+
+        for fac in candidates:
+            fac["semantic_score"] = semantic_map.get(fac.get("name", ""), 0.0)
+
+        non_zero = sum(1 for f in candidates if f["semantic_score"] > 0)
+        logger.info(f"[RAG Stage 2] Semantic scores attached ({non_zero} non-zero)")
+
+        # -- Stage 3: Type Filter ? Score ? LLM -------------------------------
+        classification = classify_emergency(message)
+        severity       = _derive_severity(message)   # keyword-based, no API call
+
+        candidates = self._filter_by_type(candidates, message)
+        scored     = _score_facilities(candidates[:50], severity=severity, user_lat=lat, user_lon=lon)
+        top5       = scored[:5]
+        guidance   = _generate_guidance(message, top5, severity=severity)
+
+        logger.info(f"[RAG Stage 3] Severity={severity}, Top5 selected, guidance generated")
+
         return {
-            "success": False,
-            "status": "ERROR",
-            "guidance": f"Emergency pipeline failed: {str(e)}",
-            "facilities": [],
+            "guidance":   guidance,
+            "severity":   severity,
+            "facilities": scored,
+            "top5":       top5,
         }
+
+    @staticmethod
+    def _filter_by_type(facilities: list, message: str) -> list:
+        """Pushes medical facilities to front when medical keywords detected."""
+        medical_kw = {
+            "ambulance", "hospital", "injured", "bleeding",
+            "unconscious", "cardiac", "chest", "fracture", "accident", "crash"
+        }
+        if not any(kw in message.lower() for kw in medical_kw):
+            return facilities
+        priority  = [f for f in facilities if f.get("type") in ("hospital", "ambulance")]
+        secondary = [f for f in facilities if f.get("type") not in ("hospital", "ambulance")]
+        return priority + secondary
+
+
+# Singleton
+_orchestrator = PathwayRAGOrchestrator()
+
+
+# -----------------------------------------------------------------------------
+# Public entry point — called by FastAPI /chatbot router
+# Argument order: message first, then lat, lon  (matches chatbot.py router)
+# -----------------------------------------------------------------------------
+
+async def process_emergency_chatbot(
+    message: str,
+    latitude: float,
+    longitude: float,
+    user_id: Optional[str] = None,
+) -> dict:
+    """
+    Drop-in replacement called by chatbot.py router:
+        process_emergency_chatbot(request.message, request.latitude, request.longitude)
+    """
+    classification = classify_emergency(message)
+    status  = classification.get("status", "REAL")
+    proceed = classification.get("proceed", True)
+
+    if not proceed:
+        logger.info(f"[Chatbot] Status={status} — skipping pipeline")
+        return {
+            "status":    status,
+            "guidance":  "This appears to be a test message. In a real emergency, call 108.",
+            "facilities": [],
+            "top5":      [],
+            "severity":  "default",
+        }
+
+    result = _orchestrator.process(message, latitude, longitude)
+    result["status"] = status
+
+    if status == "SUSPICIOUS":
+        result["guidance"] += (
+            "\n\n⚠️ Note: This message was flagged as potentially ambiguous. "
+            "If this is a real emergency, please call 108 immediately."
+        )
+
+    return result
+

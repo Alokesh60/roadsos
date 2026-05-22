@@ -8,7 +8,9 @@ BASE_DIR = os.path.abspath(
     )
 )
 
-DB_PATH = os.path.join(BASE_DIR, "roadsos.db")
+DB_PATH = os.path.abspath(
+    os.path.join(BASE_DIR, "../ai/roadsos.db")
+)
 
 
 def get_connection():

@@ -172,9 +172,7 @@ def get_suspicious_warning() -> str:
     return _SUSPICIOUS_WARNING
 
 
-# ---------------------------------------------------------------------------
-# How Alokesh / chain.py uses this — typical call pattern
-# ---------------------------------------------------------------------------
+
 """
 INTEGRATION EXAMPLE (for chain.py or FastAPI endpoint):
 
