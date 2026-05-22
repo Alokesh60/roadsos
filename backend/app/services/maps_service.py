@@ -4,13 +4,13 @@ import requests
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
 
 
-TYPE_MAPPING = {
-    "hospital": '"amenity"="hospital"',
-    "police_station": '"amenity"="police"',
-    "fire_station": '"amenity"="fire_station"',
-    "blood_bank": '"healthcare"="blood_bank"',
-}
 
+TYPE_MAPPING = {
+    "hospital": '["amenity"="hospital"]',
+    "police": '["amenity"="police"]',
+    "fire_station": '["amenity"="fire_station"]',
+    "blood_bank": '["healthcare"="blood_bank"]',
+}
 
 def fetch_live_services(lat, lon, service_type, radius=5000):
 
@@ -23,9 +23,9 @@ def fetch_live_services(lat, lon, service_type, radius=5000):
     [out:json];
 
     (
-      node[{osm_filter}](around:{radius},{lat},{lon});
-      way[{osm_filter}](around:{radius},{lat},{lon});
-      relation[{osm_filter}](around:{radius},{lat},{lon});
+      node{osm_filter}(around:{radius},{lat},{lon});
+      way{osm_filter}(around:{radius},{lat},{lon});
+      relation{osm_filter}(around:{radius},{lat},{lon});
     );
 
     out center;
@@ -36,6 +36,9 @@ def fetch_live_services(lat, lon, service_type, radius=5000):
         response = requests.get(
             OVERPASS_URL,
             params={"data": query},
+            headers= {
+                "User-Agent": "RoadSOS Emergency APP"
+            },
             timeout=30
         )
 

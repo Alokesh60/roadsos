@@ -10,6 +10,22 @@ sys.path.append(
     )
 )
 
+from app.services.distance_service import (
+    calculate_distance
+)
+
+from app.services.logging_service import (
+    save_emergency_log
+)
+
+from app.utils.response_formatter import (
+    format_service
+)
+
+from app.utils.emergency_numbers import (
+    get_emergency_numbers
+)
+
 from ai.chatbot.chain import (
     get_chat_response
 )
@@ -38,12 +54,15 @@ from ai.embeddings.chroma_setup import (
 def process_emergency_chatbot(
     message: str,
     latitude: float,
-    longitude: float
+    longitude: float,
+    country: str = "India",
 ):
     
     classification = classify_emergency(
         message
     )
+
+    emergency_numbers = get_emergency_numbers(country)
 
     if not classification["proceed"]:
 
@@ -90,6 +109,24 @@ def process_emergency_chatbot(
 
     for service in services:
 
+        if service.get("country") != country:
+            continue
+
+        distance = calculate_distance(
+
+            latitude,
+
+            longitude,
+
+            service["latitude"],
+
+            service["longitude"]
+        )
+
+        # Ignore very far cached services
+        if distance > 50:
+            continue
+
         # Facility type filtering
 
         if service["type"] != emergency_type:
@@ -114,7 +151,7 @@ def process_emergency_chatbot(
         scored
     )
 
-    recommended = (
+    recommended = format_service(
         ranked[0]
         if ranked
         else {}
@@ -148,6 +185,16 @@ def process_emergency_chatbot(
         severity=severity
     )
 
+    save_emergency_log(
+        message=message,
+        detected_type=emergency_type,
+        priority=priority,
+        confidence=confidence,
+        country=country,
+        classification_status=classification["status"],
+        recommended_service=recommended
+    )
+
     return {
         "classification_status": classification["status"],
 
@@ -165,7 +212,7 @@ def process_emergency_chatbot(
 
         "guidance": guidance,
 
-        "semantic_matches_found": len(filtered)
+        "semantic_matches_found": len(filtered),
+
+        "emergency_numbers": emergency_numbers
     }
-
-

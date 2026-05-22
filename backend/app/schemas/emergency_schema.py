@@ -9,8 +9,16 @@ class EmergencyRequest(BaseModel):
 
     longitude: float
 
+    country: str = "India"
+
 
 class EmergencyResponse(BaseModel):
+
+    classification_status: str
+
+    classification_reason: str
+
+    proceed: bool
 
     detected_type: str
 
@@ -19,3 +27,7 @@ class EmergencyResponse(BaseModel):
     confidence: float
 
     recommended_service: dict
+
+    guidance: str
+
+    semantic_matches_found: int

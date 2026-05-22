@@ -12,6 +12,8 @@ from app.api.ai_emergency import router as ai_emergency_router
 from app.api.chatbot import router as chatbot_router
 from app.services.sqlite_service import get_all_services
 from ai.embeddings.chroma_setup import build_index
+from app.api.sos import router as sos_router
+from app.api.contacts import router as contacts_router
 
 # Initialize the ChromaDB index
 services = get_all_services()
@@ -51,7 +53,8 @@ app.include_router(emergency_router)
 app.include_router(semantic_router)
 app.include_router(ai_emergency_router)
 app.include_router(chatbot_router)
-
+app.include_router(sos_router)
+app.include_router(contacts_router)
 
 @app.get("/")
 async def root():
