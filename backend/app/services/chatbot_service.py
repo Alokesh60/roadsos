@@ -10,6 +10,10 @@ sys.path.append(
     )
 )
 
+from ai.chatbot.chain import (
+    get_chat_response
+)
+
 from ai.utils.classifier import (
     classify_emergency
 )
@@ -120,10 +124,32 @@ def process_emergency_chatbot(
         else {}
     )
 
-    # AI emergency guidance
+    
+    severity_map = {
 
-    guidance = generate_guidance(
-        emergency_type
+        "high": "serious",
+
+        "medium": "default",
+
+        "low": "minor"
+    }
+
+    severity = severity_map.get(
+        priority,
+        "default"
+    )
+
+    guidance = get_chat_response(
+
+        message=message,
+
+        lat=latitude,
+
+        lon=longitude,
+
+        nearby_facilities=ranked,
+
+        severity=severity
     )
 
     return {
@@ -147,30 +173,3 @@ def process_emergency_chatbot(
     }
 
 
-def generate_guidance(
-    emergency_type: str
-):
-
-    if emergency_type == "hospital":
-
-        return (
-            "Keep the injured person stable and avoid unnecessary movement."
-        )
-
-    elif emergency_type == "fire_station":
-
-        return (
-            "Move away from smoke and fire immediately."
-        )
-
-    elif emergency_type == "police":
-
-        return (
-            "Move to a safe location and contact authorities."
-        )
-
-    else:
-
-        return (
-            "Stay calm and wait for emergency assistance."
-        )
