@@ -10,12 +10,36 @@ from app.api.emergency import router as emergency_router
 from app.api.semantic import router as semantic_router
 from app.api.ai_emergency import router as ai_emergency_router
 from app.api.chatbot import router as chatbot_router
+from app.services.sqlite_service import get_all_services
+from ai.embeddings.chroma_setup import build_index
+
+# Initialize the ChromaDB index
+services = get_all_services()
+build_index(services)
 
 app = FastAPI(
     title="RoadSoS API",
     description="Emergency Road Safety Backend",
     version="1.0.0"
 )
+
+@app.on_event("startup")
+async def startup_event():
+
+    print("\n[Startup] Loading emergency services...")
+
+    services = get_all_services()
+
+    print(
+        f"[Startup] Found {len(services)} services."
+    )
+
+    print("[Startup] Building ChromaDB index...")
+
+    build_index(services)
+
+    print("[Startup] ChromaDB ready.\n")
+
 setup_cors(app)
 
 app.include_router(health_router)
