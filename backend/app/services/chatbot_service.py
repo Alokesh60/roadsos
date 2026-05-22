@@ -1,13 +1,30 @@
+import sys
+import os
+
+sys.path.append(
+    os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "../../../"
+        )
+    )
+)
+
+from ai.utils.classifier import (
+    classify_emergency
+)
+
+from ai.ranking.scorer import (
+    score_facilities,
+    to_api_response
+)
+
 from app.services.emergency_nlp_service import (
     detect_emergency_type
 )
 
 from app.services.sqlite_service import (
     get_all_services
-)
-
-from app.services.distance_service import (
-    calculate_distance
 )
 
 from app.services.chroma_service import (
@@ -20,8 +37,27 @@ def process_emergency_chatbot(
     latitude: float,
     longitude: float
 ):
+    
+    classification = classify_emergency(
+        message
+    )
 
-    # NLP classification
+    if not classification["proceed"]:
+
+      return {
+
+          "classification_status": classification["status"],
+
+          "classification_reason": classification["reason"],
+
+          "proceed": False,
+
+          "message": (
+              "Test or non-emergency message detected."
+          )
+      }
+
+    # fallback NLP
 
     emergency_type, priority, confidence = (
         detect_emergency_type(message)
@@ -64,35 +100,23 @@ def process_emergency_chatbot(
         if semantic_ids and service["id"] not in semantic_ids:
             continue
 
-        # Distance calculation
-
-        distance = calculate_distance(
-
-            latitude,
-            longitude,
-
-            service["latitude"],
-            service["longitude"]
-        )
-
-        service["distance_km"] = round(
-            distance,
-            2
-        )
+        service["facility_type"] = service["type"]
 
         filtered.append(service)
 
-    # Sort nearest first
-
-    filtered.sort(
-        key=lambda x: x["distance_km"]
+    scored = score_facilities(
+        filtered,
+        latitude,
+        longitude
     )
 
-    # Best recommendation
+    ranked = to_api_response(
+        scored
+    )
 
     recommended = (
-        filtered[0]
-        if filtered
+        ranked[0]
+        if ranked
         else {}
     )
 
@@ -103,6 +127,11 @@ def process_emergency_chatbot(
     )
 
     return {
+        "classification_status": classification["status"],
+
+        "classification_reason": classification["reason"],
+
+        "proceed": classification["proceed"],
 
         "detected_type": emergency_type,
 
