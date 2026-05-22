@@ -50,7 +50,7 @@ def _get_local_facilities(lat: float, lon: float, radius_km: float = MAX_RADIUS_
     Bounding-box pre-filter from SQLite, then exact haversine trim.
     Returns rows sorted nearest-first.
     """
-    deg = radius_km / 111.0  # 1 degree latitude ≈ 111 km
+    deg = radius_km / 111.0
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     rows = conn.execute(
@@ -129,7 +129,6 @@ def process_emergency(message: str, lat: float, lon: float) -> dict:
         # Stage 1: geo-first retrieval from SQLite
         candidates = _get_local_facilities(lat, lon, MAX_RADIUS_KM)
         if not candidates:
-            # Nothing within 100 km — widen search before giving up
             candidates = _get_local_facilities(lat, lon, WIDE_RADIUS_KM)
 
         # Stage 2: attach semantic scores for scorer tie-breaking

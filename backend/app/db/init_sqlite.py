@@ -1,7 +1,6 @@
 from app.db.sqlite_db import get_connection
 
 conn = get_connection()
-
 cursor = conn.cursor()
 
 cursor.execute("""
@@ -12,12 +11,19 @@ CREATE TABLE IF NOT EXISTS emergency_services (
     latitude REAL NOT NULL,
     longitude REAL NOT NULL,
     phone TEXT,
-    address TEXT
+    address TEXT,
+    city TEXT,
+    state TEXT,
+    country TEXT,
+    rating REAL,
+    response_time_min INTEGER,
+    is_available INTEGER DEFAULT 1,
+    services_offered TEXT,
+    last_verified TEXT
 )
 """)
 
 conn.commit()
-
 conn.close()
 
 print("SQLite database initialized.")
