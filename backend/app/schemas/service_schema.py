@@ -35,3 +35,5 @@ class EmergencyServiceSchema(BaseModel):
     distance_km: Optional[float] = None
 
     emergency_score: Optional[float] = None
+
+    ai_priority: Optional[str] = None
