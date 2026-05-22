@@ -1,73 +1,55 @@
-def detect_emergency_type(message: str):
+def detect_emergency_type(text: str):
 
-    text = message.lower()
+    text = text.lower()
 
-    # MEDICAL
-
-    medical_keywords = [
-
+    trauma_keywords = [
         "accident",
-        "injury",
         "bleeding",
-        "ambulance",
+        "injury",
         "crash",
-        "hospital",
-        "unconscious"
+        "fracture",
+        "bike accident"
     ]
 
-    # FIRE
-
     fire_keywords = [
-
         "fire",
         "burn",
         "smoke",
         "explosion"
     ]
 
-    # POLICE
-
-    police_keywords = [
-
-        "theft",
-        "crime",
-        "fight",
+    crime_keywords = [
         "attack",
-        "police"
+        "robbery",
+        "violence",
+        "theft",
+        "kidnap"
     ]
 
-    # TOWING
+    if any(word in text for word in trauma_keywords):
 
-    towing_keywords = [
+        return (
+            "hospital",
+            "high"
+        )
 
-        "breakdown",
-        "towing",
-        "flat tire",
-        "vehicle stuck"
-    ]
+    elif any(word in text for word in fire_keywords):
 
-    for word in medical_keywords:
+        return (
+            "fire_station",
+            "high"
+        )
 
-        if word in text:
+    elif any(word in text for word in crime_keywords):
 
-            return "ambulance", "HIGH"
+        return (
+            "police",
+            "medium"
+        )
 
-    for word in fire_keywords:
+    else:
 
-        if word in text:
-
-            return "fire", "HIGH"
-
-    for word in police_keywords:
-
-        if word in text:
-
-            return "police", "MEDIUM"
-
-    for word in towing_keywords:
-
-        if word in text:
-
-            return "towing", "LOW"
-
-    return "general", "LOW"
+        return (
+            "ambulance",
+            "low"
+        )
