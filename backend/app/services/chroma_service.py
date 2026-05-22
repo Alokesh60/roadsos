@@ -150,3 +150,29 @@ def semantic_search(query: str):
     )
 
     return formatted_results
+
+def semantic_emergency_classification(
+    query: str
+):
+
+    query_embedding = (
+        model.encode(query).tolist()
+    )
+
+    results = collection.query(
+
+        query_embeddings=[query_embedding],
+
+        n_results=1
+    )
+
+    metadata = results["metadatas"][0][0]
+
+    return {
+
+        "detected_service_type":
+            metadata["type"],
+
+        "recommended_service":
+            metadata["name"]
+    }

@@ -8,6 +8,7 @@ from app.api.auth import router as auth_router
 from app.middleware.cors import setup_cors
 from app.api.emergency import router as emergency_router
 from app.api.semantic import router as semantic_router
+from app.api.ai_emergency import router as ai_emergency_router
 
 app = FastAPI(
     title="RoadSoS API",
@@ -23,6 +24,7 @@ app.include_router(download_router)
 app.include_router(auth_router)
 app.include_router(emergency_router)
 app.include_router(semantic_router)
+app.include_router(ai_emergency_router)
 
 
 @app.get("/")
