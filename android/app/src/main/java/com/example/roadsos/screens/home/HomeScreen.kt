@@ -57,17 +57,8 @@ fun HomeScreen(
     onTabSelected: (BottomNavScreen) -> Unit
 ) {
 
-
     var showNotifications by remember {
         mutableStateOf(false)
-    }
-
-    var latitude by remember {
-        mutableStateOf(0.0)
-    }
-
-    var longitude by remember {
-        mutableStateOf(0.0)
     }
 
     var showSOSDialog by remember {
@@ -80,16 +71,6 @@ fun HomeScreen(
 
     var sosError by remember {
         mutableStateOf("")
-    }
-
-    LaunchedEffect(sosError) {
-
-        if (sosError.isNotEmpty()) {
-
-            kotlinx.coroutines.delay(3000)
-
-            sosError = ""
-        }
     }
 
     Box(
@@ -110,17 +91,18 @@ fun HomeScreen(
                 NoInternetBanner()
             }
 
-            // MAIN CONTENT
+            // FIXED HEADER
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .verticalScroll(rememberScrollState())
+                    .fillMaxWidth()
                     .padding(horizontal = 20.dp)
-                    .padding(bottom = 110.dp)
             ) {
 
-                Spacer(modifier = Modifier.height(55.dp))
+                Spacer(
+                    modifier =
+                        Modifier.height(55.dp)
+                )
 
                 TopSection(
 
@@ -136,24 +118,80 @@ fun HomeScreen(
                         )
                     }
                 )
+            }
 
-                Spacer(modifier = Modifier.height(22.dp))
+            // SCROLLABLE CONTENT
+
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(
+                        rememberScrollState()
+                    )
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 110.dp)
+            ) {
+
+                Spacer(
+                    modifier =
+                        Modifier.height(22.dp)
+                )
+                Row(
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
+
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(Color.Green)
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.width(8.dp)
+                    )
+
+                    Text(
+                        text = "GPS Active",
+                        color = TextGray,
+                        fontSize = 13.sp
+                    )
+                }
+
+                Spacer(
+                    modifier =
+                        Modifier.height(18.dp)
+                )
 
                 LocationMapCard()
 
-                Spacer(modifier = Modifier.height(26.dp))
+                Spacer(
+                    modifier =
+                        Modifier.height(26.dp)
+                )
 
                 QuickActionsSection()
 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(
+                    modifier =
+                        Modifier.height(28.dp)
+                )
 
                 SOSSection()
 
-                Spacer(modifier = Modifier.height(28.dp))
+                Spacer(
+                    modifier =
+                        Modifier.height(28.dp)
+                )
 
                 NearbyServicesSection()
 
-                Spacer(modifier = Modifier.height(40.dp))
+                Spacer(
+                    modifier =
+                        Modifier.height(40.dp)
+                )
             }
         }
 
@@ -170,35 +208,44 @@ fun HomeScreen(
             )
         }
 
-        // SOS ERROR BANNER
-
-        if (sosError.isNotEmpty()) {
-
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(
-                        horizontal = 18.dp,
-                        vertical = 120.dp
-                    )
-            ) {
-
-                ErrorBanner(
-                    message = sosError
-                )
-            }
-        }
-
         // BOTTOM NAVBAR
 
         Box(
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier =
+                Modifier.align(
+                    Alignment.BottomCenter
+                )
         ) {
 
-            BottomNavBar(
-                currentScreen = currentScreen,
+            if (
+                sosError.isNotEmpty()
+            ) {
 
-                onTabSelected = onTabSelected,
+                Column(
+                    modifier = Modifier
+                        .align(
+                            Alignment.BottomCenter
+                        )
+                        .padding(
+                            bottom = 130.dp
+                        )
+                        .padding(
+                            horizontal = 18.dp
+                        )
+                ) {
+
+                    ErrorBanner(
+                        message = sosError
+                    )
+                }
+            }
+
+            BottomNavBar(
+                currentScreen =
+                    currentScreen,
+
+                onTabSelected =
+                    onTabSelected,
 
                 onSOSError = {
 
@@ -217,51 +264,46 @@ fun TopSection(
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+
+        horizontalArrangement =
+            Arrangement.SpaceBetween,
+
+        verticalAlignment =
+            Alignment.CenterVertically
     ) {
 
         Column {
 
             Text(
                 text = "RoadSoS",
+
                 color = TextWhite,
+
                 fontSize = 34.sp,
-                fontWeight = FontWeight.Bold
+
+                fontWeight =
+                    FontWeight.Bold
             )
 
-            Spacer(modifier = Modifier.height(4.dp))
+            // REDUCED GAP
+
+            Spacer(
+                modifier =
+                    Modifier.height(1.dp)
+            )
 
             Text(
                 text = "Your Safety, Our Priority",
+
                 color = TextGray,
+
                 fontSize = 15.sp
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-
-                Box(
-                    modifier = Modifier
-                        .size(10.dp)
-                        .clip(CircleShape)
-                        .background(Color.Green)
-                )
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = "GPS Active",
-                    color = TextGray,
-                    fontSize = 13.sp
-                )
-            }
         }
 
         Row {
+
+            // NOTIFICATION
 
             IconButton(
                 onClick = onNotificationClick
@@ -269,30 +311,54 @@ fun TopSection(
 
                 BadgedBox(
                     badge = {
+
                         Badge(
-                            containerColor = PrimaryRed
+                            containerColor =
+                                PrimaryRed
                         )
                     }
                 ) {
 
                     Icon(
-                        imageVector = Icons.Default.Notifications,
-                        contentDescription = null,
-                        tint = TextWhite,
-                        modifier = Modifier.size(28.dp)
+                        imageVector =
+                            Icons.Default.Notifications,
+
+                        contentDescription =
+                            null,
+
+                        tint =
+                            TextWhite,
+
+                        modifier =
+                            Modifier.size(28.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.width(6.dp))
+            Spacer(
+                modifier =
+                    Modifier.width(6.dp)
+            )
 
-            IconButton(onClick = onProfileClick) {
+            // PROFILE
+
+            IconButton(
+                onClick =
+                    onProfileClick
+            ) {
 
                 Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = null,
-                    tint = TextWhite,
-                    modifier = Modifier.size(34.dp)
+                    imageVector =
+                        Icons.Default.AccountCircle,
+
+                    contentDescription =
+                        null,
+
+                    tint =
+                        TextWhite,
+
+                    modifier =
+                        Modifier.size(34.dp)
                 )
             }
         }

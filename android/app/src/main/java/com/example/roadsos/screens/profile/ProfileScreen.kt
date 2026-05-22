@@ -31,31 +31,70 @@ import com.example.roadsos.theme.TextGray
 import com.example.roadsos.theme.TextWhite
 import androidx.activity.compose.BackHandler
 
+
+data class CountryCode(
+    val flag: String,
+    val name: String,
+    val code: String
+)
+
+val countryCodes = listOf(
+
+    CountryCode("🇮🇳","India","+91"),
+    CountryCode("🇺🇸","USA","+1"),
+    CountryCode("🇬🇧","UK","+44"),
+    CountryCode("🇨🇦","Canada","+1"),
+    CountryCode("🇦🇺","Australia","+61"),
+    CountryCode("🇩🇪","Germany","+49"),
+    CountryCode("🇫🇷","France","+33"),
+    CountryCode("🇯🇵","Japan","+81"),
+    CountryCode("🇨🇳","China","+86"),
+    CountryCode("🇸🇬","Singapore","+65")
+)
 @Composable
 fun ProfileScreen(
     onBack: () -> Unit,
     onOpenPermissions: () -> Unit,
     onLogout: () -> Unit
 ) {
+
     BackHandler {
 
         onBack()
     }
 
     var name by remember {
+
         mutableStateOf("Tarpan Saikia")
     }
 
     var phone by remember {
-        mutableStateOf("+91 9876543210")
+
+        mutableStateOf("9876543210")
+    }
+
+    var expanded by remember {
+
+        mutableStateOf(false)
+    }
+
+    var selectedCountry by remember {
+
+        mutableStateOf(
+            countryCodes[0]
+        )
     }
 
     var email by remember {
+
         mutableStateOf("tarpan@email.com")
     }
+
     var isEditing by remember {
+
         mutableStateOf(true)
     }
+
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -65,261 +104,567 @@ fun ProfileScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .verticalScroll(
-                    rememberScrollState()
-                )
-                .padding(20.dp)
         ) {
 
-            Spacer(modifier = Modifier.height(42.dp))
+            // FIXED HEADER
 
-            // TOP BAR
-
-            Row(
-                verticalAlignment =
-                    Alignment.CenterVertically
-            ) {
-
-                IconButton(
-                    onClick = onBack
-                ) {
-
-                    Icon(
-                        imageVector =
-                            Icons.Default.ArrowBack,
-
-                        contentDescription = null,
-
-                        tint = TextWhite
-                    )
-                }
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = "Profile",
-                    color = TextWhite,
-                    fontSize = 28.sp,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(36.dp))
-
-            // PROFILE ICON
-
-            Box(
+            Column(
                 modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .background(
-                        Brush.radialGradient(
-                            colors = listOf(
-                                Color(0xFFFF6666),
-                                PrimaryRed
-                            )
-                        )
-                    )
-                    .align(Alignment.CenterHorizontally),
-
-                contentAlignment = Alignment.Center
+                    .fillMaxWidth()
+                    .padding(20.dp)
             ) {
 
-                Icon(
-                    imageVector = Icons.Default.Person,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(60.dp)
+                Spacer(
+                    modifier =
+                        Modifier.height(42.dp)
                 )
-            }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            Text(
-                text = name,
-                color = TextWhite,
-                fontSize = 26.sp,
-                fontWeight = FontWeight.Bold,
-
-                modifier = Modifier.align(
-                    Alignment.CenterHorizontally
-                )
-            )
-
-            Spacer(modifier = Modifier.height(42.dp))
-
-            ProfileInputField(
-                label = "Full Name",
-                value = name,
-                icon = Icons.Default.Person,
-                enabled = isEditing,
-                onValueChange = {
-                    name = it
-                }
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            ProfileInputField(
-                label = "Phone Number",
-                value = phone,
-                icon = Icons.Default.Phone,
-                enabled = isEditing,
-
-                onValueChange = {
-                    phone = it
-                }
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            ProfileInputField(
-                label = "Email",
-                value = email,
-                icon = Icons.Default.Email,
-                enabled = isEditing,
-                onValueChange = {
-                    email = it
-                }
-            )
-
-            Spacer(modifier = Modifier.height(26.dp))
-
-            // PERMISSION SETTINGS
-
-            Card(
-                onClick = {
-
-                    onOpenPermissions()
-                },
-
-                colors = CardDefaults.cardColors(
-                    containerColor = CardBackground
-                ),
-
-                shape = RoundedCornerShape(24.dp)
-            ) {
 
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(20.dp),
-
                     verticalAlignment =
                         Alignment.CenterVertically
                 ) {
 
-                    Box(
-                        modifier = Modifier
-                            .size(52.dp)
-                            .clip(CircleShape)
-                            .background(
-                                PrimaryRed.copy(alpha = 0.12f)
-                            ),
-
-                        contentAlignment = Alignment.Center
+                    IconButton(
+                        onClick = onBack
                     ) {
 
                         Icon(
-                            imageVector = Icons.Default.Lock,
-                            contentDescription = null,
-                            tint = PrimaryRed
+                            imageVector =
+                                Icons.Default.ArrowBack,
+
+                            contentDescription =
+                                null,
+
+                            tint = TextWhite
                         )
                     }
 
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(
+                        modifier =
+                            Modifier.width(8.dp)
+                    )
 
-                    Column(
-                        modifier = Modifier.weight(1f)
-                    ) {
+                    Text(
+                        text = "Profile",
 
-                        Text(
-                            text = "Permission Settings",
-                            color = TextWhite,
-                            fontSize = 17.sp,
-                            fontWeight = FontWeight.Bold
-                        )
+                        color = TextWhite,
 
-                        Spacer(modifier = Modifier.height(4.dp))
+                        fontSize = 28.sp,
 
-                        Text(
-                            text = "Manage location & emergency permissions.",
-                            color = TextGray,
-                            fontSize = 13.sp
-                        )
-                    }
-
-                    Icon(
-                        imageVector = Icons.Default.Edit,
-                        contentDescription = null,
-                        tint = TextGray
+                        fontWeight =
+                            FontWeight.Bold
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(34.dp))
+            // SCROLLABLE CONTENT
 
-            // SAVE BUTTON
-
-            Button(
-                onClick = {
-
-                    isEditing = false
-                },
-
+            Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(60.dp),
-
-                shape = RoundedCornerShape(24.dp),
-
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = PrimaryRed
-                )
+                    .fillMaxSize()
+                    .verticalScroll(
+                        rememberScrollState()
+                    )
+                    .padding(
+                        horizontal = 20.dp
+                    )
             ) {
 
+                Spacer(
+                    modifier =
+                        Modifier.height(10.dp)
+                )
+
+                // PROFILE ICON
+
+                Box(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clip(CircleShape)
+                        .background(
+                            Brush.radialGradient(
+                                colors = listOf(
+                                    Color(0xFFFF6666),
+                                    PrimaryRed
+                                )
+                            )
+                        )
+                        .align(
+                            Alignment.CenterHorizontally
+                        ),
+
+                    contentAlignment =
+                        Alignment.Center
+                ) {
+
+                    Icon(
+                        imageVector =
+                            Icons.Default.Person,
+
+                        contentDescription =
+                            null,
+
+                        tint = Color.White,
+
+                        modifier =
+                            Modifier.size(60.dp)
+                    )
+                }
+
+                Spacer(
+                    modifier =
+                        Modifier.height(18.dp)
+                )
+
                 Text(
-                    text = "Save Changes",
-                    fontSize = 17.sp,
-                    fontWeight = FontWeight.Bold
+                    text = name,
+
+                    color = TextWhite,
+
+                    fontSize = 26.sp,
+
+                    fontWeight =
+                        FontWeight.Bold,
+
+                    modifier =
+                        Modifier.align(
+                            Alignment.CenterHorizontally
+                        )
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.height(42.dp)
+                )
+
+                // NAME
+
+                ProfileInputField(
+                    label = "Full Name",
+                    value = name,
+                    icon = Icons.Default.Person,
+                    enabled = isEditing
+                ) {
+
+                    name = it
+                }
+
+                Spacer(
+                    modifier =
+                        Modifier.height(20.dp)
+                )
+
+                // PHONE + COUNTRY
+
+                Column {
+
+                    Text(
+                        text = "Phone Number",
+                        color = TextGray,
+                        fontSize = 14.sp
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.height(10.dp)
+                    )
+
+                    Row(
+                        modifier =
+                            Modifier.fillMaxWidth(),
+
+                        verticalAlignment =
+                            Alignment.CenterVertically
+                    ) {
+
+                        Box(
+                            modifier =
+                                Modifier.width(105.dp)
+                        ) {
+
+                            OutlinedButton(
+
+                                onClick = {
+
+                                    if (
+                                        isEditing
+                                    ) {
+
+                                        expanded = true
+                                    }
+                                },
+
+                                modifier =
+                                    Modifier.height(
+                                        58.dp
+                                    ),
+
+                                shape =
+                                    RoundedCornerShape(
+                                        22.dp
+                                    ),
+
+                                colors =
+                                    ButtonDefaults.outlinedButtonColors(
+
+                                        containerColor =
+                                            CardBackground,
+
+                                        contentColor =
+                                            TextWhite
+                                    )
+                            ) {
+
+                                Text(
+                                    text =
+                                        "${selectedCountry.flag} ${selectedCountry.code}"
+                                )
+                            }
+
+                            DropdownMenu(
+
+                                expanded =
+                                    expanded,
+
+                                onDismissRequest = {
+
+                                    expanded = false
+                                }
+                            ) {
+
+                                countryCodes.forEach {
+
+                                    DropdownMenuItem(
+
+                                        text = {
+
+                                            Text(
+                                                "${it.flag} ${it.name} (${it.code})"
+                                            )
+                                        },
+
+                                        onClick = {
+
+                                            selectedCountry =
+                                                it
+
+                                            expanded =
+                                                false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+
+                        Spacer(
+                            modifier =
+                                Modifier.width(
+                                    6.dp
+                                )
+                        )
+
+                        OutlinedTextField(
+
+                            value = phone,
+
+                            onValueChange = {
+
+                                phone = it
+                            },
+
+                            modifier =
+                                Modifier.weight(
+                                    1f
+                                ),
+
+                            enabled =
+                                isEditing,
+
+                            singleLine =
+                                true,
+
+                            leadingIcon = {
+
+                                Icon(
+                                    imageVector =
+                                        Icons.Default.Phone,
+
+                                    contentDescription =
+                                        null,
+
+                                    tint =
+                                        PrimaryRed
+                                )
+                            },
+
+                            colors =
+                                OutlinedTextFieldDefaults.colors(
+
+                                    focusedContainerColor =
+                                        CardBackground,
+
+                                    unfocusedContainerColor =
+                                        CardBackground,
+
+                                    disabledContainerColor =
+                                        CardBackground,
+
+                                    focusedBorderColor =
+                                        PrimaryRed,
+
+                                    unfocusedBorderColor =
+                                        Color.Transparent,
+
+                                    disabledBorderColor =
+                                        Color.Transparent,
+
+                                    focusedTextColor =
+                                        TextWhite,
+
+                                    unfocusedTextColor =
+                                        TextWhite,
+
+                                    disabledTextColor =
+                                        TextWhite,
+
+                                    cursorColor =
+                                        PrimaryRed
+                                ),
+
+                            shape =
+                                RoundedCornerShape(
+                                    22.dp
+                                )
+                        )
+                    }
+                }
+
+                Spacer(
+                    modifier =
+                        Modifier.height(20.dp)
+                )
+
+                // EMAIL
+
+                ProfileInputField(
+                    label = "Email",
+                    value = email,
+                    icon = Icons.Default.Email,
+                    enabled = isEditing
+                ) {
+
+                    email = it
+                }
+
+                Spacer(
+                    modifier =
+                        Modifier.height(26.dp)
+                )
+
+                // PERMISSIONS CARD
+
+                Card(
+                    onClick = {
+
+                        onOpenPermissions()
+                    },
+
+                    colors =
+                        CardDefaults.cardColors(
+                            containerColor =
+                                CardBackground
+                        ),
+
+                    shape =
+                        RoundedCornerShape(
+                            24.dp
+                        )
+                ) {
+
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(20.dp),
+
+                        verticalAlignment =
+                            Alignment.CenterVertically
+                    ) {
+
+                        Box(
+                            modifier = Modifier
+                                .size(52.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    PrimaryRed.copy(
+                                        alpha = 0.12f
+                                    )
+                                ),
+
+                            contentAlignment =
+                                Alignment.Center
+                        ) {
+
+                            Icon(
+                                imageVector =
+                                    Icons.Default.Lock,
+
+                                contentDescription =
+                                    null,
+
+                                tint =
+                                    PrimaryRed
+                            )
+                        }
+
+                        Spacer(
+                            modifier =
+                                Modifier.width(
+                                    16.dp
+                                )
+                        )
+
+                        Column(
+                            modifier =
+                                Modifier.weight(1f)
+                        ) {
+
+                            Text(
+                                "Permission Settings",
+                                color =
+                                    TextWhite,
+
+                                fontSize =
+                                    17.sp,
+
+                                fontWeight =
+                                    FontWeight.Bold
+                            )
+
+                            Spacer(
+                                modifier =
+                                    Modifier.height(
+                                        4.dp
+                                    )
+                            )
+
+                            Text(
+                                "Manage location & emergency permissions.",
+                                color =
+                                    TextGray,
+
+                                fontSize =
+                                    13.sp
+                            )
+                        }
+
+                        Icon(
+                            imageVector =
+                                Icons.Default.Edit,
+
+                            contentDescription =
+                                null,
+
+                            tint =
+                                TextGray
+                        )
+                    }
+                }
+
+                Spacer(
+                    modifier =
+                        Modifier.height(34.dp)
+                )
+
+                // SAVE
+
+                Button(
+                    onClick = {
+
+                        isEditing = false
+                    },
+
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(60.dp),
+
+                    shape =
+                        RoundedCornerShape(
+                            24.dp
+                        ),
+
+                    colors =
+                        ButtonDefaults.buttonColors(
+                            containerColor =
+                                PrimaryRed
+                        )
+                ) {
+
+                    Text(
+                        "Save Changes",
+                        fontSize = 17.sp,
+                        fontWeight =
+                            FontWeight.Bold
+                    )
+                }
+
+                Spacer(
+                    modifier =
+                        Modifier.height(18.dp)
+                )
+
+                // LOGOUT
+
+                OutlinedButton(
+                    onClick = {
+
+                        onLogout()
+                    },
+
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(58.dp),
+
+                    shape =
+                        RoundedCornerShape(
+                            24.dp
+                        ),
+
+                    colors =
+                        ButtonDefaults.outlinedButtonColors(
+                            contentColor =
+                                PrimaryRed
+                        )
+                ) {
+
+                    Icon(
+                        imageVector =
+                            Icons.Default.Logout,
+
+                        contentDescription =
+                            null
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.width(
+                                10.dp
+                            )
+                    )
+
+                    Text(
+                        "Logout",
+                        fontWeight =
+                            FontWeight.Bold
+                    )
+                }
+
+                Spacer(
+                    modifier =
+                        Modifier.height(
+                            60.dp
+                        )
                 )
             }
-
-            Spacer(modifier = Modifier.height(18.dp))
-
-            // LOGOUT
-
-            OutlinedButton(
-                onClick = {
-
-                    onLogout()
-                },
-
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(58.dp),
-
-                shape = RoundedCornerShape(24.dp),
-
-                colors = ButtonDefaults.outlinedButtonColors(
-                    contentColor = PrimaryRed
-                )
-            ) {
-
-                Icon(
-                    imageVector = Icons.Default.Logout,
-                    contentDescription = null
-                )
-
-                Spacer(modifier = Modifier.width(10.dp))
-
-                Text(
-                    text = "Logout",
-                    fontWeight = FontWeight.Bold
-                )
-            }
-
-            Spacer(modifier = Modifier.height(60.dp))
         }
     }
 }
