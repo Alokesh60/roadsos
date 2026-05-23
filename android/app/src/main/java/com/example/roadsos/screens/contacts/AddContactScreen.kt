@@ -26,25 +26,7 @@ import com.example.roadsos.theme.TextGray
 import com.example.roadsos.theme.TextWhite
 import androidx.activity.compose.BackHandler
 
-data class CountryCode(
-    val flag: String,
-    val name: String,
-    val code: String
-)
 
-val countryCodes = listOf(
-
-    CountryCode("🇮🇳","India","+91"),
-    CountryCode("🇺🇸","USA","+1"),
-    CountryCode("🇬🇧","UK","+44"),
-    CountryCode("🇨🇦","Canada","+1"),
-    CountryCode("🇦🇺","Australia","+61"),
-    CountryCode("🇩🇪","Germany","+49"),
-    CountryCode("🇫🇷","France","+33"),
-    CountryCode("🇯🇵","Japan","+81"),
-    CountryCode("🇨🇳","China","+86"),
-    CountryCode("🇸🇬","Singapore","+65")
-)
 @Composable
 fun AddContactScreen(
 
@@ -64,16 +46,8 @@ fun AddContactScreen(
     var number by remember {
         mutableStateOf("")
     }
-    var expanded by remember {
-
-        mutableStateOf(false)
-    }
-
-    var selectedCountry by remember {
-
-        mutableStateOf(
-            countryCodes[0]
-        )
+    var countryCode by remember {
+        mutableStateOf("")
     }
 
     var relation by remember {
@@ -178,6 +152,8 @@ fun AddContactScreen(
 
             // PHONE
 
+            // PHONE
+
             Column {
 
                 Text(
@@ -187,7 +163,8 @@ fun AddContactScreen(
                 )
 
                 Spacer(
-                    modifier = Modifier.height(10.dp)
+                    modifier =
+                        Modifier.height(10.dp)
                 )
 
                 Row(
@@ -197,100 +174,30 @@ fun AddContactScreen(
                         Alignment.CenterVertically
                 ) {
 
-                    // COUNTRY DROPDOWN
-
-                    Box(
-                        modifier =
-                            Modifier.width(105.dp)
-                    ) {
-
-                        OutlinedButton(
-
-                            onClick = {
-
-                                expanded = true
-                            },
-
-                            modifier =
-                                Modifier.height(58.dp),
-
-                            shape =
-                                RoundedCornerShape(20.dp),
-
-                            colors =
-                                ButtonDefaults.outlinedButtonColors(
-
-                                    containerColor =
-                                        CardBackground,
-
-                                    contentColor =
-                                        TextWhite
-                                )
-                        ) {
-
-                            Text(
-                                text =
-                                    "${selectedCountry.flag} ${selectedCountry.code}"
-                            )
-                        }
-
-                        DropdownMenu(
-
-                            expanded = expanded,
-
-                            onDismissRequest = {
-
-                                expanded = false
-                            }
-                        ) {
-
-                            countryCodes.forEach {
-
-                                DropdownMenuItem(
-
-                                    text = {
-
-                                        Text(
-                                            "${it.flag} ${it.name} (${it.code})"
-                                        )
-                                    },
-
-                                    onClick = {
-
-                                        selectedCountry = it
-
-                                        expanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
-
-                    Spacer(
-                        modifier = Modifier.width(6.dp)
-                    )
-
-                    // PHONE INPUT
+                    // COUNTRY CODE
 
                     OutlinedTextField(
 
-                        value = number,
+                        value = countryCode,
 
                         onValueChange = {
 
-                            number = it
+                            countryCode = it
                         },
 
-                        modifier = Modifier.weight(1f),
+                        modifier =
+                            Modifier.width(100.dp),
 
                         singleLine = true,
 
                         placeholder = {
 
                             Text(
-                                "Enter phone number",
+                                "+91",
                                 color =
-                                    TextGray.copy(alpha = 0.7f)
+                                    TextGray.copy(
+                                        alpha = 0.7f
+                                    )
                             )
                         },
 
@@ -320,7 +227,72 @@ fun AddContactScreen(
                             ),
 
                         shape =
-                            RoundedCornerShape(20.dp)
+                            RoundedCornerShape(
+                                20.dp
+                            )
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.width(6.dp)
+                    )
+
+                    // PHONE NUMBER
+
+                    OutlinedTextField(
+
+                        value = number,
+
+                        onValueChange = {
+
+                            number = it
+                        },
+
+                        modifier =
+                            Modifier.weight(1f),
+
+                        singleLine = true,
+
+                        placeholder = {
+
+                            Text(
+                                "Enter phone number",
+                                color =
+                                    TextGray.copy(
+                                        alpha = 0.7f
+                                    )
+                            )
+                        },
+
+                        colors =
+                            OutlinedTextFieldDefaults.colors(
+
+                                focusedContainerColor =
+                                    CardBackground,
+
+                                unfocusedContainerColor =
+                                    CardBackground,
+
+                                focusedBorderColor =
+                                    PrimaryRed,
+
+                                unfocusedBorderColor =
+                                    Color.Transparent,
+
+                                focusedTextColor =
+                                    TextWhite,
+
+                                unfocusedTextColor =
+                                    TextWhite,
+
+                                cursorColor =
+                                    PrimaryRed
+                            ),
+
+                        shape =
+                            RoundedCornerShape(
+                                20.dp
+                            )
                     )
                 }
             }

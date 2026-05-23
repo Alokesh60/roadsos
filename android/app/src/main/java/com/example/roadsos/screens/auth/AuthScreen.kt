@@ -37,28 +37,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-data class CountryCode(
-    val flag: String,
-    val name: String,
-    val code: String
-)
-
-val countryCodes = listOf(
-
-    CountryCode("🇮🇳","India","+91"),
-    CountryCode("🇺🇸","USA","+1"),
-    CountryCode("🇬🇧","UK","+44"),
-    CountryCode("🇨🇦","Canada","+1"),
-    CountryCode("🇦🇺","Australia","+61"),
-    CountryCode("🇩🇪","Germany","+49"),
-    CountryCode("🇫🇷","France","+33"),
-    CountryCode("🇯🇵","Japan","+81"),
-    CountryCode("🇨🇳","China","+86"),
-    CountryCode("🇸🇬","Singapore","+65"),
-    CountryCode("🇧🇷","Brazil","+55"),
-    CountryCode("🇷🇺","Russia","+7"),
-    CountryCode("🇿🇦","South Africa","+27")
-)
 @Composable
 fun AuthScreen(
     onLoginSuccess: () -> Unit,
@@ -76,16 +54,8 @@ fun AuthScreen(
     var phone by remember {
         mutableStateOf("")
     }
-    var expanded by remember {
-
-        mutableStateOf(false)
-    }
-
-    var selectedCountry by remember {
-
-        mutableStateOf(
-            countryCodes[0]
-        )
+    var countryCode by remember {
+        mutableStateOf("")
     }
 
     var otp by remember {
@@ -242,6 +212,8 @@ fun AuthScreen(
 
             // PHONE FIELD
 
+            // COUNTRY CODE + PHONE
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
 
@@ -249,81 +221,32 @@ fun AuthScreen(
                     Alignment.CenterVertically
             ) {
 
-                // COUNTRY DROPDOWN
+                // COUNTRY CODE
 
-                Box(
+                AuthInputField(
+
+                    value = countryCode,
+
+                    placeholder = "+91",
+
+                    icon = Icons.Default.Phone,
+
                     modifier =
-                        Modifier.width(105.dp)
+                        Modifier.width(100.dp),
+
+                    keyboardType =
+                        KeyboardType.Phone
                 ) {
 
-                    OutlinedButton(
-
-                        onClick = {
-
-                            expanded = true
-                        },
-
-                        modifier =
-                            Modifier.height(58.dp),
-
-                        shape =
-                            RoundedCornerShape(22.dp),
-
-                        colors =
-                            ButtonDefaults.outlinedButtonColors(
-
-                                containerColor =
-                                    Color(0xFF161B24),
-
-                                contentColor =
-                                    TextWhite
-                            )
-                    ) {
-
-                        Text(
-
-                            text =
-                                "${selectedCountry.flag} ${selectedCountry.code}"
-                        )
-                    }
-
-                    DropdownMenu(
-
-                        expanded = expanded,
-
-                        onDismissRequest = {
-
-                            expanded = false
-                        }
-                    ) {
-
-                        countryCodes.forEach {
-
-                            DropdownMenuItem(
-
-                                text = {
-
-                                    Text(
-                                        "${it.flag} ${it.name} (${it.code})"
-                                    )
-                                },
-
-                                onClick = {
-
-                                    selectedCountry = it
-
-                                    expanded = false
-                                }
-                            )
-                        }
-                    }
+                    countryCode = it
                 }
 
                 Spacer(
-                    modifier = Modifier.width(6.dp)
+                    modifier =
+                        Modifier.width(6.dp)
                 )
 
-                // PHONE FIELD
+                // PHONE
 
                 AuthInputField(
 
