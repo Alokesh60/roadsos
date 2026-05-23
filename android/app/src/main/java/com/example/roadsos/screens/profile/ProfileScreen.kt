@@ -32,25 +32,7 @@ import com.example.roadsos.theme.TextWhite
 import androidx.activity.compose.BackHandler
 
 
-data class CountryCode(
-    val flag: String,
-    val name: String,
-    val code: String
-)
 
-val countryCodes = listOf(
-
-    CountryCode("🇮🇳","India","+91"),
-    CountryCode("🇺🇸","USA","+1"),
-    CountryCode("🇬🇧","UK","+44"),
-    CountryCode("🇨🇦","Canada","+1"),
-    CountryCode("🇦🇺","Australia","+61"),
-    CountryCode("🇩🇪","Germany","+49"),
-    CountryCode("🇫🇷","France","+33"),
-    CountryCode("🇯🇵","Japan","+81"),
-    CountryCode("🇨🇳","China","+86"),
-    CountryCode("🇸🇬","Singapore","+65")
-)
 @Composable
 fun ProfileScreen(
     onBack: () -> Unit,
@@ -73,16 +55,8 @@ fun ProfileScreen(
         mutableStateOf("9876543210")
     }
 
-    var expanded by remember {
-
-        mutableStateOf(false)
-    }
-
-    var selectedCountry by remember {
-
-        mutableStateOf(
-            countryCodes[0]
-        )
+    var countryCode by remember {
+        mutableStateOf("+91")
     }
 
     var email by remember {
@@ -256,6 +230,8 @@ fun ProfileScreen(
 
                 // PHONE + COUNTRY
 
+                // PHONE
+
                 Column {
 
                     Text(
@@ -277,84 +253,65 @@ fun ProfileScreen(
                             Alignment.CenterVertically
                     ) {
 
-                        Box(
+                        // COUNTRY CODE
+
+                        OutlinedTextField(
+
+                            value = countryCode,
+
+                            onValueChange = {
+
+                                countryCode = it
+                            },
+
                             modifier =
-                                Modifier.width(105.dp)
-                        ) {
+                                Modifier.width(100.dp),
 
-                            OutlinedButton(
+                            // NOT EDITABLE
 
-                                onClick = {
+                            enabled = false,
 
-                                    if (
-                                        isEditing
-                                    ) {
+                            singleLine = true,
 
-                                        expanded = true
-                                    }
-                                },
+                            colors =
+                                OutlinedTextFieldDefaults.colors(
 
-                                modifier =
-                                    Modifier.height(
-                                        58.dp
-                                    ),
+                                    focusedContainerColor =
+                                        CardBackground,
 
-                                shape =
-                                    RoundedCornerShape(
-                                        22.dp
-                                    ),
+                                    unfocusedContainerColor =
+                                        CardBackground,
 
-                                colors =
-                                    ButtonDefaults.outlinedButtonColors(
+                                    disabledContainerColor =
+                                        CardBackground,
 
-                                        containerColor =
-                                            CardBackground,
+                                    focusedBorderColor =
+                                        PrimaryRed,
 
-                                        contentColor =
-                                            TextWhite
-                                    )
-                            ) {
+                                    unfocusedBorderColor =
+                                        Color.Transparent,
 
-                                Text(
-                                    text =
-                                        "${selectedCountry.flag} ${selectedCountry.code}"
+                                    disabledBorderColor =
+                                        Color.Transparent,
+
+                                    focusedTextColor =
+                                        TextWhite,
+
+                                    unfocusedTextColor =
+                                        TextWhite,
+
+                                    disabledTextColor =
+                                        TextWhite,
+
+                                    cursorColor =
+                                        PrimaryRed
+                                ),
+
+                            shape =
+                                RoundedCornerShape(
+                                    22.dp
                                 )
-                            }
-
-                            DropdownMenu(
-
-                                expanded =
-                                    expanded,
-
-                                onDismissRequest = {
-
-                                    expanded = false
-                                }
-                            ) {
-
-                                countryCodes.forEach {
-
-                                    DropdownMenuItem(
-
-                                        text = {
-
-                                            Text(
-                                                "${it.flag} ${it.name} (${it.code})"
-                                            )
-                                        },
-
-                                        onClick = {
-
-                                            selectedCountry =
-                                                it
-
-                                            expanded =
-                                                false
-                                        }
-                                    )
-                                }
-                            }
-                        }
+                        )
 
                         Spacer(
                             modifier =
@@ -362,6 +319,8 @@ fun ProfileScreen(
                                     6.dp
                                 )
                         )
+
+                        // PHONE
 
                         OutlinedTextField(
 
@@ -377,11 +336,11 @@ fun ProfileScreen(
                                     1f
                                 ),
 
-                            enabled =
-                                isEditing,
+                            // PHONE LOCKED
 
-                            singleLine =
-                                true,
+                            enabled = false,
+
+                            singleLine = true,
 
                             leadingIcon = {
 
