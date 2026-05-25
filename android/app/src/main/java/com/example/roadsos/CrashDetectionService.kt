@@ -19,6 +19,7 @@ import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.core.app.NotificationCompat
+import kotlin.math.abs
 import kotlin.math.sqrt
 
 class CrashDetectionService :
@@ -56,13 +57,26 @@ class CrashDetectionService :
     private lateinit var sensorManager:
             SensorManager
 
-    private var accelerometer: Sensor? = null
+    private var accelerometer:
+            Sensor? = null
 
-    private var lastAcceleration = 0f
+    private var gyroscope:
+            Sensor? = null
 
-    private var currentAcceleration = 0f
+    private var lastAcceleration =
+        0f
 
-    private var shakeAcceleration = 0f
+    private var currentAcceleration =
+        0f
+
+    private var shakeAcceleration =
+        0f
+
+    private var highImpact =
+        false
+
+    private var highRotation =
+        false
 
     override fun onCreate() {
 
@@ -82,18 +96,16 @@ class CrashDetectionService :
             e.printStackTrace()
         }
 
-        // DELAY SENSOR START
-
         Handler(
             Looper.getMainLooper()
         ).postDelayed({
 
             initializeSensors()
 
-        }, 1000)
+        }, 800)
     }
 
-    // SENSOR INITIALIZATION
+    // SENSOR INIT
 
     private fun initializeSensors() {
 
@@ -105,6 +117,11 @@ class CrashDetectionService :
         accelerometer =
             sensorManager.getDefaultSensor(
                 Sensor.TYPE_ACCELEROMETER
+            )
+
+        gyroscope =
+            sensorManager.getDefaultSensor(
+                Sensor.TYPE_GYROSCOPE
             )
 
         lastAcceleration =
@@ -120,8 +137,16 @@ class CrashDetectionService :
             sensorManager.registerListener(
                 this,
                 it,
-                SensorManager.SENSOR_DELAY_NORMAL
+                SensorManager.SENSOR_DELAY_GAME
             )
+        }
+
+        gyroscope?.also {
+
+            sensorManager.registerListener(
+                this,
+                it,
+                SensorManager.SENSOR_DELAY_GAME            )
         }
     }
 
@@ -160,76 +185,143 @@ class CrashDetectionService :
         event: SensorEvent?
     ) {
 
-        if (event != null) {
+        if (
+            event == null ||
+            emergencyActive
+        ) return
 
-            val x = event.values[0]
+        when (
+            event.sensor.type
+        ) {
 
-            val y = event.values[1]
+            // ACCELEROMETER
 
-            val z = event.values[2]
+            Sensor.TYPE_ACCELEROMETER -> {
 
-            lastAcceleration =
-                currentAcceleration
+                val x =
+                    event.values[0]
 
-            currentAcceleration =
-                sqrt(
-                    (
-                            x * x +
-                                    y * y +
-                                    z * z
-                            ).toDouble()
-                ).toFloat()
+                val y =
+                    event.values[1]
 
-            val delta =
-                currentAcceleration -
-                        lastAcceleration
+                val z =
+                    event.values[2]
 
-            shakeAcceleration =
-                shakeAcceleration * 0.8f + delta
+                lastAcceleration =
+                    currentAcceleration
 
-            // ACCIDENT DETECTION
+                currentAcceleration =
+                    sqrt(
+                        (
+                                x * x +
+                                        y * y +
+                                        z * z
+                                ).toDouble()
+                    ).toFloat()
+
+                val delta =
+                    currentAcceleration -
+                            lastAcceleration
+
+                shakeAcceleration =
+                    shakeAcceleration *
+                            0.8f +
+                            delta
+
+                if (
+                    shakeAcceleration > 28
+                ) {
+
+                    highImpact =
+                        true
+
+                    Handler(
+                        Looper.getMainLooper()
+                    ).postDelayed({
+
+                        highImpact =
+                            false
+
+                    }, 1000)
+                }
+            }
+
+            // GYROSCOPE
+
+            Sensor.TYPE_GYROSCOPE -> {
+
+                val rotX =
+                    event.values[0]
+
+                val rotY =
+                    event.values[1]
+
+                val rotZ =
+                    event.values[2]
+
+                val rotation =
+
+                    abs(rotX) +
+                            abs(rotY) +
+                            abs(rotZ)
+
+                if (
+                    rotation > 22f
+                ) {
+
+                    highRotation =
+                        true
+
+                    Handler(
+                        Looper.getMainLooper()
+                    ).postDelayed({
+
+                        highRotation =
+                            false
+
+                    }, 1000)
+                }
+            }
+        }
+
+        // SENSOR FUSION
+
+        if (
+            highImpact &&
+            highRotation &&
+            !emergencyActive
+        ) {
+
+            emergencyActive =
+                true
+
+            triggerEmergencyAlert()
+
+            showEmergencyNotification()
 
             if (
-                shakeAcceleration > 12 &&
-                !emergencyActive
+                MainActivity.isAppOpen
             ) {
 
-                emergencyActive = true
-
-                // START ALERTS
-
-                triggerEmergencyAlert()
-
-                // SHOW EMERGENCY NOTIFICATION
-
-                // ALWAYS SHOW NOTIFICATION
-
-                showEmergencyNotification()
-
-// IF APP OPEN → SHOW POPUP DIRECTLY
-
-                if (MainActivity.isAppOpen) {
-
-                    val intent =
-                        Intent(
-                            this,
-                            EmergencyAlertActivity::class.java
-                        )
-
-                    intent.addFlags(
-                        Intent.FLAG_ACTIVITY_NEW_TASK
+                val intent =
+                    Intent(
+                        this,
+                        EmergencyAlertActivity::class.java
                     )
 
-                    intent.addFlags(
-                        Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    )
+                intent.addFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK
+                )
 
-                    intent.addFlags(
-                        Intent.FLAG_ACTIVITY_CLEAR_TOP
-                    )
+                intent.addFlags(
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP
+                )
 
-                    startActivity(intent)
-                }
+                intent.addFlags(
+                    Intent.FLAG_ACTIVITY_CLEAR_TOP
+                )
+
+                startActivity(intent)
             }
         }
     }
@@ -241,11 +333,9 @@ class CrashDetectionService :
 
     }
 
-    // VIBRATION + ALARM
+    // ALERT
 
     private fun triggerEmergencyAlert() {
-
-        // VIBRATION
 
         val vibrator =
             getSystemService(
@@ -272,11 +362,7 @@ class CrashDetectionService :
             )
         }
 
-        // STOP OLD ALARM
-
         stopAlarm()
-
-        // START NEW ALARM
 
         try {
 
@@ -286,17 +372,17 @@ class CrashDetectionService :
                     android.provider.Settings.System.DEFAULT_NOTIFICATION_URI
                 )
 
-            mediaPlayerInstance?.isLooping = true
+            mediaPlayerInstance
+                ?.isLooping = true
 
-            mediaPlayerInstance?.start()
+            mediaPlayerInstance
+                ?.start()
 
         } catch (e: Exception) {
 
             e.printStackTrace()
         }
     }
-
-    // FOREGROUND SERVICE NOTIFICATION
 
     private fun createForegroundNotification():
             Notification {
@@ -305,29 +391,21 @@ class CrashDetectionService :
             this,
             "crash_detection_channel"
         )
-
             .setSmallIcon(
                 android.R.drawable.stat_notify_sync
             )
-
             .setContentTitle(
                 "RoadSOS Protection Active"
             )
-
             .setContentText(
                 "Crash detection running"
             )
-
             .setPriority(
                 NotificationCompat.PRIORITY_LOW
             )
-
             .setOngoing(true)
-
             .build()
     }
-
-    // EMERGENCY NOTIFICATION
 
     private fun showEmergencyNotification() {
 
@@ -341,22 +419,12 @@ class CrashDetectionService :
             Intent.FLAG_ACTIVITY_NEW_TASK
         )
 
-        intent.addFlags(
-            Intent.FLAG_ACTIVITY_SINGLE_TOP
-        )
-
-        intent.addFlags(
-            Intent.FLAG_ACTIVITY_CLEAR_TOP
-        )
-
         val pendingIntent =
 
             PendingIntent.getActivity(
 
                 this,
-
                 200,
-
                 intent,
 
                 PendingIntent.FLAG_UPDATE_CURRENT or
@@ -409,8 +477,6 @@ class CrashDetectionService :
         )
     }
 
-    // NOTIFICATION CHANNEL
-
     private fun createNotificationChannel() {
 
         if (
@@ -422,8 +488,7 @@ class CrashDetectionService :
                 NotificationChannel(
                     "crash_detection_channel",
                     "Crash Detection",
-                    NotificationManager.IMPORTANCE_MAX
-                )
+                    NotificationManager.IMPORTANCE_HIGH                )
 
             channel.description =
                 "RoadSOS background crash detection"
