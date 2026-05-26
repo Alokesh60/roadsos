@@ -1,0 +1,8 @@
+nh_number,segment_name,helpline,state,lat_start,lng_start,lat_end,lng_end
+NH-27,Guwahati to Dhubri,1033,Assam,26.1445,91.7362,26.0167,89.9833
+NH-27,Dhubri to West Bengal Border,1033,Assam,26.0167,89.9833,26.0100,89.7500
+NH-17,Guwahati to Shillong,1033,Assam,26.1445,91.7362,25.5788,91.8933
+NH-37,Numaligarh to Jorhat,1033,Assam,26.6600,93.6800,26.7509,94.2037
+NH-37,Jorhat to Dibrugarh,1033,Assam,26.7509,94.2037,27.4728,94.9120
+NH-715,Barpeta Road to Bongaigaon,1033,Assam,26.4977,91.0123,26.4781,90.5582
+NH-127B,Tezpur to Arunachal Border,1033,Assam,26.6338,92.7924,27.1000,93.6000

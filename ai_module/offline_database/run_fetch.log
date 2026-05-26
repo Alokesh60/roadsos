@@ -1,0 +1,569 @@
+[2026-05-26 11:01:53] =======================================================
+[2026-05-26 11:01:53] RoadSOS fetch wrapper started
+[2026-05-26 11:01:53] Total regions: 19
+[2026-05-26 11:01:53] Log file: C:\Users\USER\roadsos\ai_module\offline_database\run_fetch.log
+[2026-05-26 11:01:53] =======================================================
+[2026-05-26 11:01:53] 
+Attempt 1/20 — 0/19 regions done, 19 remaining: ['India_North', 'India_Northeast', 'India_South', 'India_East', 'Asia_Central', 'Asia_Southeast', 'Asia_East', 'Asia_Middle_East', 'Europe_West', 'Europe_East', 'North_America_US', 'North_America_CA', 'North_America_MX', 'Central_America', 'South_America_N', 'South_America_S', 'Africa_North', 'Africa_Sub', 'Australia_NZ']
+[2026-05-26 11:01:53] Running: C:\Users\USER\roadsos\ai_module\venv\Scripts\python.exe C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py --resume
+[2026-05-26 11:15:01] =======================================================
+[2026-05-26 11:15:01] RoadSOS fetch wrapper started
+[2026-05-26 11:15:01] Total regions: 42 (small bboxes — safe for Overpass)
+[2026-05-26 11:15:01] Log file: C:\Users\USER\roadsos\ai_module\offline_database\run_fetch.log
+[2026-05-26 11:15:01] =======================================================
+[2026-05-26 11:15:01] 
+Attempt 1/20 — 0/42 regions done, 42 remaining: ['India_NW', 'India_NC', 'India_NE_Plains', 'India_Northeast', 'India_West', 'India_Central', 'India_East', 'India_South', 'Asia_Pakistan', 'Asia_Bangladesh_Myanmar', 'Asia_Central', 'Asia_Central_E', 'Asia_Southeast_W', 'Asia_Southeast_E', 'Asia_East_China', 'Asia_East_Japan', 'Asia_Middle_East_W', 'Asia_Middle_East_E', 'Europe_NW', 'Europe_SW', 'Europe_NE', 'Europe_SE', 'Europe_East', 'NA_US_West', 'NA_US_Central', 'NA_US_East', 'NA_Canada_W', 'NA_Canada_E', 'NA_Mexico', 'Central_America', 'SA_North', 'SA_Central', 'SA_South', 'Africa_NW', 'Africa_NE', 'Africa_West', 'Africa_Central', 'Africa_East', 'Africa_South', 'Australia_W', 'Australia_E', 'NZ_Pacific']
+[2026-05-26 11:15:01] Running: C:\Users\USER\roadsos\ai_module\venv\Scripts\python.exe C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py --resume
+[2026-05-26 11:15:01] Progress is being written to this log file. To watch live:
+[2026-05-26 11:15:01]   Windows PowerShell : Get-Content run_fetch.log -Wait
+[2026-05-26 11:15:01]   Mac / Linux        : tail -f run_fetch.log
+============================================================
+  RoadSOS Global Data Fetcher v2.0
+  (Nominatim-free � offline geocoding only)
+============================================================
+
+Regions to fetch : 42
+Workers          : 1 (sequential � safe for Overpass free tier)
+Resume mode      : True
+Output           : C:\Users\USER\roadsos\ai_module\offline_database\data\service_points.csv
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 614, in main
+    rows = future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 464, in fetch_region
+    print(f"\n{'\u2500' * 55}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 2-56: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 641, in <module>
+    main()
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 619, in main
+    print(f"\n\u2717 {region_name} FAILED: {e}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2717' in position 2: character maps to <undefined>
+[2026-05-26 11:15:09] No progress this run (exit code 1). Overpass may be overloaded.
+[2026-05-26 11:15:09] Waiting 5 minutes before retry...
+[2026-05-26 11:20:09] 
+Attempt 2/20 — 0/42 regions done, 42 remaining: ['India_NW', 'India_NC', 'India_NE_Plains', 'India_Northeast', 'India_West', 'India_Central', 'India_East', 'India_South', 'Asia_Pakistan', 'Asia_Bangladesh_Myanmar', 'Asia_Central', 'Asia_Central_E', 'Asia_Southeast_W', 'Asia_Southeast_E', 'Asia_East_China', 'Asia_East_Japan', 'Asia_Middle_East_W', 'Asia_Middle_East_E', 'Europe_NW', 'Europe_SW', 'Europe_NE', 'Europe_SE', 'Europe_East', 'NA_US_West', 'NA_US_Central', 'NA_US_East', 'NA_Canada_W', 'NA_Canada_E', 'NA_Mexico', 'Central_America', 'SA_North', 'SA_Central', 'SA_South', 'Africa_NW', 'Africa_NE', 'Africa_West', 'Africa_Central', 'Africa_East', 'Africa_South', 'Australia_W', 'Australia_E', 'NZ_Pacific']
+[2026-05-26 11:20:09] Running: C:\Users\USER\roadsos\ai_module\venv\Scripts\python.exe C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py --resume
+[2026-05-26 11:20:09] Progress is being written to this log file. To watch live:
+[2026-05-26 11:20:09]   Windows PowerShell : Get-Content run_fetch.log -Wait
+[2026-05-26 11:20:09]   Mac / Linux        : tail -f run_fetch.log
+============================================================
+  RoadSOS Global Data Fetcher v2.0
+  (Nominatim-free � offline geocoding only)
+============================================================
+
+Regions to fetch : 42
+Workers          : 1 (sequential � safe for Overpass free tier)
+Resume mode      : True
+Output           : C:\Users\USER\roadsos\ai_module\offline_database\data\service_points.csv
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 614, in main
+    rows = future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 464, in fetch_region
+    print(f"\n{'\u2500' * 55}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 2-56: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 641, in <module>
+    main()
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 619, in main
+    print(f"\n\u2717 {region_name} FAILED: {e}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2717' in position 2: character maps to <undefined>
+[2026-05-26 11:20:18] No progress this run (exit code 1). Overpass may be overloaded.
+[2026-05-26 11:20:18] Waiting 5 minutes before retry...
+[2026-05-26 11:25:18] 
+Attempt 3/20 — 0/42 regions done, 42 remaining: ['India_NW', 'India_NC', 'India_NE_Plains', 'India_Northeast', 'India_West', 'India_Central', 'India_East', 'India_South', 'Asia_Pakistan', 'Asia_Bangladesh_Myanmar', 'Asia_Central', 'Asia_Central_E', 'Asia_Southeast_W', 'Asia_Southeast_E', 'Asia_East_China', 'Asia_East_Japan', 'Asia_Middle_East_W', 'Asia_Middle_East_E', 'Europe_NW', 'Europe_SW', 'Europe_NE', 'Europe_SE', 'Europe_East', 'NA_US_West', 'NA_US_Central', 'NA_US_East', 'NA_Canada_W', 'NA_Canada_E', 'NA_Mexico', 'Central_America', 'SA_North', 'SA_Central', 'SA_South', 'Africa_NW', 'Africa_NE', 'Africa_West', 'Africa_Central', 'Africa_East', 'Africa_South', 'Australia_W', 'Australia_E', 'NZ_Pacific']
+[2026-05-26 11:25:18] Running: C:\Users\USER\roadsos\ai_module\venv\Scripts\python.exe C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py --resume
+[2026-05-26 11:25:18] Progress is being written to this log file. To watch live:
+[2026-05-26 11:25:18]   Windows PowerShell : Get-Content run_fetch.log -Wait
+[2026-05-26 11:25:18]   Mac / Linux        : tail -f run_fetch.log
+============================================================
+  RoadSOS Global Data Fetcher v2.0
+  (Nominatim-free � offline geocoding only)
+============================================================
+
+Regions to fetch : 42
+Workers          : 1 (sequential � safe for Overpass free tier)
+Resume mode      : True
+Output           : C:\Users\USER\roadsos\ai_module\offline_database\data\service_points.csv
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 614, in main
+    rows = future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 464, in fetch_region
+    print(f"\n{'\u2500' * 55}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 2-56: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 641, in <module>
+    main()
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 619, in main
+    print(f"\n\u2717 {region_name} FAILED: {e}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2717' in position 2: character maps to <undefined>
+[2026-05-26 11:25:21] No progress this run (exit code 1). Overpass may be overloaded.
+[2026-05-26 11:25:21] Waiting 5 minutes before retry...
+[2026-05-26 11:30:21] 
+Attempt 4/20 — 0/42 regions done, 42 remaining: ['India_NW', 'India_NC', 'India_NE_Plains', 'India_Northeast', 'India_West', 'India_Central', 'India_East', 'India_South', 'Asia_Pakistan', 'Asia_Bangladesh_Myanmar', 'Asia_Central', 'Asia_Central_E', 'Asia_Southeast_W', 'Asia_Southeast_E', 'Asia_East_China', 'Asia_East_Japan', 'Asia_Middle_East_W', 'Asia_Middle_East_E', 'Europe_NW', 'Europe_SW', 'Europe_NE', 'Europe_SE', 'Europe_East', 'NA_US_West', 'NA_US_Central', 'NA_US_East', 'NA_Canada_W', 'NA_Canada_E', 'NA_Mexico', 'Central_America', 'SA_North', 'SA_Central', 'SA_South', 'Africa_NW', 'Africa_NE', 'Africa_West', 'Africa_Central', 'Africa_East', 'Africa_South', 'Australia_W', 'Australia_E', 'NZ_Pacific']
+[2026-05-26 11:30:21] Running: C:\Users\USER\roadsos\ai_module\venv\Scripts\python.exe C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py --resume
+[2026-05-26 11:30:21] Progress is being written to this log file. To watch live:
+[2026-05-26 11:30:21]   Windows PowerShell : Get-Content run_fetch.log -Wait
+[2026-05-26 11:30:21]   Mac / Linux        : tail -f run_fetch.log
+============================================================
+  RoadSOS Global Data Fetcher v2.0
+  (Nominatim-free � offline geocoding only)
+============================================================
+
+Regions to fetch : 42
+Workers          : 1 (sequential � safe for Overpass free tier)
+Resume mode      : True
+Output           : C:\Users\USER\roadsos\ai_module\offline_database\data\service_points.csv
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 614, in main
+    rows = future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 464, in fetch_region
+    print(f"\n{'\u2500' * 55}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 2-56: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 641, in <module>
+    main()
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 619, in main
+    print(f"\n\u2717 {region_name} FAILED: {e}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2717' in position 2: character maps to <undefined>
+[2026-05-26 11:30:28] No progress this run (exit code 1). Overpass may be overloaded.
+[2026-05-26 11:30:28] Waiting 5 minutes before retry...
+[2026-05-26 11:35:28] 
+Attempt 5/20 — 0/42 regions done, 42 remaining: ['India_NW', 'India_NC', 'India_NE_Plains', 'India_Northeast', 'India_West', 'India_Central', 'India_East', 'India_South', 'Asia_Pakistan', 'Asia_Bangladesh_Myanmar', 'Asia_Central', 'Asia_Central_E', 'Asia_Southeast_W', 'Asia_Southeast_E', 'Asia_East_China', 'Asia_East_Japan', 'Asia_Middle_East_W', 'Asia_Middle_East_E', 'Europe_NW', 'Europe_SW', 'Europe_NE', 'Europe_SE', 'Europe_East', 'NA_US_West', 'NA_US_Central', 'NA_US_East', 'NA_Canada_W', 'NA_Canada_E', 'NA_Mexico', 'Central_America', 'SA_North', 'SA_Central', 'SA_South', 'Africa_NW', 'Africa_NE', 'Africa_West', 'Africa_Central', 'Africa_East', 'Africa_South', 'Australia_W', 'Australia_E', 'NZ_Pacific']
+[2026-05-26 11:35:28] Running: C:\Users\USER\roadsos\ai_module\venv\Scripts\python.exe C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py --resume
+[2026-05-26 11:35:28] Progress is being written to this log file. To watch live:
+[2026-05-26 11:35:28]   Windows PowerShell : Get-Content run_fetch.log -Wait
+[2026-05-26 11:35:28]   Mac / Linux        : tail -f run_fetch.log
+============================================================
+  RoadSOS Global Data Fetcher v2.0
+  (Nominatim-free � offline geocoding only)
+============================================================
+
+Regions to fetch : 42
+Workers          : 1 (sequential � safe for Overpass free tier)
+Resume mode      : True
+Output           : C:\Users\USER\roadsos\ai_module\offline_database\data\service_points.csv
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 614, in main
+    rows = future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 464, in fetch_region
+    print(f"\n{'\u2500' * 55}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 2-56: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 641, in <module>
+    main()
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 619, in main
+    print(f"\n\u2717 {region_name} FAILED: {e}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2717' in position 2: character maps to <undefined>
+[2026-05-26 11:35:31] No progress this run (exit code 1). Overpass may be overloaded.
+[2026-05-26 11:35:31] Waiting 5 minutes before retry...
+[2026-05-26 11:40:31] 
+Attempt 6/20 — 0/42 regions done, 42 remaining: ['India_NW', 'India_NC', 'India_NE_Plains', 'India_Northeast', 'India_West', 'India_Central', 'India_East', 'India_South', 'Asia_Pakistan', 'Asia_Bangladesh_Myanmar', 'Asia_Central', 'Asia_Central_E', 'Asia_Southeast_W', 'Asia_Southeast_E', 'Asia_East_China', 'Asia_East_Japan', 'Asia_Middle_East_W', 'Asia_Middle_East_E', 'Europe_NW', 'Europe_SW', 'Europe_NE', 'Europe_SE', 'Europe_East', 'NA_US_West', 'NA_US_Central', 'NA_US_East', 'NA_Canada_W', 'NA_Canada_E', 'NA_Mexico', 'Central_America', 'SA_North', 'SA_Central', 'SA_South', 'Africa_NW', 'Africa_NE', 'Africa_West', 'Africa_Central', 'Africa_East', 'Africa_South', 'Australia_W', 'Australia_E', 'NZ_Pacific']
+[2026-05-26 11:40:31] Running: C:\Users\USER\roadsos\ai_module\venv\Scripts\python.exe C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py --resume
+[2026-05-26 11:40:31] Progress is being written to this log file. To watch live:
+[2026-05-26 11:40:31]   Windows PowerShell : Get-Content run_fetch.log -Wait
+[2026-05-26 11:40:31]   Mac / Linux        : tail -f run_fetch.log
+============================================================
+  RoadSOS Global Data Fetcher v2.0
+  (Nominatim-free � offline geocoding only)
+============================================================
+
+Regions to fetch : 42
+Workers          : 1 (sequential � safe for Overpass free tier)
+Resume mode      : True
+Output           : C:\Users\USER\roadsos\ai_module\offline_database\data\service_points.csv
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 614, in main
+    rows = future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 464, in fetch_region
+    print(f"\n{'\u2500' * 55}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 2-56: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 641, in <module>
+    main()
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 619, in main
+    print(f"\n\u2717 {region_name} FAILED: {e}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2717' in position 2: character maps to <undefined>
+[2026-05-26 11:40:34] No progress this run (exit code 1). Overpass may be overloaded.
+[2026-05-26 11:40:34] Waiting 5 minutes before retry...
+[2026-05-26 11:45:34] 
+Attempt 7/20 — 0/42 regions done, 42 remaining: ['India_NW', 'India_NC', 'India_NE_Plains', 'India_Northeast', 'India_West', 'India_Central', 'India_East', 'India_South', 'Asia_Pakistan', 'Asia_Bangladesh_Myanmar', 'Asia_Central', 'Asia_Central_E', 'Asia_Southeast_W', 'Asia_Southeast_E', 'Asia_East_China', 'Asia_East_Japan', 'Asia_Middle_East_W', 'Asia_Middle_East_E', 'Europe_NW', 'Europe_SW', 'Europe_NE', 'Europe_SE', 'Europe_East', 'NA_US_West', 'NA_US_Central', 'NA_US_East', 'NA_Canada_W', 'NA_Canada_E', 'NA_Mexico', 'Central_America', 'SA_North', 'SA_Central', 'SA_South', 'Africa_NW', 'Africa_NE', 'Africa_West', 'Africa_Central', 'Africa_East', 'Africa_South', 'Australia_W', 'Australia_E', 'NZ_Pacific']
+[2026-05-26 11:45:34] Running: C:\Users\USER\roadsos\ai_module\venv\Scripts\python.exe C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py --resume
+[2026-05-26 11:45:34] Progress is being written to this log file. To watch live:
+[2026-05-26 11:45:34]   Windows PowerShell : Get-Content run_fetch.log -Wait
+[2026-05-26 11:45:34]   Mac / Linux        : tail -f run_fetch.log
+============================================================
+  RoadSOS Global Data Fetcher v2.0
+  (Nominatim-free � offline geocoding only)
+============================================================
+
+Regions to fetch : 42
+Workers          : 1 (sequential � safe for Overpass free tier)
+Resume mode      : True
+Output           : C:\Users\USER\roadsos\ai_module\offline_database\data\service_points.csv
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 614, in main
+    rows = future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 464, in fetch_region
+    print(f"\n{'\u2500' * 55}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 2-56: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 641, in <module>
+    main()
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 619, in main
+    print(f"\n\u2717 {region_name} FAILED: {e}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2717' in position 2: character maps to <undefined>
+[2026-05-26 11:45:42] No progress this run (exit code 1). Overpass may be overloaded.
+[2026-05-26 11:45:42] Waiting 5 minutes before retry...
+[2026-05-26 11:50:42] 
+Attempt 8/20 — 0/42 regions done, 42 remaining: ['India_NW', 'India_NC', 'India_NE_Plains', 'India_Northeast', 'India_West', 'India_Central', 'India_East', 'India_South', 'Asia_Pakistan', 'Asia_Bangladesh_Myanmar', 'Asia_Central', 'Asia_Central_E', 'Asia_Southeast_W', 'Asia_Southeast_E', 'Asia_East_China', 'Asia_East_Japan', 'Asia_Middle_East_W', 'Asia_Middle_East_E', 'Europe_NW', 'Europe_SW', 'Europe_NE', 'Europe_SE', 'Europe_East', 'NA_US_West', 'NA_US_Central', 'NA_US_East', 'NA_Canada_W', 'NA_Canada_E', 'NA_Mexico', 'Central_America', 'SA_North', 'SA_Central', 'SA_South', 'Africa_NW', 'Africa_NE', 'Africa_West', 'Africa_Central', 'Africa_East', 'Africa_South', 'Australia_W', 'Australia_E', 'NZ_Pacific']
+[2026-05-26 11:50:42] Running: C:\Users\USER\roadsos\ai_module\venv\Scripts\python.exe C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py --resume
+[2026-05-26 11:50:42] Progress is being written to this log file. To watch live:
+[2026-05-26 11:50:42]   Windows PowerShell : Get-Content run_fetch.log -Wait
+[2026-05-26 11:50:42]   Mac / Linux        : tail -f run_fetch.log
+============================================================
+  RoadSOS Global Data Fetcher v2.0
+  (Nominatim-free � offline geocoding only)
+============================================================
+
+Regions to fetch : 42
+Workers          : 1 (sequential � safe for Overpass free tier)
+Resume mode      : True
+Output           : C:\Users\USER\roadsos\ai_module\offline_database\data\service_points.csv
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 614, in main
+    rows = future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 449, in result
+    return self.__get_result()
+           ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\_base.py", line 401, in __get_result
+    raise self._exception
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\concurrent\futures\thread.py", line 58, in run
+    result = self.fn(*self.args, **self.kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 464, in fetch_region
+    print(f"\n{'\u2500' * 55}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode characters in position 2-56: character maps to <undefined>
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 641, in <module>
+    main()
+  File "C:\Users\USER\roadsos\ai_module\offline_database\fetch_global_data.py", line 619, in main
+    print(f"\n\u2717 {region_name} FAILED: {e}")
+  File "C:\Users\USER\AppData\Local\Programs\Python\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2717' in position 2: character maps to <undefined>
+[2026-05-26 11:50:46] No progress this run (exit code 1). Overpass may be overloaded.
+[2026-05-26 11:50:46] Waiting 5 minutes before retry...
+[2026-05-26 13:22:05] =======================================================
+[2026-05-26 13:22:06] RoadSOS fetch wrapper started
+[2026-05-26 13:22:06] Mode: single region — India_Northeast
+[2026-05-26 13:22:06] Log file: D:\roadsos\ai_module\offline_database\run_fetch.log
+[2026-05-26 13:22:06] =======================================================
+[2026-05-26 13:22:06] 
+Attempt 1/20 — 0/1 regions done, 1 remaining: ['India_Northeast']
+[2026-05-26 13:22:06] Running: D:\roadsos\ai_module\offline_database\venv\Scripts\python.exe D:\roadsos\ai_module\offline_database\fetch_global_data.py --resume --region India_Northeast
+Traceback (most recent call last):
+[2026-05-26 13:39:35] =======================================================
+[2026-05-26 13:39:35] RoadSOS fetch wrapper started
+[2026-05-26 13:39:35] Mode: single region — India_Northeast
+[2026-05-26 13:39:35] Log file: D:\roadsos\ai_module\offline_database\run_fetch.log
+[2026-05-26 13:39:35] =======================================================
+[2026-05-26 13:39:35] 
+Attempt 1/20 — 0/1 regions done, 1 remaining: ['India_Northeast']
+[2026-05-26 13:39:35] Running: D:\roadsos\ai_module\offline_database\venv\Scripts\python.exe D:\roadsos\ai_module\offline_database\fetch_global_data.py --resume --region India_Northeast
+[2026-05-26 13:44:12] =======================================================
+[2026-05-26 13:44:12] RoadSOS fetch wrapper started
+[2026-05-26 13:44:12] Mode: single region — India_Northeast
+[2026-05-26 13:44:12] Log file: D:\roadsos\ai_module\offline_database\run_fetch.log
+[2026-05-26 13:44:12] =======================================================
+[2026-05-26 13:44:12] 
+Attempt 1/20 — 0/1 regions done, 1 remaining: ['India_Northeast']
+[2026-05-26 13:44:12] Running: D:\roadsos\ai_module\offline_database\venv\Scripts\python.exe D:\roadsos\ai_module\offline_database\fetch_global_data.py --resume --region India_Northeast
+Traceback (most recent call last):
+[2026-05-26 14:18:18] =======================================================
+[2026-05-26 14:18:18] RoadSOS fetch wrapper started (in-process, KD-tree shared)
+[2026-05-26 14:18:18] Mode: single region — India_Northeast
+[2026-05-26 14:18:18] Workers: 3   Retry wait: 120s   Max retries: 20
+[2026-05-26 14:18:18] Log file: D:\roadsos\ai_module\offline_database\run_fetch.log
+[2026-05-26 14:18:18] =======================================================
+[2026-05-26 14:18:18] 
+Attempt 1/20 — 0/1 done, 1 remaining: ['India_Northeast']
+[2026-05-26 14:20:07] OK  India_Northeast: 11,900 rows  (running total: 11,900)
+[2026-05-26 14:20:07] All regions complete after this attempt!
+[2026-05-26 14:20:07] 
+All regions fetched. Running global deduplication...
+[2026-05-26 14:20:08] 
+SUCCESS — D:\roadsos\ai_module\offline_database\data\service_points.csv  (1.8 MB, 11,900 rows)
+[2026-05-26 14:20:08] 
+Next step: python build_db.py
+[2026-05-26 15:02:34] =======================================================
+[2026-05-26 15:02:34] RoadSOS fetch wrapper started (in-process, KD-tree shared)
+[2026-05-26 15:02:34] Mode: single region — India_Northeast
+[2026-05-26 15:02:34] Workers: 3   Retry wait: 120s   Max retries: 20
+[2026-05-26 15:02:34] Log file: D:\roadsos\ai_module\offline_database\run_fetch.log
+[2026-05-26 15:02:34] =======================================================
+[2026-05-26 15:02:34] Found 1 existing progress file(s).
+[2026-05-26 15:04:42] Progress cleared. Starting fresh.
+[2026-05-26 15:04:43] 
+Attempt 1/20 — 0/1 done, 1 remaining: ['India_Northeast']
+[2026-05-26 15:06:01] OK  India_Northeast: 15,152 rows  (running total: 15,152)
+[2026-05-26 15:06:01] All regions complete after this attempt!
+[2026-05-26 15:06:01] 
+All regions fetched. Running global deduplication...
+[2026-05-26 15:06:01] 
+SUCCESS — D:\roadsos\ai_module\offline_database\data\service_points.csv  (2.2 MB, 15,152 rows)
+[2026-05-26 15:06:01] 
+Next step: python build_db.py
+[2026-05-26 15:07:48] =======================================================
+[2026-05-26 15:07:48] RoadSOS fetch wrapper started (in-process, KD-tree shared)
+[2026-05-26 15:07:48] Mode: single region — India_NW
+[2026-05-26 15:07:48] Workers: 3   Retry wait: 120s   Max retries: 20
+[2026-05-26 15:07:48] Log file: D:\roadsos\ai_module\offline_database\run_fetch.log
+[2026-05-26 15:07:48] =======================================================
+[2026-05-26 15:07:48] 
+Attempt 1/20 — 0/1 done, 1 remaining: ['India_NW']
+[2026-05-26 15:08:35] OK  India_NW: 13,325 rows  (running total: 13,325)
+[2026-05-26 15:08:36] All regions complete after this attempt!
+[2026-05-26 15:08:36] 
+All regions fetched. Running global deduplication...
+[2026-05-26 15:08:36] 
+SUCCESS — D:\roadsos\ai_module\offline_database\data\service_points.csv  (1.8 MB, 13,325 rows)
+[2026-05-26 15:08:37] 
+Next step: python build_db.py
+[2026-05-26 15:11:21] =======================================================
+[2026-05-26 15:11:21] RoadSOS fetch wrapper started (in-process, KD-tree shared)
+[2026-05-26 15:11:21] Mode: single region — India_NC
+[2026-05-26 15:11:21] Workers: 3   Retry wait: 120s   Max retries: 20
+[2026-05-26 15:11:21] Log file: D:\roadsos\ai_module\offline_database\run_fetch.log
+[2026-05-26 15:11:21] =======================================================
+[2026-05-26 15:11:21] 
+Attempt 1/20 — 0/1 done, 1 remaining: ['India_NC']
+[2026-05-26 15:12:13] OK  India_NC: 20,477 rows  (running total: 20,477)
+[2026-05-26 15:12:13] All regions complete after this attempt!
+[2026-05-26 15:12:13] 
+All regions fetched. Running global deduplication...
+[2026-05-26 15:12:14] 
+SUCCESS — D:\roadsos\ai_module\offline_database\data\service_points.csv  (3.1 MB, 20,477 rows)
+[2026-05-26 15:12:14] 
+Next step: python build_db.py
+[2026-05-26 15:14:08] =======================================================
+[2026-05-26 15:14:08] RoadSOS fetch wrapper started (in-process, KD-tree shared)
+[2026-05-26 15:14:08] Mode: single region — India_NE_Plains
+[2026-05-26 15:14:08] Workers: 3   Retry wait: 120s   Max retries: 20
+[2026-05-26 15:14:08] Log file: D:\roadsos\ai_module\offline_database\run_fetch.log
+[2026-05-26 15:14:08] =======================================================
+[2026-05-26 15:14:08] 
+Attempt 1/20 — 0/1 done, 1 remaining: ['India_NE_Plains']
+[2026-05-26 15:14:36] OK  India_NE_Plains: 11,393 rows  (running total: 11,393)
+[2026-05-26 15:14:36] All regions complete after this attempt!
+[2026-05-26 15:14:36] 
+All regions fetched. Running global deduplication...
+[2026-05-26 15:14:37] 
+SUCCESS — D:\roadsos\ai_module\offline_database\data\service_points.csv  (1.6 MB, 11,393 rows)
+[2026-05-26 15:14:37] 
+Next step: python build_db.py
+[2026-05-26 15:17:42] =======================================================
+[2026-05-26 15:17:42] RoadSOS fetch wrapper started (in-process, KD-tree shared)
+[2026-05-26 15:17:42] Mode: single region — India_South
+[2026-05-26 15:17:42] Workers: 3   Retry wait: 120s   Max retries: 20
+[2026-05-26 15:17:42] Log file: D:\roadsos\ai_module\offline_database\run_fetch.log
+[2026-05-26 15:17:42] =======================================================
+[2026-05-26 15:17:42] 
+Attempt 1/20 — 0/1 done, 1 remaining: ['India_South']
+[2026-05-26 15:18:55] OK  India_South: 50,229 rows  (running total: 50,229)
+[2026-05-26 15:18:56] All regions complete after this attempt!
+[2026-05-26 15:18:56] 
+All regions fetched. Running global deduplication...
+[2026-05-26 15:18:57] 
+SUCCESS — D:\roadsos\ai_module\offline_database\data\service_points.csv  (7.3 MB, 50,229 rows)
+[2026-05-26 15:18:57] 
+Next step: python build_db.py
+[2026-05-26 15:19:42] =======================================================
+[2026-05-26 15:19:42] RoadSOS fetch wrapper started (in-process, KD-tree shared)
+[2026-05-26 15:19:42] Mode: single region — India_West
+[2026-05-26 15:19:42] Workers: 3   Retry wait: 120s   Max retries: 20
+[2026-05-26 15:19:42] Log file: D:\roadsos\ai_module\offline_database\run_fetch.log
+[2026-05-26 15:19:42] =======================================================
+[2026-05-26 15:19:42] 
+Attempt 1/20 — 0/1 done, 1 remaining: ['India_West']
+[2026-05-26 15:20:16] OK  India_West: 24,039 rows  (running total: 24,039)
+[2026-05-26 15:20:16] All regions complete after this attempt!
+[2026-05-26 15:20:16] 
+All regions fetched. Running global deduplication...
+[2026-05-26 15:20:17] 
+SUCCESS — D:\roadsos\ai_module\offline_database\data\service_points.csv  (3.9 MB, 24,039 rows)
+[2026-05-26 15:20:17] 
+Next step: python build_db.py
+[2026-05-26 15:22:36] =======================================================
+[2026-05-26 15:22:36] RoadSOS fetch wrapper started (in-process, KD-tree shared)
+[2026-05-26 15:22:36] Mode: single region — India_Central
+[2026-05-26 15:22:36] Workers: 3   Retry wait: 120s   Max retries: 20
+[2026-05-26 15:22:36] Log file: D:\roadsos\ai_module\offline_database\run_fetch.log
+[2026-05-26 15:22:36] =======================================================
+[2026-05-26 15:22:36] 
+Attempt 1/20 — 0/1 done, 1 remaining: ['India_Central']
+[2026-05-26 15:23:20] OK  India_Central: 22,530 rows  (running total: 22,530)
+[2026-05-26 15:23:20] All regions complete after this attempt!
+[2026-05-26 15:23:20] 
+All regions fetched. Running global deduplication...
+[2026-05-26 15:23:21] 
+SUCCESS — D:\roadsos\ai_module\offline_database\data\service_points.csv  (3.5 MB, 22,530 rows)
+[2026-05-26 15:23:21] 
+Next step: python build_db.py
+[2026-05-26 15:23:48] =======================================================
+[2026-05-26 15:23:48] RoadSOS fetch wrapper started (in-process, KD-tree shared)
+[2026-05-26 15:23:48] Mode: single region — India_East
+[2026-05-26 15:23:48] Workers: 3   Retry wait: 120s   Max retries: 20
+[2026-05-26 15:23:48] Log file: D:\roadsos\ai_module\offline_database\run_fetch.log
+[2026-05-26 15:23:48] =======================================================
+[2026-05-26 15:23:48] 
+Attempt 1/20 — 0/1 done, 1 remaining: ['India_East']
+[2026-05-26 15:24:40] OK  India_East: 12,456 rows  (running total: 12,456)
+[2026-05-26 15:24:40] All regions complete after this attempt!
+[2026-05-26 15:24:40] 
+All regions fetched. Running global deduplication...
+[2026-05-26 15:24:41] 
+SUCCESS — D:\roadsos\ai_module\offline_database\data\service_points.csv  (1.8 MB, 12,456 rows)
+[2026-05-26 15:24:41] 
+Next step: python build_db.py

@@ -1,5 +1,6 @@
 package com.example.roadsos
 
+import android.app.NotificationManager
 import android.os.Build
 import android.os.Bundle
 import android.view.WindowManager
@@ -33,20 +34,20 @@ class EmergencyAlertActivity :
 
         super.onCreate(savedInstanceState)
 
-        // SHOW OVER LOCKSCREEN
+        // LOCKSCREEN
 
         window.addFlags(
 
             WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON or
-
                     WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON or
-
                     WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
-
                     WindowManager.LayoutParams.FLAG_DISMISS_KEYGUARD
         )
 
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+        if (
+            Build.VERSION.SDK_INT >=
+            Build.VERSION_CODES.O_MR1
+        ) {
 
             setShowWhenLocked(true)
 
@@ -58,9 +59,13 @@ class EmergencyAlertActivity :
             RoadSoSTheme {
 
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier =
+                        Modifier.fillMaxSize(),
+
                     color =
-                        MaterialTheme.colorScheme.background
+                        MaterialTheme
+                            .colorScheme
+                            .background
                 ) {
 
                     EmergencyAlertScreen(
@@ -71,6 +76,8 @@ class EmergencyAlertActivity :
 
                             CrashDetectionService.resetEmergency()
 
+                            clearEmergencyNotification()
+
                             finish()
                         },
 
@@ -80,19 +87,41 @@ class EmergencyAlertActivity :
 
                             CrashDetectionService.resetEmergency()
 
+                            clearEmergencyNotification()
+
                             finish()
+                        },
+
+                        clearNotification = {
+
+                            clearEmergencyNotification()
                         }
                     )
                 }
             }
         }
     }
+
+    private fun clearEmergencyNotification() {
+
+        val manager =
+            getSystemService(
+                NotificationManager::class.java
+            )
+
+        manager.cancel(99)
+    }
 }
 
 @Composable
 fun EmergencyAlertScreen(
+
     onSafe: () -> Unit,
-    onSOS: () -> Unit
+
+    onSOS: () -> Unit,
+
+    clearNotification:
+        () -> Unit
 ) {
 
     var countdown by remember {
@@ -107,7 +136,9 @@ fun EmergencyAlertScreen(
 
     // COUNTDOWN
 
-    LaunchedEffect(countdown) {
+    LaunchedEffect(
+        countdown
+    ) {
 
         if (
             countdown > 0 &&
@@ -121,118 +152,177 @@ fun EmergencyAlertScreen(
 
         // AUTO SOS
 
-        if (countdown == 0) {
+        if (
+            countdown == 0
+        ) {
 
             CrashDetectionService.stopAlarm()
+
+            clearNotification()
 
             sosSent = true
         }
     }
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(
-                Color.Black.copy(alpha = 0.75f)
-            ),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(
+                    Color.Black.copy(
+                        alpha = 0.75f
+                    )
+                ),
 
-        contentAlignment = Alignment.Center
+        contentAlignment =
+            Alignment.Center
     ) {
 
         Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = 24.dp
+                    ),
 
-            shape = RoundedCornerShape(32.dp),
+            shape =
+                RoundedCornerShape(
+                    32.dp
+                ),
 
-            colors = CardDefaults.cardColors(
-                containerColor = Color(0xFF171C24)
-            )
+            colors =
+                CardDefaults.cardColors(
+                    containerColor =
+                        Color(
+                            0xFF171C24
+                        )
+                )
         ) {
 
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(30.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            30.dp
+                        ),
 
                 horizontalAlignment =
                     Alignment.CenterHorizontally
             ) {
 
-                // WARNING ICON
+                // ICON
 
                 Box(
-                    modifier = Modifier
-                        .size(92.dp)
-                        .background(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    Color(0xFFFF8A80),
-                                    Color(0xFFE53935)
-                                )
+                    modifier =
+                        Modifier
+                            .size(
+                                92.dp
+                            )
+                            .background(
+                                brush =
+                                    Brush.radialGradient(
+                                        colors =
+                                            listOf(
+                                                Color(
+                                                    0xFFFF8A80
+                                                ),
+                                                Color(
+                                                    0xFFE53935
+                                                )
+                                            )
+                                    ),
+                                shape =
+                                    CircleShape
                             ),
-                            shape = CircleShape
-                        ),
 
-                    contentAlignment = Alignment.Center
+                    contentAlignment =
+                        Alignment.Center
                 ) {
 
                     Icon(
                         imageVector =
                             Icons.Default.Warning,
 
-                        contentDescription = null,
+                        contentDescription =
+                            null,
 
-                        tint = Color.White,
+                        tint =
+                            Color.White,
 
-                        modifier = Modifier.size(46.dp)
+                        modifier =
+                            Modifier.size(
+                                46.dp
+                            )
                     )
                 }
 
                 Spacer(
-                    modifier = Modifier.height(24.dp)
+                    modifier =
+                        Modifier.height(
+                            24.dp
+                        )
                 )
 
                 Text(
                     text =
                         "Possible Accident Detected",
 
-                    color = Color.White,
+                    color =
+                        Color.White,
 
-                    fontSize = 24.sp,
+                    fontSize =
+                        24.sp,
 
-                    fontWeight = FontWeight.Bold
+                    fontWeight =
+                        FontWeight.Bold
                 )
 
                 Spacer(
-                    modifier = Modifier.height(14.dp)
+                    modifier =
+                        Modifier.height(
+                            14.dp
+                        )
                 )
 
                 Text(
                     text =
                         "Emergency SOS will trigger automatically.",
 
-                    color = Color(0xFFBAC4CF),
+                    color =
+                        Color(
+                            0xFFBAC4CF
+                        ),
 
-                    fontSize = 16.sp
+                    fontSize =
+                        16.sp
                 )
 
                 Spacer(
-                    modifier = Modifier.height(30.dp)
+                    modifier =
+                        Modifier.height(
+                            30.dp
+                        )
                 )
 
-                // COUNTDOWN
+                // TIMER
 
                 Box(
-                    modifier = Modifier
-                        .size(130.dp)
-                        .background(
-                            Color(0xFF242B36),
-                            CircleShape
-                        ),
+                    modifier =
+                        Modifier
+                            .size(
+                                130.dp
+                            )
+                            .background(
+                                Color(
+                                    0xFF242B36
+                                ),
+                                CircleShape
+                            ),
 
-                    contentAlignment = Alignment.Center
+                    contentAlignment =
+                        Alignment.Center
                 ) {
 
                     Column(
@@ -241,56 +331,73 @@ fun EmergencyAlertScreen(
                     ) {
 
                         Text(
-                            text = "$countdown",
+                            text =
+                                "$countdown",
 
-                            color = Color.White,
+                            color =
+                                Color.White,
 
-                            fontSize = 42.sp,
+                            fontSize =
+                                42.sp,
 
                             fontWeight =
                                 FontWeight.Bold
                         )
 
                         Text(
-                            text = "seconds",
+                            text =
+                                "seconds",
 
-                            color = Color(0xFF9CA9B5),
+                            color =
+                                Color(
+                                    0xFF9CA9B5
+                                ),
 
-                            fontSize = 14.sp
+                            fontSize =
+                                14.sp
                         )
                     }
                 }
 
                 Spacer(
-                    modifier = Modifier.height(30.dp)
+                    modifier =
+                        Modifier.height(
+                            30.dp
+                        )
                 )
 
                 Column(
                     verticalArrangement =
-                        Arrangement.spacedBy(14.dp)
+                        Arrangement.spacedBy(
+                            14.dp
+                        )
                 ) {
 
-                    // SAFE BUTTON
-
                     Button(
-                        onClick = onSafe,
 
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(58.dp),
+                        onClick =
+                            onSafe,
+
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(
+                                    58.dp
+                                ),
 
                         shape =
-                            RoundedCornerShape(18.dp)
+                            RoundedCornerShape(
+                                18.dp
+                            )
                     ) {
 
                         Text(
-                            text = "I'm Safe",
+                            "I'm Safe",
 
-                            fontSize = 18.sp
+                            fontSize =
+                                18.sp
                         )
                     }
-
-                    // SOS BUTTON
 
                     OutlinedButton(
 
@@ -298,30 +405,40 @@ fun EmergencyAlertScreen(
 
                             CrashDetectionService.stopAlarm()
 
+                            clearNotification()
+
                             sosSent = true
                         },
 
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(58.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .height(
+                                    58.dp
+                                ),
 
                         shape =
-                            RoundedCornerShape(18.dp)
+                            RoundedCornerShape(
+                                18.dp
+                            )
                     ) {
 
                         Text(
-                            text = "Send SOS Now",
+                            "Send SOS Now",
 
-                            fontSize = 18.sp
+                            fontSize =
+                                18.sp
                         )
                     }
                 }
             }
         }
 
-        // SOS SUCCESS DIALOG
+        // SUCCESS
 
-        if (sosSent) {
+        if (
+            sosSent
+        ) {
 
             AlertDialog(
 
@@ -340,7 +457,9 @@ fun EmergencyAlertScreen(
                         }
                     ) {
 
-                        Text("OK")
+                        Text(
+                            "OK"
+                        )
                     }
                 },
 
@@ -359,16 +478,25 @@ fun EmergencyAlertScreen(
                             imageVector =
                                 Icons.Default.CheckCircle,
 
-                            contentDescription = null,
+                            contentDescription =
+                                null,
 
-                            tint = Color(0xFF2ECC71),
+                            tint =
+                                Color(
+                                    0xFF2ECC71
+                                ),
 
-                            modifier = Modifier.size(48.dp)
+                            modifier =
+                                Modifier.size(
+                                    48.dp
+                                )
                         )
 
                         Spacer(
                             modifier =
-                                Modifier.height(12.dp)
+                                Modifier.height(
+                                    12.dp
+                                )
                         )
 
                         Text(

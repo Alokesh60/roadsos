@@ -149,13 +149,22 @@ fun ServicesScreenContent(
         val matchesFilter =
 
             selectedFilter == "All" ||
+
                     service.type.equals(
                         selectedFilter,
-                        ignoreCase=true
+                        ignoreCase = true
                     )
 
         matchesSearch && matchesFilter
     }
+
+    val filters = listOf(
+        "All",
+        "Hospital",
+        "Ambulance",
+        "Police",
+        "Towing"
+    )
 
     Box(
         modifier = Modifier
@@ -166,186 +175,264 @@ fun ServicesScreenContent(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 20.dp)
         ) {
 
-            Spacer(modifier = Modifier.height(56.dp))
+            // FIXED HEADER
 
-            // HEADER
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+            ) {
 
-            Text(
-                text = "Nearby Services",
-                color = TextWhite,
-                fontSize = 32.sp,
-                fontWeight = FontWeight.Bold
-            )
+                Spacer(
+                    modifier =
+                        Modifier.height(56.dp)
+                )
 
-            Spacer(modifier = Modifier.height(6.dp))
+                Text(
+                    text = "Nearby Services",
+                    color = TextWhite,
+                    fontSize = 32.sp,
+                    fontWeight =
+                        FontWeight.Bold
+                )
 
-            Text(
-                text = "Emergency help around you",
-                color = TextGray,
-                fontSize = 15.sp
-            )
+                Spacer(
+                    modifier =
+                        Modifier.height(2.dp)
+                )
 
-            Spacer(modifier = Modifier.height(24.dp))
+                Text(
+                    text =
+                        "Emergency help around you",
 
-            // SEARCH BAR
+                    color =
+                        TextGray,
 
-            OutlinedTextField(
+                    fontSize =
+                        15.sp
+                )
 
-                value = searchText,
+                Spacer(
+                    modifier =
+                        Modifier.height(18.dp)
+                )
 
-                onValueChange = {
+                // SEARCH
 
-                    searchText = it
-                },
+                OutlinedTextField(
 
-                modifier = Modifier.fillMaxWidth(),
+                    value = searchText,
 
-                placeholder = {
+                    onValueChange = {
 
-                    Text(
-                        text = "Search services...",
-                        color = TextGray
-                    )
-                },
+                        searchText = it
+                    },
 
-                leadingIcon = {
+                    modifier =
+                        Modifier.fillMaxWidth(),
 
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        tint = TextGray
-                    )
-                },
+                    placeholder = {
 
-                singleLine = true,
+                        Text(
+                            text =
+                                "Search services...",
 
-                colors = OutlinedTextFieldDefaults.colors(
+                            color =
+                                TextGray
+                        )
+                    },
 
-                    focusedContainerColor =
-                        CardBackground,
+                    leadingIcon = {
 
-                    unfocusedContainerColor =
-                        CardBackground,
+                        Icon(
+                            imageVector =
+                                Icons.Default.Search,
 
-                    focusedBorderColor =
-                        PrimaryRed,
+                            contentDescription =
+                                null,
 
-                    unfocusedBorderColor =
-                        Color.Transparent,
+                            tint =
+                                TextGray
+                        )
+                    },
 
-                    focusedTextColor =
-                        TextWhite,
+                    singleLine = true,
 
-                    unfocusedTextColor =
-                        TextWhite,
+                    colors =
+                        OutlinedTextFieldDefaults.colors(
 
-                    cursorColor =
-                        PrimaryRed
-                ),
-
-                shape = RoundedCornerShape(22.dp)
-            )
-
-            Spacer(modifier = Modifier.height(20.dp))
-
-            // FILTER CHIPS
-
-            val filters = listOf(
-                "All",
-                "Hospital",
-                "Ambulance",
-                "Police",
-                "Towing"
-            )
-
-            LazyRow {
-
-                items(filters) { filter ->
-
-                    FilterChip(
-
-                        selected =
-                            selectedFilter == filter,
-
-                        onClick = {
-
-                            selectedFilter = filter
-                        },
-
-                        label = {
-
-                            Text(filter)
-                        },
-
-                        colors = FilterChipDefaults.filterChipColors(
-
-                            selectedContainerColor =
-                                PrimaryRed,
-
-                            selectedLabelColor =
-                                Color.White,
-
-                            containerColor =
+                            focusedContainerColor =
                                 CardBackground,
 
-                            labelColor =
-                                TextGray
+                            unfocusedContainerColor =
+                                CardBackground,
+
+                            focusedBorderColor =
+                                PrimaryRed,
+
+                            unfocusedBorderColor =
+                                Color.Transparent,
+
+                            focusedTextColor =
+                                TextWhite,
+
+                            unfocusedTextColor =
+                                TextWhite,
+
+                            cursorColor =
+                                PrimaryRed
                         ),
 
-                        modifier = Modifier.padding(end = 10.dp)
-                    )
+                    shape =
+                        RoundedCornerShape(
+                            22.dp
+                        )
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.height(16.dp)
+                )
+
+                // FILTERS
+
+                LazyRow {
+
+                    items(filters) { filter ->
+
+                        FilterChip(
+
+                            selected =
+                                selectedFilter ==
+                                        filter,
+
+                            onClick = {
+
+                                selectedFilter =
+                                    filter
+                            },
+
+                            label = {
+
+                                Text(filter)
+                            },
+
+                            colors =
+                                FilterChipDefaults.filterChipColors(
+
+                                    selectedContainerColor =
+                                        PrimaryRed,
+
+                                    selectedLabelColor =
+                                        Color.White,
+
+                                    containerColor =
+                                        CardBackground,
+
+                                    labelColor =
+                                        TextGray
+                                ),
+
+                            modifier =
+                                Modifier.padding(
+                                    end = 10.dp
+                                )
+                        )
+                    }
                 }
+
+                Spacer(
+                    modifier =
+                        Modifier.height(18.dp)
+                )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            // SCROLLABLE SERVICES LIST
 
-            // SERVICES LIST
+            if (
+                filteredServices.isEmpty()
+            ) {
 
-            if (filteredServices.isEmpty()) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(
+                            horizontal = 20.dp
+                        )
+                ) {
 
-                EmptyStateCard(
+                    EmptyStateCard(
 
-                    title = "No Services Found",
+                        title =
+                            "No Services Found",
 
-                    subtitle =
-                        "No nearby emergency services match your search."
-                )
+                        subtitle =
+                            "No nearby emergency services match your search."
+                    )
+                }
 
             } else {
 
                 LazyColumn(
-                    contentPadding = PaddingValues(bottom = 140.dp)
+
+                    modifier =
+                        Modifier.fillMaxSize(),
+
+                    contentPadding =
+                        PaddingValues(
+
+                            start = 20.dp,
+                            end = 20.dp,
+                            bottom = 140.dp
+                        )
                 ) {
 
-                    items(filteredServices) { service ->
+                    items(filteredServices) {
+
+                            service ->
 
                         ServiceCard(
-                            service = service,
+
+                            service =
+                                service,
 
                             onClick = {
 
-                                onServiceClick(service)
+                                onServiceClick(
+                                    service
+                                )
                             }
                         )
 
-                        Spacer(modifier = Modifier.height(16.dp))
+                        Spacer(
+                            modifier =
+                                Modifier.height(
+                                    16.dp
+                                )
+                        )
                     }
                 }
             }
         }
 
-        // BOTTOM NAVBAR
+        // BOTTOM NAV
 
         Box(
-            modifier = Modifier.align(Alignment.BottomCenter)
+            modifier =
+                Modifier.align(
+                    Alignment.BottomCenter
+                )
         ) {
 
             BottomNavBar(
-                currentScreen = currentScreen,
-                onTabSelected = onTabSelected,
+                currentScreen =
+                    currentScreen,
+
+                onTabSelected =
+                    onTabSelected,
+
                 onSOSError = { }
             )
         }

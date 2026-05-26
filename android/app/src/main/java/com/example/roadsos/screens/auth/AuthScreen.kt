@@ -38,6 +38,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roadsos.viewmodel.AuthState
 import com.example.roadsos.viewmodel.AuthViewModel
 
+
+
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -93,6 +95,9 @@ fun AuthScreenContent(
 
     var countryCode by remember {
         mutableStateOf("+91")
+    }
+    var countryCode by remember {
+        mutableStateOf("")
     }
 
     var phone by remember {
@@ -413,6 +418,7 @@ fun AuthInputField(
     value: String,
     placeholder: String,
     icon: androidx.compose.ui.graphics.vector.ImageVector,
+    modifier: Modifier = Modifier,
     keyboardType: KeyboardType = KeyboardType.Text,
     onValueChange: (String) -> Unit
 ) {
@@ -422,7 +428,7 @@ fun AuthInputField(
 
         onValueChange = onValueChange,
 
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
 
         singleLine = true,
 
