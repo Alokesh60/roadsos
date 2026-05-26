@@ -1,0 +1,114 @@
+[
+  {
+    "intent": "accident",
+    "keywords": [
+      "accident", "crash", "collision", "collide", "hit", "smash",
+      "impact", "vehicle hit", "road accident", "met with accident",
+      "car accident", "durghatna", "takkar", "hadsa", "durghotona"
+    ],
+    "response_en": "There has been an accident. Stay calm.\n\n1. Call 108 for an ambulance immediately.\n2. Call 100 to report to police.\n3. Turn on your hazard lights.\n4. Do NOT move any injured person unless there is immediate danger of fire.\n5. Place a warning triangle 50 metres behind the vehicle if safe.\n\nHelp is on the way. Stay on the line with the operator.",
+    "response_hi": "Durghatna ho gayi hai. Shant rahein.\n\n1. Turant 108 pe ambulance ke liye call karein.\n2. Police ke liye 100 pe call karein.\n3. Hazard lights jalayein.\n4. Ghayal vyakti ko mat hilayen jab tak aag ka khatre na ho.\n\nMadad aa rahi hai.",
+    "response_as": "Durghotona hoise. Shant thakk.\n\n1. Tubei 108-t ambulance-r karone phone kor.\n2. Police-r karone 100-t phone kor.\n3. Hazard light jola.\n\nSahaay aahise.",
+    "action_label": "Call Ambulance — 108",
+    "action_number": "108",
+    "extra_actions": [
+      { "label": "Call Police — 100", "number": "100" },
+      { "label": "Highway Help — 1033", "number": "1033" }
+    ]
+  },
+  {
+    "intent": "tyre_burst",
+    "keywords": [
+      "tyre", "tire", "flat tyre", "flat tire", "burst", "puncture",
+      "blowout", "wheel", "tyre burst", "tire burst",
+      "tyre phata", "puncture ho gaya", "chakka phata"
+    ],
+    "response_en": "Tyre burst — follow these steps:\n\n1. Grip the steering wheel FIRMLY with both hands.\n2. Do NOT brake suddenly — it will cause a skid.\n3. Ease off the accelerator slowly.\n4. Steer straight and let the vehicle slow down on its own.\n5. Gradually steer to the LEFT shoulder and stop.\n6. Turn on hazard lights. Stay inside until safe.\n\nCall 1033 for roadside assistance on national highways.",
+    "response_hi": "Tyre phata — yeh karein:\n\n1. Steering wheel ko dono haathon se mazbooti se pakdein.\n2. Achanak brake mat lagaen — gaadi phisal sakti hai.\n3. Dheere accelerator chhodein.\n4. Gaadi ko seedha rakhein aur dheere rokein.\n5. Baayi taraf road ke kinare jakar roke.\n\nNational highway pe 1033 pe call karein.",
+    "response_as": null,
+    "action_label": "NHAI Roadside Help — 1033",
+    "action_number": "1033",
+    "extra_actions": [
+      { "label": "Call Police — 100", "number": "100" }
+    ]
+  },
+  {
+    "intent": "breakdown",
+    "keywords": [
+      "breakdown", "broke down", "broken down", "engine", "stalled",
+      "not starting", "wont start", "engine failure", "car stopped",
+      "vehicle stopped", "overheating", "battery dead", "no fuel",
+      "out of fuel", "petrol finish", "gaadi kharab", "start nahi"
+    ],
+    "response_en": "Vehicle breakdown — here is what to do:\n\n1. Steer to the LEFT shoulder immediately.\n2. Turn on your hazard lights.\n3. Place a warning triangle behind the vehicle if available.\n4. Do not stand behind or in front of the vehicle on the road.\n5. Call 1033 (NHAI helpline) for highway assistance.\n\nStay inside the vehicle with doors locked if traffic is fast.",
+    "response_hi": "Gaadi kharab ho gayi:\n\n1. Turant baayi taraf le jaen.\n2. Hazard lights jalayein.\n3. Agar ho sake to peeche warning triangle lagayein.\n4. Gaadi ke aage ya peeche sadak par mat khade hon.\n5. Highway helpline 1033 pe call karein.",
+    "response_as": null,
+    "action_label": "NHAI Helpline — 1033",
+    "action_number": "1033",
+    "extra_actions": [
+      { "label": "Call Police — 100", "number": "100" }
+    ]
+  },
+  {
+    "intent": "medical",
+    "keywords": [
+      "injured", "injury", "bleeding", "blood", "unconscious", "fainted",
+      "not breathing", "heart attack", "chest pain", "ambulance", "hurt",
+      "pain", "fracture", "broken bone", "head injury",
+      "chot lagi", "khoon", "behosh", "ambulance chahiye", "aahat"
+    ],
+    "response_en": "Medical emergency — act immediately:\n\n1. Call 108 for an ambulance RIGHT NOW.\n2. Keep the person STILL, warm, and calm.\n3. Do NOT give water or food if they are unconscious.\n4. If not breathing and you are trained, begin CPR.\n5. If bleeding, apply firm pressure with a clean cloth.\n6. Stay on the line with the 108 operator — they will guide you.\n\nDo not leave the person alone.",
+    "response_hi": "Chikitsa aapaat sthiti:\n\n1. ABHI 108 pe ambulance ke liye call karein.\n2. Vyakti ko hilne mat do, garman aur shant rakho.\n3. Behosh ho to paani ya khana mat do.\n4. Agar khoon aa raha ho, saaf kapde se dabao.\n\n108 operator se baat karte rahein.",
+    "response_as": "Chikitsha aapot awostha:\n\n1. Ekhoni 108-t phone kor ambulance-r karone.\n2. Manuhjon-k korone thik rakh.\n3. Behosh manuhjone-k pani nidibo.\n\n108 operator-r logot kotha koi thak.",
+    "action_label": "Call Ambulance — 108",
+    "action_number": "108",
+    "extra_actions": [
+      { "label": "Unified Emergency — 112", "number": "112" }
+    ]
+  },
+  {
+    "intent": "fire",
+    "keywords": [
+      "fire", "smoke", "burning", "flame", "fuel leak", "petrol leak",
+      "catching fire", "on fire", "vehicle fire", "aag", "dhuan", "jal raha"
+    ],
+    "response_en": "Vehicle fire — get out IMMEDIATELY:\n\n1. STOP the vehicle and turn off the engine.\n2. GET EVERYONE OUT immediately — do not collect belongings.\n3. Move at LEAST 100 metres away from the vehicle.\n4. Do NOT open the bonnet if smoke is from the engine — it feeds oxygen to fire.\n5. Call 101 (Fire) and 108 (Ambulance).\n\nWARNING: Fuel tanks can explode. Distance is your priority.",
+    "response_hi": "Gaadi mein aag lagi:\n\n1. Engine band karo aur turant bahar niklo.\n2. Saman mat lo — jaan bachao.\n3. Kam se kam 100 metre door jao.\n4. Bonnet mat kholo.\n5. 101 (Fire) aur 108 (Ambulance) pe call karo.",
+    "response_as": null,
+    "action_label": "Call Fire Brigade — 101",
+    "action_number": "101",
+    "extra_actions": [
+      { "label": "Call Ambulance — 108", "number": "108" },
+      { "label": "Call Police — 100", "number": "100" }
+    ]
+  },
+  {
+    "intent": "lost",
+    "keywords": [
+      "lost", "direction", "where am i", "wrong road", "wrong turn",
+      "dont know where", "navigation", "route", "map",
+      "rasta bhool gaya", "kahan hun", "baat haroilun"
+    ],
+    "response_en": "You appear to be lost or need directions.\n\n1. Pull over safely before checking your location.\n2. Your GPS coordinates are being shared with this app.\n3. Call 1033 (NHAI helpline) if on a national highway — they can give milestone directions.\n4. Call 100 (Police) if you feel unsafe.\n\nStay on a lit, populated road if possible.",
+    "response_hi": "Rasta bhool gaye hain:\n\n1. Gaadi rokein aur dekhen kahan hain.\n2. Agar national highway pe hain to 1033 pe call karein.\n3. Agar asurakhit feel ho raha hai to 100 pe call karein.",
+    "response_as": null,
+    "action_label": "NHAI Helpline — 1033",
+    "action_number": "1033",
+    "extra_actions": [
+      { "label": "Call Police — 100", "number": "100" }
+    ]
+  },
+  {
+    "intent": "other",
+    "keywords": [],
+    "response_en": "I am here to help. Please describe your emergency clearly.\n\nFor immediate help:\n• Ambulance: 108\n• Police: 100\n• Fire: 101\n• NHAI Highway Help: 1033\n• Unified Emergency: 112",
+    "response_hi": "Mein madad karne ke liye hoon. Apni samasya batayein.\n\nTurant madad ke liye:\n• Ambulance: 108\n• Police: 100\n• Aag: 101\n• Highway: 1033",
+    "response_as": null,
+    "action_label": "Unified Emergency — 112",
+    "action_number": "112",
+    "extra_actions": [
+      { "label": "Call Ambulance — 108", "number": "108" },
+      { "label": "Call Police — 100", "number": "100" }
+    ]
+  }
+]

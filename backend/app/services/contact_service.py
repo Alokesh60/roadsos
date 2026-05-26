@@ -1,34 +1,39 @@
-from app.db.client import supabase
-
-
 def create_contact(data: dict):
 
-    response = supabase.table(
-        "emergency_contacts"
-    ).insert(data).execute()
+    print(
+        "[INFO] create_contact called"
+    )
 
-    return response.data
+    return data
 
 
 def get_contacts(user_id: str):
 
-    response = supabase.table(
-        "emergency_contacts"
-    ).select("*").eq(
-        "user_id",
-        user_id
-    ).execute()
+    print(
+        f"[INFO] get_contacts called for {user_id}"
+    )
 
-    return response.data
+    # Temporary mock contacts
+    return [
+
+        {
+            "id": 1,
+            "name": "Emergency Contact",
+            "phone": "+911234567890",
+            "relationship": "Family"
+        }
+    ]
 
 
 def delete_contact(contact_id: int):
 
-    response = supabase.table(
-        "emergency_contacts"
-    ).delete().eq(
-        "id",
-        contact_id
-    ).execute()
+    print(
+        f"[INFO] delete_contact called for {contact_id}"
+    )
 
-    return response.data
+    return {
+
+        "success": True,
+
+        "deleted_contact_id": contact_id
+    }

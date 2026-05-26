@@ -1,23 +1,27 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+import requests
 
-from app.services.chroma_service import (
-     semantic_search
+from app.services.broadcast_service import (
+    find_nearby_users,
+    build_sos_message,
+    broadcast_sos_alert
 )
 
-from ai.chatbot.chain import (
-    get_chat_response
+from app.services.notification_service import (
+    build_emergency_alert,
+    trigger_emergency_notifications
+)
+
+from app.dependencies.auth_dependency import (
+    get_current_user
 )
 
 from app.services.contact_service import (
     get_contacts
 )
 
-from app.services.chroma_service import (
-    semantic_emergency_classification
-)
-
 from app.services.distance_service import (
-    calculate_distance  
+    calculate_distance
 )
 
 from app.services.ai_scoring_service import (
@@ -25,116 +29,300 @@ from app.services.ai_scoring_service import (
 )
 
 from app.services.maps_service import (
-  fetch_live_services
+    fetch_live_services
+)
+
+from app.services.emergency_nlp_service import (
+    detect_emergency_type
 )
 
 router = APIRouter()
 
 
 @router.get("/ai-emergency")
-
 async def ai_emergency(
+
     query: str,
 
     lat: float,
 
     lon: float,
 
-    country: str = "India"
+    country: str = "India",
+
+    user=Depends(get_current_user)
 ):
 
-    result = (
-        semantic_emergency_classification(
-            query
-        )
+    # =====================================
+    # EMERGENCY CLASSIFICATION
+    # =====================================
+
+    service_type, priority, confidence = (
+        detect_emergency_type(query)
     )
 
-    semantic_matches = semantic_search(query)
+    # =====================================
+    # AI RESULT
+    # =====================================
 
-    service_type = result[
-            "detected_service_type"
-    ]
+    result = {
+
+        "classification_status": "REAL",
+
+        "detected_service_type": service_type,
+
+        "priority": priority,
+
+        "confidence": confidence
+    }
+
+    # =====================================
+    # FETCH LIVE SERVICES
+    # =====================================
 
     live_services = fetch_live_services(
 
-            lat,
+        lat,
 
-            lon,
+        lon,
 
-            service_type
-        )
+        service_type
+    )
 
     enhanced_services = []
 
     for service in live_services:
 
-            distance = calculate_distance(
+        distance = calculate_distance(
 
-                lat,
+            lat,
 
-                lon,
+            lon,
 
-                service["latitude"],
+            service["latitude"],
 
-                service["longitude"]
-            )
+            service["longitude"]
+        )
 
-            service["distance_km"] = round(
-                distance,
-                2
-            )
+        service["distance_km"] = round(
+            distance,
+            2
+        )
 
-            # temporary AI fields
-            service["rating"] = 4.0
+        service["availability"] = True
 
-            service["availability"] = True
+        service["emergency_score"] = (
+            calculate_emergency_score(service)
+        )
 
-            service["emergency_score"] = (
-                calculate_emergency_score(
-                    service
-                )
-            )
+        if service["emergency_score"] >= 80:
 
-            if service["emergency_score"] >= 80:
+            service["ai_priority"] = "HIGH"
 
-                service["ai_priority"] = "HIGH"
+        elif service["emergency_score"] >= 50:
 
-            elif service["emergency_score"] >= 50:
+            service["ai_priority"] = "MEDIUM"
 
-                service["ai_priority"] = "MEDIUM"
+        else:
 
-            else:
+            service["ai_priority"] = "LOW"
 
-                service["ai_priority"] = "LOW"
-
-            enhanced_services.append(service)
+        enhanced_services.append(service)
 
     enhanced_services.sort(
 
-            key=lambda x: (
-                -x["emergency_score"],
-                x["distance_km"]
-            )
+        key=lambda x: (
+            -x["emergency_score"],
+            x["distance_km"]
         )
-    
-    emergency_contacts = get_contacts(
-         "test-user"
     )
 
-    severity = result["priority"]
+    # =====================================
+    # EMERGENCY CONTACTS
+    # =====================================
 
-    guidance = get_chat_response(
+    uid = user.get("uid")
 
-        message=query,
+    try:
 
-        lat=lat,
+        emergency_contacts = get_contacts(uid)
 
-        lon=lon,
+    except Exception as e:
 
-        nearby_facilities=enhanced_services[:5],
+        print(f"Contacts fetch failed: {e}")
 
-        severity=severity
+        emergency_contacts = []
+
+    severity = priority
+
+    # =====================================
+    # NEARBY RESPONDERS
+    # =====================================
+
+    nearby_users = find_nearby_users(
+
+        latitude=lat,
+
+        longitude=lon,
+
+        current_uid=uid,
+
+        radius_km=10
     )
+
+    # =====================================
+    # COMMUNITY BROADCAST
+    # =====================================
+
+    community_alert_message = (
+
+        build_sos_message(
+
+            user_name=(
+                user.get("name")
+                or user.get("email")
+                or "RoadSOS User"
+            ),
+
+            emergency_type=service_type,
+
+            latitude=lat,
+
+            longitude=lon,
+
+            priority=severity
+        )
+    )
+
+    broadcast_results = (
+
+        broadcast_sos_alert(
+
+            nearby_users,
+
+            community_alert_message
+        )
+    )
+
+    # =====================================
+    # EMERGENCY CONTACT ALERT
+    # =====================================
+
+    alert_message = (
+
+        build_emergency_alert(
+
+            user_name=(
+                user.get("name")
+                or user.get("email")
+                or "RoadSOS User"
+            ),
+
+            emergency_description=query,
+
+            service_type=service_type,
+
+            latitude=lat,
+
+            longitude=lon,
+
+            priority=severity
+        )
+    )
+
+    notification_results = (
+
+        trigger_emergency_notifications(
+
+            emergency_contacts,
+
+            alert_message
+        )
+    )
+
+    # =====================================
+    # AI GUIDANCE (NEW AI MODULE)
+    # =====================================
+
+    try:
+
+        ai_response = requests.post(
+
+            "http://127.0.0.1:8000/chat",
+
+            json={
+
+                "user_message": query,
+
+                "context": {
+
+                    "lat": lat,
+
+                    "lng": lon,
+
+                    "state": None,
+
+                    "district": None,
+
+                    "nearest_hospital": (
+                        enhanced_services[0]["name"]
+                        if enhanced_services
+                        else None
+                    ),
+
+                    "is_sos_active": True
+                },
+
+                "history": []
+            },
+
+            timeout=5
+        )
+
+        if ai_response.status_code == 200:
+
+            ai_data = ai_response.json()
+
+            guidance = ai_data.get(
+                "reply",
+                "Emergency guidance unavailable."
+            )
+
+            ai_source = ai_data.get(
+                "source",
+                "offline_template"
+            )
+
+            detected_intent = ai_data.get(
+                "intent_detected",
+                service_type
+            )
+
+        else:
+
+            guidance = (
+                "Emergency guidance unavailable."
+            )
+
+            ai_source = "offline_template"
+
+            detected_intent = service_type
+
+    except Exception as e:
+
+        print(f"AI module error: {e}")
+
+        guidance = (
+            "Emergency guidance unavailable."
+        )
+
+        ai_source = "offline_template"
+
+        detected_intent = service_type
+
+    # =====================================
+    # FINAL RESPONSE
+    # =====================================
 
     return {
 
@@ -142,16 +330,27 @@ async def ai_emergency(
 
         "query": query,
 
-        "ai_result": {
-            **result, 
-            "semantic_matches": semantic_matches
-        },
+        "intent_detected": detected_intent,
 
-        "live_services": enhanced_services[:5],
+        "ai_source": ai_source,
 
-        "emergency_contacts": emergency_contacts,
+        "ai_result": result,
 
-        "guidance": guidance,
+        "live_services":
+            enhanced_services[:5],
 
-        
+        "emergency_contacts":
+            emergency_contacts,
+
+        "guidance":
+            guidance,
+
+        "notifications":
+            notification_results,
+
+        "broadcast_results":
+            broadcast_results,
+
+        "nearby_responders":
+            nearby_users
     }

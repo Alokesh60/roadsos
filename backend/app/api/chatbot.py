@@ -1,3 +1,5 @@
+# chatbot.py
+
 from fastapi import APIRouter
 
 from app.services.history_service import (
@@ -14,8 +16,8 @@ from app.services.chatbot_service import (
 
 router = APIRouter()
 
-@router.get("/history")
 
+@router.get("/history")
 def get_history():
 
     return {
@@ -23,8 +25,8 @@ def get_history():
         "history": get_emergency_history()
     }
 
-@router.post("/chatbot")
 
+@router.post("/chatbot")
 async def chatbot_handler(
     request: EmergencyRequest
 ):
@@ -32,8 +34,11 @@ async def chatbot_handler(
     result = process_emergency_chatbot(
 
         request.message,
+
         request.latitude,
+
         request.longitude,
+
         request.country
     )
 

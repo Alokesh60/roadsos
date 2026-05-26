@@ -1,42 +1,180 @@
-CREATE TABLE emergency_services (
-    id BIGSERIAL PRIMARY KEY,
+-- =====================================
+-- GLOBAL UNIFIED SERVICE POINTS
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS service_points (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
 
     name TEXT NOT NULL,
 
-    type TEXT NOT NULL CHECK (
-        type IN (
-            'hospital',
-            'trauma_center',
-            'ambulance',
-            'police_station',
-            'towing_service',
-            'puncture_shop',
-            'blood_bank',
-            'fire_station',
-            'showroom'
-        )
-    ),
+    service_type TEXT NOT NULL,
 
     phone TEXT,
 
+    phone_source TEXT,
+
     address TEXT,
 
-    city TEXT,
+    district TEXT,
+
     state TEXT,
+
     country TEXT,
 
-    latitude DOUBLE PRECISION NOT NULL,
-    longitude DOUBLE PRECISION NOT NULL,
+    postcode TEXT,
 
-    rating DOUBLE PRECISION DEFAULT 0,
+    latitude REAL NOT NULL,
 
-    availability BOOLEAN DEFAULT true,
+    longitude REAL NOT NULL,
 
-    verified BOOLEAN DEFAULT false,
+    operator TEXT,
 
     source TEXT,
 
-    last_verified TIMESTAMP,
+    last_verified TEXT
+);
 
-    created_at TIMESTAMP DEFAULT NOW()
+
+-- =====================================
+-- EMERGENCY NUMBERS
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS emergency_numbers (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    country TEXT,
+
+    service_type TEXT,
+
+    emergency_number TEXT
+);
+
+
+-- =====================================
+-- CHATBOT INTENTS
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS chatbot_intents (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    intent TEXT,
+
+    keywords TEXT,
+
+    response TEXT
+);
+
+
+-- =====================================
+-- HIGHWAY CORRIDORS
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS nh_corridors (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    highway_name TEXT,
+
+    state TEXT,
+
+    risk_level TEXT
+);
+
+
+-- =====================================
+-- SOS EVENTS
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS sos_events (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    user_id TEXT,
+
+    message TEXT,
+
+    detected_type TEXT,
+
+    latitude REAL,
+
+    longitude REAL,
+
+    priority TEXT,
+
+    created_at TEXT
+);
+
+
+-- =====================================
+-- RESPONDER CACHE
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS responder_cache (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    user_id TEXT,
+
+    latitude REAL,
+
+    longitude REAL,
+
+    fcm_token TEXT,
+
+    is_online INTEGER DEFAULT 1,
+
+    updated_at TEXT
+);
+
+
+-- =====================================
+-- OFFLINE ALERT QUEUE
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS offline_alert_queue (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    alert_type TEXT,
+
+    payload TEXT,
+
+    retry_count INTEGER DEFAULT 0,
+
+    created_at TEXT
+);
+
+
+-- =====================================
+-- CACHED SERVICES
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS cached_services (
+
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+    name TEXT,
+
+    service_type TEXT,
+
+    latitude REAL,
+
+    longitude REAL,
+
+    source TEXT,
+
+    cached_at TEXT
+);
+
+
+-- =====================================
+-- DATABASE VERSION
+-- =====================================
+
+CREATE TABLE IF NOT EXISTS db_version (
+
+    version TEXT
 );

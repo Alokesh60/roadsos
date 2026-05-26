@@ -1,35 +1,89 @@
+# =====================================
+# FORMAT SERVICE RESPONSE
+# =====================================
+
 def format_service(service: dict):
 
     if not service:
+
         return {}
 
     return {
 
-        "id": service.get("id"),
+        "id":
+            service.get("id"),
 
-        "name": service.get("name"),
+        "name":
+            service.get("name"),
 
-        "type": service.get("type"),
+        "service_type":
+            service.get(
+                "service_type"
+            ),
 
-        "phone": service.get("phone"),
+        "phone":
+            service.get("phone"),
 
-        "address": service.get("address"),
+        "phone_source":
+            service.get(
+                "phone_source"
+            ),
 
-        "city": service.get("city"),
+        "address":
+            service.get("address"),
 
-        "state": service.get("state"),
+        "district":
+            service.get("district"),
 
-        "country": service.get("country"),
+        "city":
+            service.get("city"),
 
-        "latitude": service.get("latitude"),
+        "state":
+            service.get("state"),
 
-        "longitude": service.get("longitude"),
+        "country":
+            service.get("country"),
 
-        "distance_km": service.get("distance_km"),
+        "postcode":
+            service.get("postcode"),
 
-        "rating": service.get("rating"),
+        "latitude":
+            service.get("latitude"),
 
-        "availability": service.get("is_available"),
+        "longitude":
+            service.get("longitude"),
 
-        "score": service.get("score")
+        "distance_km":
+            service.get(
+                "distance_km"
+            ),
+
+        "rating":
+            service.get("rating"),
+
+        "availability":
+            service.get(
+                "availability"
+            ),
+
+        "verified":
+            service.get(
+                "verified"
+            ),
+
+        "operator":
+            service.get("operator"),
+
+        "source":
+            service.get("source"),
+
+        "emergency_score":
+            service.get(
+                "emergency_score"
+            ),
+
+        "ai_priority":
+            service.get(
+                "ai_priority"
+            )
     }

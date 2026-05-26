@@ -1,7 +1,30 @@
-from pydantic import BaseModel
+from typing import List, Optional
+
+from pydantic import (
+    BaseModel
+)
 
 
-class EmergencyRequest(BaseModel):
+# =====================================
+# EMERGENCY CONTACT
+# =====================================
+
+class EmergencyContact(
+    BaseModel
+):
+
+    name: str
+
+    phone: str
+
+
+# =====================================
+# EMERGENCY REQUEST
+# =====================================
+
+class EmergencyRequest(
+    BaseModel
+):
 
     message: str
 
@@ -11,8 +34,34 @@ class EmergencyRequest(BaseModel):
 
     country: str = "India"
 
+    # =============================
+    # ANDROID CONTACTS
+    # =============================
 
-class EmergencyResponse(BaseModel):
+    contacts: List[
+        EmergencyContact
+    ] = []
+
+    # =============================
+    # SOURCE TRACKING
+    # =============================
+
+    source: str = "mobile_app"
+
+    # =============================
+    # OFFLINE MODE FLAG
+    # =============================
+
+    offline_mode: bool = False
+
+
+# =====================================
+# EMERGENCY RESPONSE
+# =====================================
+
+class EmergencyResponse(
+    BaseModel
+):
 
     classification_status: str
 
@@ -30,4 +79,20 @@ class EmergencyResponse(BaseModel):
 
     guidance: str
 
-    semantic_matches_found: int
+    # =============================
+    # SOURCE INFO
+    # =============================
+
+    source: Optional[str] = None
+
+    # =============================
+    # OFFLINE SUPPORT
+    # =============================
+
+    offline_support: bool = True
+
+    # =============================
+    # DISASTER ALERTS
+    # =============================
+
+    disaster_alerts: list = []

@@ -1,124 +1,213 @@
-import sys
-import os
-
-sys.path.append(
-    os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__),
-            "../../../"
-        )
-    )
-)
-
 from typing import Optional
-from fastapi import APIRouter, Query, Depends
 
-from app.services.sqlite_service import get_all_services
-from app.services.distance_service import calculate_distance
-from app.services.maps_service import fetch_live_services
-from app.schemas.nearby_schema import NearbyResponseSchema
-from app.dependencies import verify_token
-from app.services.ai_scoring_service import calculate_emergency_score
-from ai.embeddings.chroma_setup import (
-    semantic_search
+from fastapi import (
+    APIRouter,
+    Query,
+    Depends
 )
 
-from app.services.ai_scoring_service import calculate_emergency_score
-from app.services.distance_service import calculate_distance
+from app.dependencies.auth_dependency import (
+    get_current_user
+)
+
+from app.schemas.nearby_schema import (
+    NearbyResponseSchema
+)
+
 from app.services.sqlite_service import (
+
+    get_all_services,
+
     save_live_services_to_sqlite,
-)
-from app.services.sqlite_service import (
+
     cleanup_far_services
 )
 
+from app.services.distance_service import (
+    calculate_distance
+)
+
+from app.services.maps_service import (
+    fetch_live_services
+)
+
+from app.services.ai_scoring_service import (
+    calculate_emergency_score
+)
+
+
 router = APIRouter()
 
-@router.get("/nearby",
-            response_model=NearbyResponseSchema)
+
+# =====================================
+# OFFLINE / LOCAL DATABASE NEARBY
+# =====================================
+
+@router.get(
+
+    "/nearby",
+
+    response_model=NearbyResponseSchema
+)
+
 async def nearby_services(
+
     lat: float = Query(...),
+
     lon: float = Query(...),
+
     radius: float = Query(10),
-    type: Optional[str] = Query(None),
-    query: Optional[str] = Query(None),
+
+    service_type: Optional[str] = Query(None),
+
     country: str = Query("India"),
-    # user=Depends(verify_token),
+
+    user=Depends(get_current_user),
 ):
 
     services = get_all_services()
 
-    semantic_ids = set()
-
-    if query:
-
-        semantic_results = semantic_search(query)
-
-        for result in semantic_results:
-
-            if "id" in result:
-
-                semantic_ids.add(
-                    int(result["id"])
-                )
-
     nearby_results = []
 
     for service in services:
-        
+
         if service.get("country") != country:
             continue
 
-        # Filter by type if provided
-        if type and service["type"] != type:
+        # =================================
+        # FILTER BY SERVICE TYPE
+        # =================================
+
+        if (
+
+            service_type
+
+            and
+
+            service.get("service_type")
+            != service_type
+        ):
+
             continue
 
-        # Filter by semantic search results if query is provided
-        if semantic_ids and service["id"] not in semantic_ids:
+        latitude = service.get(
+            "latitude"
+        )
+
+        longitude = service.get(
+            "longitude"
+        )
+
+        if (
+
+            latitude is None
+
+            or
+
+            longitude is None
+        ):
+
             continue
 
         distance = calculate_distance(
+
             lat,
+
             lon,
-            service["latitude"],
-            service["longitude"]
+
+            latitude,
+
+            longitude
         )
 
         if distance <= radius:
 
-            service["distance_km"] = round(distance, 2)
+            service["distance_km"] = round(
+                distance,
+                2
+            )
 
-            # Calculate emergency score
-            service["emergency_score"] = calculate_emergency_score(service)
-            
+            # =============================
+            # AI SCORE
+            # =============================
+
+            service["emergency_score"] = (
+
+                calculate_emergency_score(
+                    service
+                )
+            )
+
+            # =============================
+            # AI PRIORITY
+            # =============================
+
             if service["emergency_score"] >= 80:
 
-                service["ai_priority"] = "HIGH"
+                service["ai_priority"] = (
+                    "HIGH"
+                )
 
             elif service["emergency_score"] >= 50:
 
-                service["ai_priority"] = "MEDIUM"
+                service["ai_priority"] = (
+                    "MEDIUM"
+                )
 
             else:
 
-                service["ai_priority"] = "LOW"
+                service["ai_priority"] = (
+                    "LOW"
+                )
+
+            # =============================
+            # OFFLINE SOURCE
+            # =============================
+
+            service["source"] = (
+                "offline_db"
+            )
 
             nearby_results.append(service)
 
+    # =================================
+    # SORTING
+    # =================================
+
     nearby_results.sort(
+
         key=lambda x: (
+
             -x["emergency_score"],
-            x["distance_km"], 
+
+            x["distance_km"]
         )
     )
 
     return {
+
         "success": True,
-        "count": len(nearby_results),
-        "radius_km": radius,
-        "filter_type": type,
-        "data": nearby_results
+
+        "mode":
+            "offline_fallback",
+
+        "count":
+            len(nearby_results),
+
+        "radius_km":
+            radius,
+
+        "service_type":
+            service_type,
+
+        "data":
+            nearby_results
     }
+
+
+# =====================================
+# LIVE ONLINE SEARCH
+# =====================================
 
 @router.get("/live-nearby")
 
@@ -128,10 +217,9 @@ async def live_nearby(
 
     lon: float,
 
-    type: str,
+    service_type: str,
 
     radius: int = 5000
-
 ):
 
     services = fetch_live_services(
@@ -140,79 +228,162 @@ async def live_nearby(
 
         lon,
 
-        type,
+        service_type,
 
         radius
     )
 
+    # =================================
+    # CACHE CLEANUP
+    # =================================
+
     cleanup_far_services(
+
         lat,
 
         lon,
 
-        keep_radius_km=radius / 1000 + 10
+        keep_radius_km=(
+            radius / 1000 + 10
+        )
     )
 
-    save_live_services_to_sqlite(services)
+    # =================================
+    # SAVE CACHE
+    # =================================
+
+    save_live_services_to_sqlite(
+        services
+    )
 
     enhanced_results = []
 
     for service in services:
 
-        # calculate distance
+        latitude = service.get(
+            "latitude"
+        )
+
+        longitude = service.get(
+            "longitude"
+        )
+
+        if (
+
+            latitude is None
+
+            or
+
+            longitude is None
+        ):
+
+            continue
+
         distance = calculate_distance(
 
             lat,
 
             lon,
 
-            service["latitude"],
+            latitude,
 
-            service["longitude"]
+            longitude
         )
 
-        service["distance_km"] = round(distance, 2)
+        service["distance_km"] = round(
+            distance,
+            2
+        )
 
-        # temporary AI fields for live data
+        # =============================
+        # TEMP RATING
+        # =============================
+
         service["rating"] = 4.0
+
         service["availability"] = True
 
-        # AI emergency score
+        # =============================
+        # AI SCORE
+        # =============================
+
         service["emergency_score"] = (
-            calculate_emergency_score(service)
+
+            calculate_emergency_score(
+                service
+            )
         )
 
-        # AI priority
+        # =============================
+        # AI PRIORITY
+        # =============================
+
         if service["emergency_score"] >= 80:
 
-            service["ai_priority"] = "HIGH"
+            service["ai_priority"] = (
+                "HIGH"
+            )
 
         elif service["emergency_score"] >= 50:
 
-            service["ai_priority"] = "MEDIUM"
+            service["ai_priority"] = (
+                "MEDIUM"
+            )
 
         else:
 
-            service["ai_priority"] = "LOW"
+            service["ai_priority"] = (
+                "LOW"
+            )
 
         enhanced_results.append(service)
 
-    # intelligent sorting
+    # =================================
+    # SORTING
+    # =================================
+
     enhanced_results.sort(
 
         key=lambda x: (
+
             -x["emergency_score"],
+
             x["distance_km"]
         )
     )
+
+    # =================================
+    # DETECT ONLINE/OFFLINE MODE
+    # =================================
+
+    mode = "online"
+
+    if (
+
+        enhanced_results
+
+        and
+
+        enhanced_results[0].get(
+            "source"
+        ) == "offline_db"
+    ):
+
+        mode = "offline_fallback"
 
     return {
 
         "success": True,
 
-        "count": len(enhanced_results),
+        "mode":
+            mode,
 
-        "type": type,
+        "count":
+            len(enhanced_results),
 
-        "data": enhanced_results
+        "service_type":
+            service_type,
+
+        "data":
+            enhanced_results
     }
