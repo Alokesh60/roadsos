@@ -258,15 +258,13 @@ fun ProfileScreen(
                 }
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(
-                    text = name,
+                    text = userProfile.name,
 
                     color = TextWhite,
                     fontSize = 22.sp,
                     fontWeight = FontWeight.Medium
                 )
             }
-
-                    fontSize = 26.sp,
 
             // PROFILE ICON
             Box(
@@ -362,6 +360,7 @@ fun ProfileScreen(
                         Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit Name", tint = TextWhite)
                     }
                 }
+            }
 
             Spacer(modifier = Modifier.height(26.dp))
 

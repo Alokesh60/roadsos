@@ -96,9 +96,6 @@ fun AuthScreenContent(
     var countryCode by remember {
         mutableStateOf("+91")
     }
-    var countryCode by remember {
-        mutableStateOf("")
-    }
 
     var phone by remember {
         mutableStateOf("")
