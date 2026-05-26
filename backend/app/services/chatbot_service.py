@@ -1,79 +1,272 @@
-from app.services.emergency_nlp_service import (
-    detect_emergency_type
-)
+import sys
+import os
+import requests
 
-from app.services.sqlite_service import (
-    get_all_services
+sys.path.append(
+    os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__),
+            "../../../"
+        )
+    )
 )
 
 from app.services.distance_service import (
     calculate_distance
 )
 
-from app.services.chroma_service import (
-    semantic_search
+from app.services.logging_service import (
+    save_emergency_log
+)
+
+from app.services.sqlite_service import (
+    get_all_services
+)
+
+from app.utils.response_formatter import (
+    format_service
+)
+
+from app.utils.emergency_numbers import (
+    get_emergency_numbers
+)
+
+from app.services.emergency_nlp_service import (
+    detect_emergency_type
 )
 
 
-def process_emergency_chatbot(
-    message: str,
-    latitude: float,
-    longitude: float
+# =====================================
+# DISASTER ALERT DETECTION
+# =====================================
+
+def detect_disaster_alerts(
+    message: str
 ):
 
-    # NLP classification
+    message = message.lower()
 
-    emergency_type, priority, confidence = (
-        detect_emergency_type(message)
-    )
+    alerts = []
 
-    # Fetch all services
+    if "flood" in message:
 
-    services = get_all_services()
+        alerts.append(
 
-    # Semantic retrieval from ChromaDB
+            "⚠ Flood risk detected."
+        )
 
-    semantic_results = semantic_search(
-        message
-    )
+    if "landslide" in message:
 
-    semantic_ids = set()
+        alerts.append(
+
+            "⚠ Landslide-prone area."
+        )
+
+    if "rain" in message:
+
+        alerts.append(
+
+            "⚠ Heavy rainfall warning."
+        )
+
+    if "storm" in message:
+
+        alerts.append(
+
+            "⚠ Thunderstorm alert."
+        )
+
+    return alerts
+
+
+# =====================================
+# AI GUIDANCE
+# =====================================
+
+def get_ai_guidance(
+
+    message: str,
+
+    latitude: float,
+
+    longitude: float,
+
+    nearest_service=None
+):
 
     try:
 
-        for result_id in semantic_results["ids"][0]:
+        ai_response = requests.post(
 
-            semantic_ids.add(
-                int(result_id)
-            )
+            "http://127.0.0.1:8000/chat",
 
-    except:
-        pass
+            json={
+
+                "user_message": message,
+
+                "context": {
+
+                    "lat": latitude,
+
+                    "lng": longitude,
+
+                    "nearest_service": (
+                        nearest_service
+                    ),
+
+                    "is_sos_active": True
+                },
+
+                "history": []
+            },
+
+            timeout=5
+        )
+
+        ai_response.raise_for_status()
+
+        ai_data = ai_response.json()
+
+        return {
+
+            "guidance":
+                ai_data.get(
+                    "reply",
+                    "Emergency guidance unavailable."
+                ),
+
+            "source":
+                ai_data.get(
+                    "source",
+                    "ai_module"
+                ),
+
+            "suggested_actions":
+                ai_data.get(
+                    "suggested_actions",
+                    []
+                )
+        }
+
+    except Exception as e:
+
+        print(
+            f"AI module failed: {e}"
+        )
+
+        return {
+
+            "guidance":
+                (
+                    "Emergency detected. "
+                    "Please contact nearby "
+                    "services immediately."
+                ),
+
+            "source":
+                "offline_fallback",
+
+            "suggested_actions": [
+
+                "Call emergency services",
+
+                "Share your live location",
+
+                "Move to a safe area"
+            ]
+        }
+
+
+# =====================================
+# MAIN EMERGENCY PROCESSOR
+# =====================================
+
+def process_emergency_chatbot(
+
+    message: str,
+
+    latitude: float,
+
+    longitude: float,
+
+    country: str = "India"
+):
+
+    # =================================
+    # OFFLINE EMERGENCY NUMBERS
+    # =================================
+
+    emergency_numbers = (
+
+        get_emergency_numbers(
+            country
+        )
+    )
+
+    # =================================
+    # LOCAL NLP CLASSIFIER
+    # =================================
+
+    detected_type, priority, confidence = (
+
+        detect_emergency_type(
+            message
+        )
+    )
+
+    # =================================
+    # FETCH SERVICES
+    # =================================
+
+    services = get_all_services()
 
     filtered = []
 
     for service in services:
 
-        # Facility type filtering
-
-        if service["type"] != emergency_type:
+        if service.get("country") != country:
             continue
 
-        # Semantic filtering
+        if (
 
-        if semantic_ids and service["id"] not in semantic_ids:
+            service.get("service_type")
+            != detected_type
+        ):
+
             continue
 
-        # Distance calculation
+        latitude_value = service.get(
+            "latitude"
+        )
+
+        longitude_value = service.get(
+            "longitude"
+        )
+
+        if (
+
+            latitude_value is None
+
+            or
+
+            longitude_value is None
+        ):
+
+            continue
 
         distance = calculate_distance(
 
             latitude,
+
             longitude,
 
-            service["latitude"],
-            service["longitude"]
+            latitude_value,
+
+            longitude_value
         )
+
+        if distance > 50:
+            continue
 
         service["distance_km"] = round(
             distance,
@@ -82,66 +275,127 @@ def process_emergency_chatbot(
 
         filtered.append(service)
 
-    # Sort nearest first
+    # =================================
+    # SORT BY DISTANCE
+    # =================================
 
     filtered.sort(
+
         key=lambda x: x["distance_km"]
     )
 
-    # Best recommendation
+    # =================================
+    # RECOMMENDED SERVICE
+    # =================================
 
-    recommended = (
+    recommended = format_service(
+
         filtered[0]
         if filtered
         else {}
     )
 
-    # AI emergency guidance
+    # =================================
+    # AI GUIDANCE
+    # =================================
 
-    guidance = generate_guidance(
-        emergency_type
+    ai_result = get_ai_guidance(
+
+        message=message,
+
+        latitude=latitude,
+
+        longitude=longitude,
+
+        nearest_service=(
+            recommended.get("name")
+        )
     )
+
+    # =================================
+    # DISASTER ALERTS
+    # =================================
+
+    disaster_alerts = (
+        detect_disaster_alerts(
+            message
+        )
+    )
+
+    # =================================
+    # SAVE EMERGENCY LOG
+    # =================================
+
+    save_emergency_log(
+
+        message=message,
+
+        detected_type=detected_type,
+
+        priority=priority,
+
+        confidence=confidence,
+
+        country=country,
+
+        classification_status=(
+            "emergency"
+        ),
+
+        recommended_service=(
+            recommended
+        )
+    )
+
+    # =================================
+    # FINAL RESPONSE
+    # =================================
 
     return {
 
-        "detected_type": emergency_type,
+        "success": True,
 
-        "priority": priority,
+        "classification_status":
+            "EMERGENCY",
 
-        "confidence": confidence,
+        "classification_reason":
+            "Emergency intent detected",
 
-        "recommended_service": recommended,
+        "proceed":
+            True,
 
-        "guidance": guidance,
+        "detected_type":
+            detected_type,
 
-        "semantic_matches_found": len(filtered)
+        "priority":
+            priority,
+
+        "confidence":
+            confidence,
+
+        "guidance":
+            ai_result["guidance"],
+
+        "source":
+            ai_result["source"],
+
+        "suggested_actions":
+            ai_result[
+                "suggested_actions"
+            ],
+
+        "recommended_service":
+            recommended,
+
+        "nearby_matches_found":
+            len(filtered),
+
+        "emergency_numbers":
+            emergency_numbers,
+
+        "offline_support":
+            True,
+
+        "disaster_alerts":
+            disaster_alerts
     }
-
-
-def generate_guidance(
-    emergency_type: str
-):
-
-    if emergency_type == "hospital":
-
-        return (
-            "Keep the injured person stable and avoid unnecessary movement."
-        )
-
-    elif emergency_type == "fire_station":
-
-        return (
-            "Move away from smoke and fire immediately."
-        )
-
-    elif emergency_type == "police":
-
-        return (
-            "Move to a safe location and contact authorities."
-        )
-
-    else:
-
-        return (
-            "Stay calm and wait for emergency assistance."
-        )

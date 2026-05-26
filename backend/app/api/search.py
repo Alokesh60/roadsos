@@ -1,6 +1,9 @@
+# search.py
 from fastapi import APIRouter, Query
 
-from app.services.supabase_service import search_services
+from app.services.sqlite_service import (
+    get_all_services
+)
 
 router = APIRouter()
 
@@ -9,12 +12,34 @@ router = APIRouter()
 async def search(
     q: str = Query(...)
 ):
+    """
+    Local SQLite-based emergency service search.
 
-    results = search_services(q)
+    Replaces old Supabase search implementation.
+    """
+
+    query = q.lower().strip()
+
+    services = get_all_services()
+
+    filtered = []
+
+    for service in services:
+
+        searchable_text = " ".join([
+            str(service.get("name", "")),
+            str(service.get("service_type", "")),
+            str(service.get("district", "")),
+            str(service.get("state", "")),
+            str(service.get("address", ""))
+        ]).lower()
+
+        if query in searchable_text:
+            filtered.append(service)
 
     return {
         "success": True,
-        "count": len(results),
+        "count": len(filtered),
         "query": q,
-        "data": results
+        "data": filtered
     }

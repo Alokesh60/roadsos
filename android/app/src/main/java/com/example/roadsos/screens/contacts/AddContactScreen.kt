@@ -28,6 +28,7 @@ import com.example.roadsos.theme.TextWhite
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.tooling.preview.Preview
 
+
 @Composable
 fun AddContactScreen(
 
@@ -45,6 +46,9 @@ fun AddContactScreen(
     }
 
     var number by remember {
+        mutableStateOf("")
+    }
+    var countryCode by remember {
         mutableStateOf("")
     }
 
@@ -152,15 +156,150 @@ fun AddContactScreen(
 
             // PHONE
 
-            InputField(
-                label = "Phone Number",
-                value = number,
-                placeholder = "Enter phone number",
+            // PHONE
 
-                onValueChange = {
-                    number = it
+            Column {
+
+                Text(
+                    text = "Phone Number",
+                    color = TextGray,
+                    fontSize = 14.sp
+                )
+
+                Spacer(
+                    modifier =
+                        Modifier.height(10.dp)
+                )
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+
+                    verticalAlignment =
+                        Alignment.CenterVertically
+                ) {
+
+                    // COUNTRY CODE
+
+                    OutlinedTextField(
+
+                        value = countryCode,
+
+                        onValueChange = {
+
+                            countryCode = it
+                        },
+
+                        modifier =
+                            Modifier.width(100.dp),
+
+                        singleLine = true,
+
+                        placeholder = {
+
+                            Text(
+                                "+91",
+                                color =
+                                    TextGray.copy(
+                                        alpha = 0.7f
+                                    )
+                            )
+                        },
+
+                        colors =
+                            OutlinedTextFieldDefaults.colors(
+
+                                focusedContainerColor =
+                                    CardBackground,
+
+                                unfocusedContainerColor =
+                                    CardBackground,
+
+                                focusedBorderColor =
+                                    PrimaryRed,
+
+                                unfocusedBorderColor =
+                                    Color.Transparent,
+
+                                focusedTextColor =
+                                    TextWhite,
+
+                                unfocusedTextColor =
+                                    TextWhite,
+
+                                cursorColor =
+                                    PrimaryRed
+                            ),
+
+                        shape =
+                            RoundedCornerShape(
+                                20.dp
+                            )
+                    )
+
+                    Spacer(
+                        modifier =
+                            Modifier.width(6.dp)
+                    )
+
+                    // PHONE NUMBER
+
+                    OutlinedTextField(
+
+                        value = number,
+
+                        onValueChange = {
+
+                            number = it
+                        },
+
+                        modifier =
+                            Modifier.weight(1f),
+
+                        singleLine = true,
+
+                        placeholder = {
+
+                            Text(
+                                "Enter phone number",
+                                color =
+                                    TextGray.copy(
+                                        alpha = 0.7f
+                                    )
+                            )
+                        },
+
+                        colors =
+                            OutlinedTextFieldDefaults.colors(
+
+                                focusedContainerColor =
+                                    CardBackground,
+
+                                unfocusedContainerColor =
+                                    CardBackground,
+
+                                focusedBorderColor =
+                                    PrimaryRed,
+
+                                unfocusedBorderColor =
+                                    Color.Transparent,
+
+                                focusedTextColor =
+                                    TextWhite,
+
+                                unfocusedTextColor =
+                                    TextWhite,
+
+                                cursorColor =
+                                    PrimaryRed
+                            ),
+
+                        shape =
+                            RoundedCornerShape(
+                                20.dp
+                            )
+                    )
                 }
-            )
+            }
 
             Spacer(modifier = Modifier.height(20.dp))
 

@@ -1,4 +1,6 @@
-from fastapi import APIRouter
+from fastapi import (
+    APIRouter
+)
 
 from app.schemas.emergency_schema import (
     EmergencyRequest,
@@ -10,65 +12,146 @@ from app.services.emergency_nlp_service import (
 )
 
 from app.services.sqlite_service import (
-    get_all_services
-)
-
-from app.services.distance_service import (
-    calculate_distance
+    get_nearest_services
 )
 
 router = APIRouter()
 
 
+# =====================================
+# EMERGENCY HANDLER
+# =====================================
+
 @router.post(
+
     "/emergency",
+
     response_model=EmergencyResponse
 )
 
 async def emergency_handler(
+
     request: EmergencyRequest
 ):
 
-    emergency_type, priority,confidence = (
+    # =================================
+    # DETECT EMERGENCY
+    # =================================
+
+    detected_type, priority, confidence = (
+
         detect_emergency_type(
             request.message
         )
     )
 
-    services = get_all_services()
+    # =================================
+    # FETCH NEAREST SERVICES
+    # =================================
 
-    filtered = []
+    nearby_services = (
 
-    for service in services:
+        get_nearest_services(
 
-        if service["type"] != emergency_type:
+            latitude=request.latitude,
 
-            continue
+            longitude=request.longitude,
 
-        distance = calculate_distance(
-            request.latitude,
-            request.longitude,
-            service["latitude"],
-            service["longitude"]
+            service_type=detected_type,
+
+            radius_km=50
         )
-
-        service["distance_km"] = distance
-
-        filtered.append(service)
-
-    filtered.sort(
-        key=lambda x: x["distance_km"]
     )
 
+    # =================================
+    # RECOMMENDED SERVICE
+    # =================================
+
     recommended = (
-        filtered[0]
-        if filtered
+
+        nearby_services[0]
+
+        if nearby_services
+
         else {}
     )
 
+    # =================================
+    # DISASTER ALERTS
+    # =================================
+
+    disaster_alerts = []
+
+    message = request.message.lower()
+
+    if "flood" in message:
+
+        disaster_alerts.append(
+            "⚠ Flood warning detected."
+        )
+
+    if "landslide" in message:
+
+        disaster_alerts.append(
+            "⚠ Landslide-prone area."
+        )
+
+    if "storm" in message:
+
+        disaster_alerts.append(
+            "⚠ Thunderstorm warning."
+        )
+
+    if "heavy rain" in message:
+
+        disaster_alerts.append(
+            "⚠ Heavy rainfall alert."
+        )
+
+    # =================================
+    # RESPONSE
+    # =================================
+
     return {
-        "detected_type": emergency_type,
-        "priority": priority,
-        "confidence": confidence,
-        "recommended_service": recommended
+
+        "classification_status":
+            "EMERGENCY",
+
+        "classification_reason":
+            "Emergency intent detected",
+
+        "proceed":
+            True,
+
+        "detected_type":
+            detected_type,
+
+        "priority":
+            priority,
+
+        "confidence":
+            confidence,
+
+        "recommended_service":
+            recommended,
+
+        "guidance":
+            (
+                "Please contact the "
+                "nearest emergency service "
+                "immediately."
+            ),
+
+        "source":
+            (
+                "offline_db"
+                if request.offline_mode
+                else "hybrid"
+            ),
+
+        "offline_support":
+            True,
+
+        "disaster_alerts":
+            disaster_alerts
     }
