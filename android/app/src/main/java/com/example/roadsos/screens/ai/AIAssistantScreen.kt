@@ -37,6 +37,8 @@ import com.example.roadsos.theme.TextWhite
 import androidx.compose.foundation.layout.imePadding
 
 import com.example.roadsos.ui.components.ErrorBanner
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.roadsos.theme.RoadSoSTheme
 
 data class AIChatMessage(
     val text: String,
@@ -79,7 +81,9 @@ fun AIAssistantScreen(
     ) {
 
         Column(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding()
         ) {
 
             // TOP BAR
@@ -486,5 +490,13 @@ fun AIAssistantScreen(
 
             Spacer(modifier = Modifier.height(14.dp))
         }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun AIAssistantScreenPreview() {
+    RoadSoSTheme {
+        AIAssistantScreen(onBack = {})
     }
 }

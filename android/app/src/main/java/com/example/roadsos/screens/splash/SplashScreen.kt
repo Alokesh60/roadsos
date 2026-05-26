@@ -21,8 +21,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.roadsos.R
 import com.example.roadsos.theme.PrimaryRed
+import com.example.roadsos.theme.RoadSoSTheme
 import com.example.roadsos.theme.TextGray
 import com.example.roadsos.theme.TextWhite
 
@@ -187,5 +189,14 @@ fun SplashScreen() {
                     Color.White.copy(alpha = 0.15f)
             )
         }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun SplashScreenPreview() {
+
+    RoadSoSTheme {
+        SplashScreen()
     }
 }

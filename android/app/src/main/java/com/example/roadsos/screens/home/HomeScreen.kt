@@ -1,7 +1,15 @@
 package com.example.roadsos.screens.home
 
+import androidx.compose.animation.core.InfiniteTransition
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -13,6 +21,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.LocalHospital
 import androidx.compose.material.icons.filled.LocalPolice
 import androidx.compose.material.icons.filled.LocationOn
@@ -35,6 +44,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.roadsos.LocationUtils
+import com.example.roadsos.models.PlaceCategory
 import com.example.roadsos.screens.navigation.BottomNavScreen
 import com.example.roadsos.theme.CardBackground
 import com.example.roadsos.theme.DarkBackground
@@ -47,27 +58,55 @@ import com.example.roadsos.ui.components.ErrorBanner
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roadsos.viewmodel.ServiceViewModel
+import com.example.roadsos.viewmodel.NearbyPlacesViewModel
+import com.example.roadsos.viewmodel.NearbyPlaceItem
 import kotlinx.coroutines.delay
 import androidx.compose.ui.platform.LocalContext
-import com.example.roadsos.LocationUtils
 
 @Composable
 fun HomeScreen(
     currentScreen: BottomNavScreen,
-    onTabSelected: (BottomNavScreen) -> Unit
+    onTabSelected: (BottomNavScreen) -> Unit,
+    onMapClick: (PlaceCategory?) -> Unit
 ) {
+    val context = LocalContext.current
+    val nearbyPlacesViewModel: NearbyPlacesViewModel = viewModel()
 
+    var latitude by remember { mutableStateOf(0.0) }
+    var longitude by remember { mutableStateOf(0.0) }
+
+    val nearbyPlaces by nearbyPlacesViewModel.nearbyPlaces.collectAsState()
+    val isGpsActive by nearbyPlacesViewModel.isGpsActive.collectAsState()
+
+    val profileViewModel: com.example.roadsos.viewmodel.ProfileViewModel = viewModel()
+    val profileState = profileViewModel.profileState.collectAsState().value
+    val profileUrl = if (profileState is com.example.roadsos.viewmodel.ProfileState.Success) profileState.profile.profileUrl else ""
+
+    LaunchedEffect(Unit) {
+        profileViewModel.fetchProfile()
+    }
+
+    // Get GPS location and fetch nearby places
+    LaunchedEffect(Unit) {
+        LocationUtils.getCurrentLocation(context) { lat, lon ->
+            if (lat != 0.0 && lon != 0.0) {
+                latitude = lat
+                longitude = lon
+                nearbyPlacesViewModel.fetchIfNeeded(lat, lon, context)
+            }
+        }
+    }
+
+    // Periodically check GPS status (every 3 seconds)
+    LaunchedEffect(Unit) {
+        while (true) {
+            nearbyPlacesViewModel.updateGpsStatus(context)
+            delay(3000)
+        }
+    }
 
     var showNotifications by remember {
         mutableStateOf(false)
-    }
-
-    var latitude by remember {
-        mutableStateOf(0.0)
-    }
-
-    var longitude by remember {
-        mutableStateOf(0.0)
     }
 
     var showSOSDialog by remember {
@@ -123,6 +162,8 @@ fun HomeScreen(
                 Spacer(modifier = Modifier.height(55.dp))
 
                 TopSection(
+                    isGpsActive = isGpsActive,
+                    profileUrl = profileUrl,
 
                     onNotificationClick = {
 
@@ -139,7 +180,17 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(22.dp))
 
-                LocationMapCard()
+                MapLegend(onCategoryClick = { category ->
+                    onMapClick(category)
+                })
+                Spacer(modifier = Modifier.height(8.dp))
+
+                LocationMapCard(
+                    latitude = latitude,
+                    longitude = longitude,
+                    nearbyPlaces = nearbyPlaces,
+                    onMapClick = onMapClick
+                )
 
                 Spacer(modifier = Modifier.height(26.dp))
 
@@ -151,7 +202,7 @@ fun HomeScreen(
 
                 Spacer(modifier = Modifier.height(28.dp))
 
-                NearbyServicesSection()
+                NearbyServicesSection(latitude = latitude, longitude = longitude)
 
                 Spacer(modifier = Modifier.height(40.dp))
             }
@@ -211,9 +262,26 @@ fun HomeScreen(
 
 @Composable
 fun TopSection(
+    isGpsActive: Boolean = true,
+    profileUrl: String = "",
     onNotificationClick: () -> Unit,
     onProfileClick: () -> Unit
 ) {
+    // Blinking animation for GPS dot
+    val infiniteTransition = rememberInfiniteTransition(label = "gps_blink")
+    val blinkAlpha by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 0.2f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(durationMillis = 800),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "gps_blink_alpha"
+    )
+
+    val gpsColor = if (isGpsActive) Color(0xFF4CAF50) else Color(0xFFE53935)
+    val gpsDotAlpha = if (isGpsActive) blinkAlpha else 1f
+    val gpsText = if (isGpsActive) "GPS Active" else "GPS Inactive"
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -248,20 +316,20 @@ fun TopSection(
                     modifier = Modifier
                         .size(10.dp)
                         .clip(CircleShape)
-                        .background(Color.Green)
+                        .background(gpsColor.copy(alpha = gpsDotAlpha))
                 )
 
                 Spacer(modifier = Modifier.width(8.dp))
 
                 Text(
-                    text = "GPS Active",
-                    color = TextGray,
+                    text = gpsText,
+                    color = gpsColor,
                     fontSize = 13.sp
                 )
             }
         }
 
-        Row {
+        Row(verticalAlignment = Alignment.CenterVertically) {
 
             IconButton(
                 onClick = onNotificationClick
@@ -287,13 +355,23 @@ fun TopSection(
             Spacer(modifier = Modifier.width(6.dp))
 
             IconButton(onClick = onProfileClick) {
-
-                Icon(
-                    imageVector = Icons.Default.AccountCircle,
-                    contentDescription = null,
-                    tint = TextWhite,
-                    modifier = Modifier.size(34.dp)
-                )
+                if (profileUrl.isNotEmpty()) {
+                    coil.compose.AsyncImage(
+                        model = profileUrl,
+                        contentDescription = "Profile",
+                        contentScale = androidx.compose.ui.layout.ContentScale.Crop,
+                        modifier = Modifier
+                            .size(34.dp)
+                            .clip(CircleShape)
+                    )
+                } else {
+                    Icon(
+                        imageVector = Icons.Default.AccountCircle,
+                        contentDescription = null,
+                        tint = TextWhite,
+                        modifier = Modifier.size(34.dp)
+                    )
+                }
             }
         }
     }
@@ -511,7 +589,69 @@ fun NotificationCard(
 
 
 @Composable
-fun LocationMapCard() {
+fun MapLegend(onCategoryClick: (PlaceCategory) -> Unit = {}) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = 4.dp, end = 4.dp, bottom = 8.dp)
+    ) {
+        Text(
+            text = "Quick Navigate to Nearest:",
+            color = TextGray,
+            fontSize = 13.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
+        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            LegendItem("Police", Color(0xFF1565C0), onClick = { onCategoryClick(PlaceCategory.POLICE) })
+            LegendItem("Hospital", Color(0xFFC62828), onClick = { onCategoryClick(PlaceCategory.HOSPITAL) })
+            LegendItem("Garage", Color(0xFFE65100), onClick = { onCategoryClick(PlaceCategory.GARAGE) })
+            LegendItem("Food", Color(0xFF2E7D32), onClick = { onCategoryClick(PlaceCategory.FOOD) })
+        }
+    }
+}
+
+@Composable
+fun LegendItem(label: String, color: Color, onClick: (() -> Unit)? = null) {
+    Surface(
+        color = color.copy(alpha = 0.15f), // Light tint of the category color
+        shape = RoundedCornerShape(20.dp),
+        modifier = if (onClick != null) Modifier.clip(RoundedCornerShape(20.dp)).clickable { onClick() } else Modifier
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(horizontal = 14.dp, vertical = 10.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(12.dp)
+                    .clip(CircleShape)
+                    .background(color)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Text(
+                text = label,
+                color = TextWhite,
+                fontSize = 13.sp,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+fun LocationMapCard(
+    latitude: Double,
+    longitude: Double,
+    nearbyPlaces: List<NearbyPlaceItem> = emptyList(),
+    onMapClick: (PlaceCategory?) -> Unit = {}
+) {
 
     Card(
         modifier = Modifier
@@ -522,251 +662,48 @@ fun LocationMapCard() {
             containerColor = CardBackground
         ),
 
-        shape = RoundedCornerShape(30.dp)
+        shape = RoundedCornerShape(30.dp),
+        onClick = { onMapClick(null) }
     ) {
+
+        var isSatellite by remember { mutableStateOf(false) }
 
         Box(
             modifier = Modifier.fillMaxSize()
         ) {
 
-            // DARK MAP BG
-
+            // MAP COMPONENT (Google Map)
+            com.example.roadsos.ui.components.MapComponent(
+                latitude = latitude,
+                longitude = longitude,
+                nearbyPlaces = nearbyPlaces,
+                isSatellite = isSatellite,
+                modifier = Modifier.fillMaxSize()
+            )
+            
+            // Transparent overlay to ensure the Card captures clicks instead of the MapView
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(
-                        Color(0xFF101826)
-                    )
+                    .background(Color.Transparent)
+                    .clickable { onMapClick(null) }
             )
 
-            // SOFT ROAD LAYOUT
-
-            Canvas(
-                modifier = Modifier.fillMaxSize()
-            ) {
-
-                val roadColor = Color(0xFF263245)
-
-                // roads
-
-                drawLine(
-                    color = roadColor,
-                    start = Offset(0f, 180f),
-                    end = Offset(size.width, 180f),
-                    strokeWidth = 14f
-                )
-
-                drawLine(
-                    color = roadColor,
-                    start = Offset(160f, 0f),
-                    end = Offset(160f, size.height),
-                    strokeWidth = 14f
-                )
-
-                drawLine(
-                    color = roadColor.copy(alpha = 0.7f),
-                    start = Offset(320f, 0f),
-                    end = Offset(320f, size.height),
-                    strokeWidth = 8f
-                )
-
-                // route
-
-                drawPath(
-                    path = androidx.compose.ui.graphics.Path().apply {
-
-                        moveTo(160f, 180f)
-
-                        cubicTo(
-                            240f,
-                            130f,
-                            320f,
-                            220f,
-                            470f,
-                            120f
-                        )
-                    },
-
-                    color = PrimaryRed,
-
-                    style = Stroke(
-                        width = 8f,
-                        cap = StrokeCap.Round
-                    )
-                )
-            }
-
-            // BLUE USER DOT
-
-            Box(
+            // Satellite Toggle Button (Placed ON TOP of the transparent overlay)
+            androidx.compose.material3.IconButton(
+                onClick = { isSatellite = !isSatellite },
                 modifier = Modifier
-                    .offset(
-                        x = 95.dp,
-                        y = 120.dp
-                    )
-                    .size(18.dp)
-                    .shadow(
-                        elevation = 16.dp,
-                        shape = CircleShape,
-                        ambientColor = Color(0xFF4DA3FF)
-                    )
+                    .align(Alignment.TopEnd)
+                    .padding(16.dp)
+                    .size(40.dp)
                     .clip(CircleShape)
-                    .background(Color(0xFF4DA3FF))
-            )
-
-            // DESTINATION PIN
-
-            Box(
-                modifier = Modifier
-                    .offset(
-                        x = 250.dp,
-                        y = 78.dp
-                    )
-                    .size(16.dp)
-                    .clip(CircleShape)
-                    .background(PrimaryRed)
-            )
-
-            // ETA CARD
-
-            Card(
-                modifier = Modifier
-                    .offset(
-                        x = 170.dp,
-                        y = 150.dp
-                    ),
-
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF141C28)
-                ),
-
-                shape = RoundedCornerShape(14.dp)
+                    .background(Color(0xFF182232).copy(alpha = 0.9f))
             ) {
-
-                Text(
-                    text = "3 min away",
-                    color = Color(0xFF4CAF50),
-
-                    modifier = Modifier.padding(
-                        horizontal = 12.dp,
-                        vertical = 8.dp
-                    ),
-
-                    fontSize = 12.sp,
-                    fontWeight = FontWeight.SemiBold
+                androidx.compose.material3.Icon(
+                    imageVector = Icons.Filled.Layers,
+                    contentDescription = if (isSatellite) "Normal Map" else "Satellite Map",
+                    tint = if (isSatellite) Color(0xFF4CAF50) else Color.White
                 )
-            }
-
-            // TOP OVERLAY
-
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(18.dp),
-
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
-
-                Column {
-
-                    Text(
-                        text = "Your Location",
-                        color = TextGray,
-                        fontSize = 11.sp
-                    )
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Text(
-                        text = "Connaught Place",
-                        color = TextWhite,
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    Text(
-                        text = "New Delhi",
-                        color = TextGray,
-                        fontSize = 12.sp
-                    )
-                }
-
-                Card(
-                    colors = CardDefaults.cardColors(
-                        containerColor = Color(0xFF182232)
-                    ),
-
-                    shape = RoundedCornerShape(16.dp)
-                ) {
-
-                    Row(
-                        modifier = Modifier.padding(
-                            horizontal = 12.dp,
-                            vertical = 8.dp
-                        ),
-
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-
-                        Box(
-                            modifier = Modifier
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(Color.Green)
-                        )
-
-                        Spacer(modifier = Modifier.width(6.dp))
-
-                        Text(
-                            text = "LIVE",
-                            color = TextWhite,
-                            fontSize = 11.sp
-                        )
-                    }
-                }
-            }
-
-            // SEARCH BAR
-
-            Card(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(14.dp),
-
-                colors = CardDefaults.cardColors(
-                    containerColor = Color(0xFF151D2A)
-                ),
-
-                shape = RoundedCornerShape(18.dp)
-            ) {
-
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(
-                            horizontal = 16.dp,
-                            vertical = 14.dp
-                        ),
-
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-
-                    Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = null,
-                        tint = TextGray
-                    )
-
-                    Spacer(modifier = Modifier.width(10.dp))
-
-                    Text(
-                        text = "Search hospitals, police...",
-                        color = TextGray,
-                        fontSize = 14.sp
-                    )
-                }
             }
         }
     }
@@ -786,8 +723,8 @@ fun QuickActionsSection() {
     val actions = listOf(
         Triple("Ambulance", "108", Icons.Default.Call),
         Triple("Police", "100", Icons.Default.LocalPolice),
-        Triple("Hospitals", "Nearby", Icons.Default.LocalHospital),
-        Triple("Towing", "Services", Icons.Default.DirectionsCar)
+        Triple("Hospitals", "104", Icons.Default.LocalHospital),
+        Triple("Towing", "103", Icons.Default.DirectionsCar)
     )
 
     LazyRow {
@@ -947,23 +884,14 @@ fun SOSSection() {
 
 
 @Composable
-fun NearbyServicesSection() {
+fun NearbyServicesSection(latitude: Double, longitude: Double) {
 
     val viewModel: ServiceViewModel = viewModel()
 
     val services by viewModel.services.collectAsState()
 
-    val context = LocalContext.current
-
-    var latitude by remember { mutableStateOf(0.0) }
-    var longitude by remember { mutableStateOf(0.0) }
-
-    LaunchedEffect(Unit) {
-
-        LocationUtils.getCurrentLocation(
-            context = context
-        ) { latitude, longitude ->
-
+    LaunchedEffect(latitude, longitude) {
+        if (latitude != 0.0 && longitude != 0.0) {
             viewModel.fetchNearbyServices(
                 lat = latitude,
                 lon = longitude
@@ -971,10 +899,27 @@ fun NearbyServicesSection() {
         }
     }
 
-    Text(
-        text = "Lat: $latitude\nLon: $longitude",
-        color = Color.White
-    )
+    // Latitude & Longitude Coordinate Display
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Column {
+            Text(
+                text = "Lat: ${if (latitude == 0.0) "..." else String.format("%.5f", latitude)}",
+                color = TextGray,
+                fontSize = 14.sp
+            )
+            Text(
+                text = "Lon: ${if (longitude == 0.0) "..." else String.format("%.5f", longitude)}",
+                color = TextGray,
+                fontSize = 14.sp
+            )
+        }
+    }
+
+    Spacer(modifier = Modifier.height(18.dp))
 
     Text(
         text = "Nearby Services",

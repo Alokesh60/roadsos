@@ -45,6 +45,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roadsos.viewmodel.ServiceViewModel
 
 import com.example.roadsos.ui.components.EmptyStateCard
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.roadsos.theme.RoadSoSTheme
 
 
 //data class EmergencyService(
@@ -60,7 +62,32 @@ import com.example.roadsos.ui.components.EmptyStateCard
 fun ServicesScreen(
     currentScreen: BottomNavScreen,
     onTabSelected: (BottomNavScreen) -> Unit,
-    onServiceClick: (EmergencyService) -> Unit
+    onServiceClick: (EmergencyService) -> Unit,
+    viewModel: ServiceViewModel = viewModel()
+) {
+
+    val services by
+    viewModel.services.collectAsState()
+
+    LaunchedEffect(Unit) {
+
+        viewModel.fetchNearbyServices()
+    }
+
+    ServicesScreenContent(
+        currentScreen = currentScreen,
+        onTabSelected = onTabSelected,
+        onServiceClick = onServiceClick,
+        services = services
+    )
+}
+
+@Composable
+fun ServicesScreenContent(
+    currentScreen: BottomNavScreen,
+    onTabSelected: (BottomNavScreen) -> Unit,
+    onServiceClick: (EmergencyService) -> Unit,
+    services: List<EmergencyService>
 ) {
 
     var searchText by remember {
@@ -69,16 +96,6 @@ fun ServicesScreen(
 
     var selectedFilter by remember {
         mutableStateOf("All")
-    }
-
-    val viewModel: ServiceViewModel =
-        viewModel()
-
-    val services by
-    viewModel.services.collectAsState()
-    LaunchedEffect(Unit) {
-
-        viewModel.fetchNearbyServices()
     }
 
 //    val services = listOf(
@@ -489,6 +506,47 @@ fun InfoPill(text: String) {
             text = text,
             color = TextGray,
             fontSize = 11.sp
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun ServicesScreenPreview() {
+
+    val previewServices = listOf(
+        EmergencyService(
+            id = 1,
+            name = "City Ambulance 108",
+            type = "Ambulance",
+            phone = "108",
+            address = "Main Road",
+            city = "Guwahati",
+            latitude = 26.1445,
+            longitude = 91.7362,
+            rating = 4.6,
+            distance_km = 1.2
+        ),
+        EmergencyService(
+            id = 2,
+            name = "AIIMS Trauma Centre",
+            type = "Hospital",
+            phone = "+91 9876543210",
+            address = "Central Avenue",
+            city = "Guwahati",
+            latitude = 26.1458,
+            longitude = 91.7381,
+            rating = 4.8,
+            distance_km = 0.8
+        )
+    )
+
+    RoadSoSTheme {
+        ServicesScreenContent(
+            currentScreen = BottomNavScreen.SERVICES,
+            onTabSelected = {},
+            onServiceClick = {},
+            services = previewServices
         )
     }
 }

@@ -24,11 +24,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.roadsos.R
 import com.example.roadsos.theme.PrimaryRed
+import com.example.roadsos.theme.RoadSoSTheme
 import com.example.roadsos.theme.TextGray
 import com.example.roadsos.theme.TextWhite
+import com.example.roadsos.ui.components.CountryCodePhoneField
 
+import android.app.Activity
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.roadsos.viewmodel.AuthState
+import com.example.roadsos.viewmodel.AuthViewModel
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -38,15 +46,53 @@ import kotlinx.coroutines.launch
 @Composable
 fun AuthScreen(
     onLoginSuccess: () -> Unit,
-    onSignupSuccess: () -> Unit
+    onSignupSuccess: () -> Unit,
+    viewModel: AuthViewModel = viewModel()
+) {
+    val context = LocalContext.current
+    val authState by viewModel.authState.collectAsState()
+
+    LaunchedEffect(authState) {
+        if (authState is AuthState.Success) {
+            if (isSignupTemp) { // Will track this in state
+                onSignupSuccess()
+            } else {
+                onLoginSuccess()
+            }
+            viewModel.resetState()
+        }
+    }
+
+    AuthScreenContent(
+        authState = authState,
+        onSendOtp = { phone, isSignup, name -> viewModel.sendVerificationCode(phone, context as Activity, isSignup, name) },
+        onVerifyOtp = { code, isSignup, name -> viewModel.verifyOtp(code, isSignup, name) },
+        onGoogleSignIn = { isSignup, name -> viewModel.signInWithGoogle(context, isSignup, name) },
+        onAuthTypeChange = { isSignup -> isSignupTemp = isSignup }
+    )
+}
+
+var isSignupTemp = false
+
+@Composable
+fun AuthScreenContent(
+    authState: AuthState,
+    onSendOtp: (String, Boolean, String) -> Unit,
+    onVerifyOtp: (String, Boolean, String) -> Unit,
+    onGoogleSignIn: (Boolean, String) -> Unit,
+    onAuthTypeChange: (Boolean) -> Unit
 ) {
 
     var isSignup by remember {
-        mutableStateOf(true)
+        mutableStateOf(false)
     }
 
     var name by remember {
         mutableStateOf("")
+    }
+
+    var countryCode by remember {
+        mutableStateOf("+91")
     }
 
     var phone by remember {
@@ -57,15 +103,9 @@ fun AuthScreen(
         mutableStateOf("")
     }
 
-    // ERROR + LOADING STATES
-
-    var authError by remember {
-        mutableStateOf("")
-    }
-
-    var isLoading by remember {
-        mutableStateOf(false)
-    }
+    val isLoading = authState is AuthState.Loading
+    val authError = if (authState is AuthState.Error) (authState as AuthState.Error).message else ""
+    val isOtpSent = authState is AuthState.OtpSent
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -98,6 +138,8 @@ fun AuthScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .systemBarsPadding()
+                .imePadding()
                 .verticalScroll(
                     rememberScrollState()
                 )
@@ -107,7 +149,7 @@ fun AuthScreen(
                 Alignment.CenterHorizontally
         ) {
 
-            Spacer(modifier = Modifier.height(62.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
             // LOGO
 
@@ -152,7 +194,7 @@ fun AuthScreen(
                 fontSize = 16.sp
             )
 
-            Spacer(modifier = Modifier.height(42.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
             // TOGGLE BUTTONS
 
@@ -168,8 +210,7 @@ fun AuthScreen(
                 ) {
 
                     isSignup = true
-
-                    authError = ""
+                    onAuthTypeChange(true)
                 }
 
                 Spacer(modifier = Modifier.width(12.dp))
@@ -182,8 +223,7 @@ fun AuthScreen(
                 ) {
 
                     isSignup = false
-
-                    authError = ""
+                    onAuthTypeChange(false)
                 }
             }
 
@@ -207,28 +247,26 @@ fun AuthScreen(
 
             // PHONE FIELD
 
-            AuthInputField(
-                value = phone,
-                placeholder = "Phone Number",
-                icon = Icons.Default.Phone,
-                keyboardType = KeyboardType.Phone
-            ) {
-
-                phone = it
-            }
+            CountryCodePhoneField(
+                phoneNumber = phone,
+                countryCode = countryCode,
+                onPhoneNumberChange = { phone = it },
+                onCountryCodeChange = { countryCode = it }
+            )
 
             Spacer(modifier = Modifier.height(18.dp))
 
-            // OTP FIELD
+            // OTP FIELD (Only show if OTP sent)
 
-            AuthInputField(
-                value = otp,
-                placeholder = "OTP",
-                icon = Icons.Default.Phone,
-                keyboardType = KeyboardType.Number
-            ) {
-
-                otp = it
+            if (isOtpSent) {
+                AuthInputField(
+                    value = otp,
+                    placeholder = "OTP",
+                    icon = Icons.Default.Phone,
+                    keyboardType = KeyboardType.Number
+                ) {
+                    otp = it
+                }
             }
 
             // ERROR MESSAGE BELOW OTP
@@ -247,16 +285,15 @@ fun AuthScreen(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            // SEND OTP
-
-            TextButton(
-                onClick = { }
-            ) {
-
-                Text(
-                    text = "Send OTP",
-                    color = PrimaryRed
-                )
+            if (!isOtpSent) {
+                TextButton(
+                    onClick = { onSendOtp(countryCode + phone, isSignup, name) }
+                ) {
+                    Text(
+                        text = "Send OTP",
+                        color = PrimaryRed
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(18.dp))
@@ -264,32 +301,11 @@ fun AuthScreen(
             // CONTINUE BUTTON
 
             Button(
-//                onClick = {
-//
-//                    authError = ""
-//
-//                    isLoading = true
-//
-//                    kotlinx.coroutines.CoroutineScope(
-//                        kotlinx.coroutines.Dispatchers.Main
-//                    ).launch {
-//
-//                        kotlinx.coroutines.delay(2000)
-//
-//                        isLoading = false
-//
-//                        authError = "Invalid OTP"
-//                    }
-//                },
                 onClick = {
-
-                    if (isSignup) {
-
-                        onSignupSuccess()
-
+                    if (isOtpSent) {
+                        onVerifyOtp(otp, isSignup, name)
                     } else {
-
-                        onLoginSuccess()
+                        onSendOtp(countryCode + phone, isSignup, name)
                     }
                 },
 
@@ -337,19 +353,7 @@ fun AuthScreen(
             // GOOGLE BUTTON
 
             OutlinedButton(
-                onClick = {
-
-                    authError = ""
-
-                    if (isSignup) {
-
-                        onSignupSuccess()
-
-                    } else {
-
-                        onLoginSuccess()
-                    }
-                },
+                onClick = { onGoogleSignIn(isSignup, name) },
 
                 modifier = Modifier
                     .fillMaxWidth()
@@ -469,4 +473,19 @@ fun AuthInputField(
 
         shape = RoundedCornerShape(22.dp)
     )
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun AuthScreenPreview() {
+
+    RoadSoSTheme {
+        AuthScreenContent(
+            authState = AuthState.Idle,
+            onSendOtp = { _, _, _ -> },
+            onVerifyOtp = { _, _, _ -> },
+            onGoogleSignIn = { _, _ -> },
+            onAuthTypeChange = {}
+        )
+    }
 }

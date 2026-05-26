@@ -24,11 +24,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import com.example.roadsos.screens.home.BottomNavBar
 import com.example.roadsos.screens.navigation.BottomNavScreen
 import com.example.roadsos.theme.CardBackground
 import com.example.roadsos.theme.DarkBackground
 import com.example.roadsos.theme.PrimaryRed
+import com.example.roadsos.theme.RoadSoSTheme
 import com.example.roadsos.theme.TextGray
 import com.example.roadsos.theme.TextWhite
 
@@ -573,6 +575,36 @@ fun ContactCard(
             },
 
             containerColor = CardBackground
+        )
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun ContactsScreenPreview() {
+
+    val previewContacts = listOf(
+        EmergencyContact(
+            name = "Rahul Sharma",
+            relation = "Brother",
+            number = "+91 9876543210",
+            priority = "Primary"
+        ),
+        EmergencyContact(
+            name = "Ananya Das",
+            relation = "Friend",
+            number = "+91 9123456780",
+            priority = "Secondary"
+        )
+    )
+
+    RoadSoSTheme {
+        ContactsScreen(
+            currentScreen = BottomNavScreen.CONTACTS,
+            onTabSelected = {},
+            contacts = previewContacts,
+            onAddContact = {},
+            onDeleteContact = {}
         )
     }
 }
