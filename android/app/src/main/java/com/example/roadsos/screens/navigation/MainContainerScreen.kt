@@ -9,12 +9,16 @@ import com.example.roadsos.screens.contacts.AddContactScreen
 import com.example.roadsos.screens.contacts.ContactsScreen
 import com.example.roadsos.screens.contacts.EmergencyContact
 import com.example.roadsos.screens.home.HomeScreen
+import com.example.roadsos.screens.home.HomeScreen
 import com.example.roadsos.models.EmergencyService
+import com.example.roadsos.models.PlaceCategory
 import com.example.roadsos.screens.services.ServiceDetailScreen
 import com.example.roadsos.screens.services.ServicesScreen
 import com.example.roadsos.screens.profile.ProfileScreen
 import com.example.roadsos.screens.permissions.PermissionScreen
 import androidx.activity.compose.BackHandler
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.roadsos.theme.RoadSoSTheme
 
 enum class BottomNavScreen {
     HOME,
@@ -24,7 +28,8 @@ enum class BottomNavScreen {
     SERVICE_DETAIL,
     ADD_CONTACT,
     PROFILE,
-    PERMISSIONS
+    PERMISSIONS,
+    FULL_MAP
 }
 
 @Composable
@@ -87,6 +92,8 @@ fun MainContainerScreen(
             )
         )
     }
+    
+    var initialMapCategory by remember { mutableStateOf<PlaceCategory?>(null) }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -103,6 +110,11 @@ fun MainContainerScreen(
 
                     onTabSelected = {
                         currentScreen = it
+                    },
+
+                    onMapClick = { category ->
+                        initialMapCategory = category
+                        currentScreen = BottomNavScreen.FULL_MAP
                     }
                 )
             }
@@ -250,10 +262,28 @@ fun MainContainerScreen(
                     onContinue = {
 
                         currentScreen =
-                            BottomNavScreen.PROFILE
+                           BottomNavScreen.HOME
+                    }
+                )
+            }
+            
+            BottomNavScreen.FULL_MAP -> {
+                com.example.roadsos.screens.home.FullMapScreen(
+                    initialCategory = initialMapCategory,
+                    onBack = {
+                        currentScreen = BottomNavScreen.HOME
+                        initialMapCategory = null
                     }
                 )
             }
         }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun MainContainerScreenPreview() {
+    RoadSoSTheme {
+        MainContainerScreen(onLogout = {})
     }
 }

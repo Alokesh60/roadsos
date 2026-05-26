@@ -33,10 +33,12 @@ import com.example.roadsos.screens.navigation.BottomNavScreen
 import com.example.roadsos.theme.CardBackground
 import com.example.roadsos.theme.DarkBackground
 import com.example.roadsos.theme.PrimaryRed
+import com.example.roadsos.theme.RoadSoSTheme
 import com.example.roadsos.theme.TextGray
 import com.example.roadsos.theme.TextWhite
 import androidx.activity.compose.BackHandler
 import com.example.roadsos.models.EmergencyService
+import androidx.compose.ui.tooling.preview.Preview
 
 @Composable
 fun ServiceDetailScreen(
@@ -526,6 +528,33 @@ fun DetailInfoCard(
                 fontWeight = FontWeight.Bold
             )
         }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun ServiceDetailScreenPreview() {
+
+    val previewService = EmergencyService(
+        id = 1,
+        name = "AIIMS Trauma Centre",
+        type = "Hospital",
+        phone = "+91 9876543210",
+        address = "Central Avenue",
+        city = "Guwahati",
+        latitude = 26.1458,
+        longitude = 91.7381,
+        rating = 4.8,
+        distance_km = 0.8
+    )
+
+    RoadSoSTheme {
+        ServiceDetailScreen(
+            service = previewService,
+            currentScreen = BottomNavScreen.SERVICE_DETAIL,
+            onTabSelected = {},
+            onBack = {}
+        )
     }
 }
 

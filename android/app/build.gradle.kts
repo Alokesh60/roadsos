@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.google.services)
 }
 
 android {
@@ -17,12 +18,12 @@ android {
 
         targetSdk = 35
 
-        versionCode = 1
-
         versionName = "1.0"
 
         testInstrumentationRunner =
             "androidx.test.runner.AndroidJUnitRunner"
+            
+        manifestPlaceholders["mapsApiKey"] = "YOUR_API_KEY_HERE"
     }
 
     buildTypes {
@@ -71,20 +72,31 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.navigation:navigation-compose:2.7.7")
-    implementation("com.squareup.retrofit2:retrofit:2.11.0")
-
-    implementation("com.squareup.retrofit2:converter-gson:2.11.0")
-
-    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
-
+    implementation(libs.androidx.compose.material.icons.extended)
+    implementation(libs.androidx.navigation.compose)
+    implementation(libs.retrofit)
+    implementation(libs.converter.gson)
+    implementation(libs.logging.interceptor)
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.0")
-
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.0")
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.play.services.location)
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
+    // Maps & Places
+    implementation(libs.maps.compose)
+    implementation(libs.play.services.maps)
+    implementation(libs.places)
+    // implementation(libs.hilt.android)
+    // kapt(libs.hilt.compiler)
+    // implementation(libs.androidx.hilt.navigation.compose)
 
-    implementation("com.google.android.gms:play-services-location:21.0.1")
-
+    // Firebase and Google Auth
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
+    implementation("com.google.firebase:firebase-firestore")
+    implementation("io.coil-kt:coil-compose:2.6.0")
 }

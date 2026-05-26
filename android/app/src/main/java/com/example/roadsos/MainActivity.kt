@@ -20,7 +20,6 @@ import com.example.roadsos.screens.permissions.PermissionScreen
 import com.example.roadsos.screens.splash.SplashScreen
 import com.example.roadsos.theme.RoadSoSTheme
 import kotlinx.coroutines.delay
-
 class MainActivity : ComponentActivity() {
     companion object {
 
@@ -80,6 +79,17 @@ class MainActivity : ComponentActivity() {
             )
         }
 
+        try {
+            val ai = packageManager.getApplicationInfo(packageName, PackageManager.GET_META_DATA)
+            val bundle = ai.metaData
+            val mapsApiKey = bundle?.getString("com.google.android.geo.API_KEY")
+            if (mapsApiKey != null && !com.google.android.libraries.places.api.Places.isInitialized()) {
+                com.google.android.libraries.places.api.Places.initialize(applicationContext, mapsApiKey)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
         setContent {
 
             RoadSoSTheme {
@@ -121,7 +131,7 @@ fun RoadSoSApp() {
 
     var isLoggedIn by remember {
 
-        mutableStateOf(false)
+        mutableStateOf(com.google.firebase.auth.FirebaseAuth.getInstance().currentUser != null)
     }
 
     var showPermissions by remember {

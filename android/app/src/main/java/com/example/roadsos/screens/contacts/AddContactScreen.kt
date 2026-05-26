@@ -22,9 +22,11 @@ import androidx.compose.ui.unit.sp
 import com.example.roadsos.theme.CardBackground
 import com.example.roadsos.theme.DarkBackground
 import com.example.roadsos.theme.PrimaryRed
+import com.example.roadsos.theme.RoadSoSTheme
 import com.example.roadsos.theme.TextGray
 import com.example.roadsos.theme.TextWhite
 import androidx.activity.compose.BackHandler
+import androidx.compose.ui.tooling.preview.Preview
 
 
 @Composable
@@ -67,6 +69,8 @@ fun AddContactScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .systemBarsPadding()
+                .imePadding()
                 .verticalScroll(
                     rememberScrollState()
                 )
@@ -541,5 +545,17 @@ fun PriorityDropdown(
                 }
             }
         }
+    }
+}
+
+@Preview(showBackground = true, showSystemUi = true)
+@Composable
+fun AddContactScreenPreview() {
+
+    RoadSoSTheme {
+        AddContactScreen(
+            onBack = {},
+            onSave = {}
+        )
     }
 }
