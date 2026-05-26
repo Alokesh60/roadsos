@@ -1,0 +1,26 @@
+name,lat,lng,phone,type,district,state,highway_near,beds
+Gauhati Medical College and Hospital,26.1445,91.7362,0361-2529457,govt,Kamrup Metropolitan,Assam,,1340
+Barpeta Medical College and Hospital,26.3219,91.0112,03666-255555,govt,Barpeta,Assam,NH-27,500
+Jorhat Medical College and Hospital,26.7509,94.2037,0376-2301063,govt,Jorhat,Assam,NH-37,500
+Silchar Medical College and Hospital,24.8333,92.7789,03842-240777,govt,Cachar,Assam,,500
+Fakhruddin Ali Ahmed Medical College Barpeta,26.3225,91.0150,03666-255501,govt,Barpeta,Assam,NH-27,300
+Assam Medical College Dibrugarh,27.4728,94.9120,0373-2300008,govt,Dibrugarh,Assam,,500
+Lakhimpur Civil Hospital,27.2394,94.1015,03752-222334,govt,Lakhimpur,Assam,,200
+Dhubri Civil Hospital,26.0167,89.9833,03662-230222,govt,Dhubri,Assam,NH-27,200
+Goalpara Civil Hospital,26.1681,90.6234,03663-222300,govt,Goalpara,Assam,NH-27,150
+Kokrajhar Civil Hospital,26.3994,90.2717,03661-271234,govt,Kokrajhar,Assam,NH-27,150
+Nagaon Civil Hospital,26.3469,92.6836,03672-235678,govt,Nagaon,Assam,,200
+Tezpur Civil Hospital,26.6338,92.7924,03712-220456,govt,Sonitpur,Assam,,200
+Karimganj Civil Hospital,24.8644,92.3568,03843-262100,govt,Karimganj,Assam,,150
+Hailakandi Civil Hospital,24.6832,92.5621,03844-222200,govt,Hailakandi,Assam,,100
+Morigaon Civil Hospital,26.2468,92.3340,03678-220123,govt,Morigaon,Assam,,100
+Nalbari Civil Hospital,26.4463,91.4381,03624-222456,govt,Nalbari,Assam,,150
+Bongaigaon Civil Hospital,26.4781,90.5582,03664-230456,govt,Bongaigaon,Assam,NH-27,200
+Kamrup Civil Hospital Baihata,26.3400,91.6200,0361-2840123,govt,Kamrup,Assam,NH-27,100
+Darrang Civil Hospital Mangaldoi,26.4367,92.0318,03713-220567,govt,Darrang,Assam,,150
+Sivasagar Civil Hospital,26.9836,94.6389,03772-222345,govt,Sivasagar,Assam,,200
+Majuli Civil Hospital,26.9500,94.1700,,govt,Majuli,Assam,,50
+Hojai Civil Hospital,26.0003,92.8575,03674-222100,govt,Hojai,Assam,,100
+Cachar Cancer Hospital Silchar,24.8220,92.7762,03842-241122,govt,Cachar,Assam,,100
+down town Hospital Guwahati,26.1320,91.8060,0361-2331003,private,Kamrup Metropolitan,Assam,,300
+Nemcare Hospital Guwahati,26.1418,91.7930,0361-2228989,private,Kamrup Metropolitan,Assam,,200

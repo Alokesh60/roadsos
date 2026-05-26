@@ -1,0 +1,23 @@
+name,lat,lng,phone,district,state,highway_near,ps_type
+Assam Police HQ Guwahati,26.1892,91.7458,0361-2237863,Kamrup Metropolitan,Assam,,district_hq
+Barpeta Police Station,26.3234,91.0028,03666-255100,Barpeta,Assam,NH-27,district_hq
+Barpeta Road Police Station,26.4977,91.0123,03666-244100,Barpeta,Assam,NH-27,local
+Sarthebari Police Station,26.3700,91.1800,,Barpeta,Assam,,local
+Dhubri Police Station,26.0167,89.9833,03662-230100,Dhubri,Assam,NH-27,district_hq
+Goalpara Police Station,26.1681,90.6234,03663-222100,Goalpara,Assam,NH-27,district_hq
+Kokrajhar Police Station,26.3994,90.2717,03661-271100,Kokrajhar,Assam,NH-27,district_hq
+Bongaigaon Police Station,26.4781,90.5582,03664-230100,Bongaigaon,Assam,NH-27,district_hq
+Kamrup District Police Rangia,26.4500,91.6000,03621-220100,Kamrup,Assam,NH-27,district_hq
+Nalbari Police Station,26.4463,91.4381,03624-222100,Nalbari,Assam,,district_hq
+Jorhat Police Station,26.7509,94.2037,0376-2301100,Jorhat,Assam,NH-37,district_hq
+Dibrugarh Police Station,27.4728,94.9120,0373-2300100,Dibrugarh,Assam,,district_hq
+Silchar Police Station,24.8333,92.7789,03842-240100,Cachar,Assam,,district_hq
+Nagaon Police Station,26.3469,92.6836,03672-235100,Nagaon,Assam,,district_hq
+Tezpur Police Station,26.6338,92.7924,03712-220100,Sonitpur,Assam,,district_hq
+Lakhimpur Police Station,27.2394,94.1015,03752-222100,Lakhimpur,Assam,,district_hq
+Sivasagar Police Station,26.9836,94.6389,03772-222100,Sivasagar,Assam,,district_hq
+Morigaon Police Station,26.2468,92.3340,03678-220100,Morigaon,Assam,,district_hq
+Hojai Police Station,26.0003,92.8575,03674-222100,Hojai,Assam,,district_hq
+Highway Police Post Jorabat,26.1200,91.9100,,Kamrup Metropolitan,Assam,NH-27,highway
+Highway Police Post Barpeta Road,26.4977,91.0123,,Barpeta,Assam,NH-27,highway
+Karimganj Police Station,24.8644,92.3568,03843-262100,Karimganj,Assam,,district_hq

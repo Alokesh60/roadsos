@@ -1,0 +1,15 @@
+category,number,tier,state,district,label
+ambulance,108,1,,,National Ambulance (EMRI)
+police,100,1,,,National Police
+fire,101,1,,,National Fire Brigade
+highway,1033,1,,,NHAI Road Helpline
+disaster,108,1,,,NDRF Disaster Response
+unified,112,1,,,Unified Emergency Number
+ambulance,102,2,Assam,,Assam State Ambulance
+police,0361-2237863,2,Assam,,Assam Police HQ Guwahati
+disaster,0361-2237219,2,Assam,,Assam SDMA
+police,03666-255100,3,Assam,Barpeta,Barpeta SP Office
+police,03662-230100,3,Assam,Dhubri,Dhubri SP Office
+police,03663-222100,3,Assam,Goalpara,Goalpara SP Office
+police,03661-271100,3,Assam,Kokrajhar,Kokrajhar SP Office
+police,03664-230100,3,Assam,Bongaigaon,Bongaigaon SP Office
