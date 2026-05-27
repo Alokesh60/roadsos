@@ -1,7 +1,7 @@
 """
 api.py
 ------
-RoadSOS AI Module — FastAPI server.
+RoadSOS AI Module — Secure FastAPI AI service.
 
 Run from:
 D:\\roadsos\\ai_module
@@ -21,8 +21,15 @@ from typing import Optional
 
 import google.generativeai as genai
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import (
+    FastAPI,
+    Header,
+    HTTPException
+)
+
+from fastapi.middleware.cors import (
+    CORSMiddleware
+)
 
 from pydantic import (
     BaseModel,
@@ -37,8 +44,7 @@ from chatbot.prompt_engine import (
 )
 
 from chatbot.intent_classifier import (
-    classify,
-    classify_from_json
+    classify
 )
 
 from chatbot.response_templates import (
@@ -73,6 +79,11 @@ GEMINI_API_KEY = os.getenv(
     ""
 )
 
+AI_MODULE_API_KEY = os.getenv(
+    "AI_MODULE_API_KEY",
+    ""
+)
+
 MAX_HISTORY_TURNS = int(
 
     os.getenv(
@@ -88,6 +99,11 @@ LLM_TIMEOUT = float(
         "4"
     )
 )
+
+ALLOWED_ORIGINS = os.getenv(
+    "ALLOWED_ORIGINS",
+    "*"
+).split(",")
 
 # =====================================================
 # GEMINI SETUP
@@ -204,6 +220,10 @@ class ChatResponse(BaseModel):
 
     intent_detected: str
 
+    detected_type: str
+
+    priority: str
+
     suggested_actions: list[ActionButton]
 
     source: str
@@ -217,25 +237,71 @@ app = FastAPI(
 
     title="RoadSOS AI Module",
 
-    description="Emergency chatbot API",
+    description="Emergency AI service",
 
-    version="1.0.0"
+    version="2.0.0"
 )
 
 # =====================================================
-# CORS
+# SECURE CORS
 # =====================================================
 
 app.add_middleware(
 
     CORSMiddleware,
 
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
 
-    allow_methods=["*"],
+    allow_methods=["POST", "GET"],
 
     allow_headers=["*"],
 )
+
+# =====================================================
+# AUTH VALIDATION
+# =====================================================
+
+def verify_backend_request(
+
+    authorization: str = Header(None)
+):
+
+    if not authorization:
+
+        raise HTTPException(
+
+            status_code=401,
+
+            detail="Authorization header missing"
+        )
+
+    if not authorization.startswith(
+        "Bearer "
+    ):
+
+        raise HTTPException(
+
+            status_code=401,
+
+            detail="Invalid authorization format"
+        )
+
+    token = authorization.replace(
+        "Bearer ",
+        ""
+    )
+
+    if token != AI_MODULE_API_KEY:
+
+        raise HTTPException(
+
+            status_code=403,
+
+            detail="Invalid AI module API key"
+        )
+
+    return True
+
 
 # =====================================================
 # ACTION BUTTONS
@@ -258,6 +324,43 @@ def _build_suggested_actions(
 
         for a in template_actions
     ]
+
+
+# =====================================================
+# PRIORITY MAPPING
+# =====================================================
+
+def determine_priority(
+    intent: str
+):
+
+    high_priority = {
+
+        "accident",
+
+        "medical",
+
+        "fire",
+
+        "crime"
+    }
+
+    medium_priority = {
+
+        "vehicle_breakdown",
+
+        "stranded"
+    }
+
+    if intent in high_priority:
+
+        return "high"
+
+    if intent in medium_priority:
+
+        return "medium"
+
+    return "low"
 
 
 # =====================================================
@@ -330,7 +433,7 @@ async def health():
 
         "status": "ok",
 
-        "version": "1.0.0",
+        "version": "2.0.0",
 
         "gemini_enabled":
             gemini_client is not None
@@ -348,14 +451,23 @@ async def health():
     response_model=ChatResponse
 )
 
-async def chat(request: ChatRequest):
+async def chat(
+
+    request: ChatRequest,
+
+    authorized=verify_backend_request
+):
 
     ctx = request.context
 
+    # =================================================
+    # SAFE LOGGING
+    # =================================================
+
     log.info(
 
-        f"Chat request: "
-        f"{request.user_message}"
+        f"Chat request received | "
+        f"session={request.session_id}"
     )
 
     # =================================================
@@ -487,6 +599,12 @@ async def chat(request: ChatRequest):
 
                 intent_detected=intent,
 
+                detected_type=intent,
+
+                priority=determine_priority(
+                    intent
+                ),
+
                 suggested_actions=(
                     suggested_actions
                 ),
@@ -508,7 +626,7 @@ async def chat(request: ChatRequest):
 
     # =================================================
     # OFFLINE FALLBACK
-    # =================================================
+    # =====================================================
 
     log.info(
         "Using offline fallback."
@@ -521,6 +639,12 @@ async def chat(request: ChatRequest):
         reply=template["reply"],
 
         intent_detected=intent,
+
+        detected_type=intent,
+
+        priority=determine_priority(
+            intent
+        ),
 
         suggested_actions=(
             suggested_actions

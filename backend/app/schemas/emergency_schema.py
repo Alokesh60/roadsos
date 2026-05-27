@@ -1,7 +1,8 @@
-from typing import List, Optional
+from typing import List
 
 from pydantic import (
-    BaseModel
+    BaseModel,
+    Field
 )
 
 
@@ -26,7 +27,15 @@ class EmergencyRequest(
     BaseModel
 ):
 
+    # =================================
+    # USER MESSAGE
+    # =================================
+
     message: str
+
+    # =================================
+    # LOCATION
+    # =================================
 
     latitude: float
 
@@ -34,23 +43,25 @@ class EmergencyRequest(
 
     country: str = "India"
 
-    # =============================
-    # ANDROID CONTACTS
-    # =============================
+    # =================================
+    # EMERGENCY CONTACTS
+    # =================================
 
     contacts: List[
         EmergencyContact
-    ] = []
+    ] = Field(
+        default_factory=list
+    )
 
-    # =============================
-    # SOURCE TRACKING
-    # =============================
+    # =================================
+    # SOURCE INFO
+    # =================================
 
     source: str = "mobile_app"
 
-    # =============================
-    # OFFLINE MODE FLAG
-    # =============================
+    # =================================
+    # OFFLINE FLAG
+    # =================================
 
     offline_mode: bool = False
 
@@ -63,36 +74,20 @@ class EmergencyResponse(
     BaseModel
 ):
 
-    classification_status: str
+    success: bool
 
-    classification_reason: str
+    sos_triggered: bool
 
-    proceed: bool
-
-    detected_type: str
-
-    priority: str
-
-    confidence: float
-
-    recommended_service: dict
+    message: str
 
     guidance: str
 
-    # =============================
-    # SOURCE INFO
-    # =============================
+    source: str
 
-    source: Optional[str] = None
+    suggested_actions: list = Field(
+        default_factory=list
+    )
 
-    # =============================
-    # OFFLINE SUPPORT
-    # =============================
-
-    offline_support: bool = True
-
-    # =============================
-    # DISASTER ALERTS
-    # =============================
-
-    disaster_alerts: list = []
+    notifications: list = Field(
+        default_factory=list
+    )
