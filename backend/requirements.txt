@@ -1,0 +1,16 @@
+fastapi
+uvicorn[standard]
+
+firebase-admin
+
+python-dotenv
+
+httpx
+
+twilio
+
+pydantic
+
+python-multipart
+
+gunicorn

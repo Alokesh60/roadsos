@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from fastapi import (
     APIRouter,
     Depends
@@ -12,7 +14,7 @@ from app.schemas.emergency_schema import (
 )
 
 from app.services.chatbot_service import (
-    process_emergency_chatbot
+    get_ai_guidance
 )
 
 from app.services.notification_service import (
@@ -20,138 +22,53 @@ from app.services.notification_service import (
     trigger_emergency_notifications
 )
 
-from app.services.broadcast_service import (
-
-    find_nearby_users,
-
-    build_sos_message,
-
-    broadcast_sos_alert
+from app.services.audit_service import (
+    save_emergency_log
 )
-
-from app.db.sqlite_db import (
-    get_connection
-)
-
 
 router = APIRouter()
 
 
 # =====================================
-# STORE SOS EVENT
-# =====================================
-
-def save_sos_event(
-
-    user_id: str,
-
-    emergency_type: str,
-
-    latitude: float,
-
-    longitude: float,
-
-    message: str,
-
-    source: str
-):
-
-    conn = get_connection()
-
-    cursor = conn.cursor()
-
-    cursor.execute(
-
-        """
-        INSERT INTO sos_events (
-
-            user_id,
-
-            emergency_type,
-
-            latitude,
-
-            longitude,
-
-            message,
-
-            source
-
-        )
-
-        VALUES (?, ?, ?, ?, ?, ?)
-        """,
-
-        (
-
-            user_id,
-
-            emergency_type,
-
-            latitude,
-
-            longitude,
-
-            message,
-
-            source
-        )
-    )
-
-    conn.commit()
-
-    conn.close()
-
-
-# =====================================
-# OFFLINE ALERT QUEUE
-# =====================================
-
-def queue_offline_alert(
-
-    phone: str,
-
-    message: str
-):
-
-    conn = get_connection()
-
-    cursor = conn.cursor()
-
-    cursor.execute(
-
-        """
-        INSERT INTO offline_alert_queue (
-
-            phone,
-
-            message,
-
-            status
-
-        )
-
-        VALUES (?, ?, ?)
-        """,
-
-        (
-
-            phone,
-
-            message,
-
-            "PENDING"
-        )
-    )
-
-    conn.commit()
-
-    conn.close()
-
-
-# =====================================
 # SOS ENDPOINT
 # =====================================
+#
+# PURPOSE:
+# Main emergency orchestration endpoint.
+#
+# RESPONSIBILITY:
+# ✅ Receive SOS requests
+# ✅ Verify Firebase user
+# ✅ Fetch AI emergency guidance
+# ✅ Trigger emergency notifications
+# ✅ Store emergency audit logs
+# ✅ Return emergency response
+#
+# REMOVED:
+# ❌ SQLite logging
+# ❌ Nearby responder broadcast
+# ❌ Offline queue system
+# ❌ Local NLP classification
+# ❌ Duplicate AI processing
+# ❌ Nearby services search
+#
+# WHY:
+# Android already handles:
+# - Google Maps
+# - Nearby services
+# - Directions
+# - Live location
+#
+# AI processing now belongs to:
+# ai_module/chatbot
+#
+# Backend should ONLY:
+# - orchestrate SOS
+# - trigger notifications
+# - communicate with AI module
+#
+# =====================================
+
 
 @router.post("/sos")
 
@@ -161,26 +78,6 @@ async def trigger_sos(
 
     user=Depends(get_current_user)
 ):
-
-    # =================================
-    # PROCESS EMERGENCY
-    # =================================
-
-    result = process_emergency_chatbot(
-
-        message=request.message,
-
-        latitude=request.latitude,
-
-        longitude=request.longitude,
-
-        country=request.country
-    )
-
-    detected_type = result.get(
-        "detected_type",
-        "hospital"
-    )
 
     # =================================
     # USER DETAILS
@@ -205,7 +102,47 @@ async def trigger_sos(
     )
 
     # =================================
-    # EMERGENCY MESSAGE
+    # CONTACT VALIDATION
+    # =================================
+
+    emergency_contacts = (
+        request.contacts or []
+    )
+
+    if len(emergency_contacts) > 5:
+
+        return {
+
+            "success": False,
+
+            "message":
+                "Maximum 5 emergency contacts allowed."
+        }
+
+    # =================================
+    # AI GUIDANCE
+    # =================================
+
+    ai_result = await get_ai_guidance(
+
+        message=request.message,
+
+        latitude=request.latitude,
+
+        longitude=request.longitude
+    )
+
+    # =================================
+    # DETECTED TYPE
+    # =================================
+
+    detected_type = ai_result.get(
+        "detected_type",
+        "emergency"
+    )
+
+    # =================================
+    # BUILD ALERT MESSAGE
     # =================================
 
     alert_message = (
@@ -231,7 +168,7 @@ async def trigger_sos(
             ),
 
             priority=(
-                result.get(
+                ai_result.get(
                     "priority",
                     "high"
                 )
@@ -240,16 +177,10 @@ async def trigger_sos(
     )
 
     # =================================
-    # CONTACTS
+    # SEND EMERGENCY ALERTS
     # =================================
-
-    emergency_contacts = request.contacts
 
     notification_results = []
-
-    # =================================
-    # SEND WHATSAPP ALERTS
-    # =================================
 
     if emergency_contacts:
 
@@ -268,93 +199,56 @@ async def trigger_sos(
         except Exception as e:
 
             print(
-                f"Notification failed: {e}"
+                f"[SOS] Notification failed: {e}"
             )
 
-            # =========================
-            # OFFLINE QUEUE
-            # =========================
-
-            for contact in emergency_contacts:
-
-                phone = contact.get(
-                    "phone"
-                )
-
-                if phone:
-
-                    queue_offline_alert(
-
-                        phone,
-
-                        alert_message
-                    )
-
     # =================================
-    # NEARBY RESPONDER BROADCAST
+    # SAVE AUDIT LOG
     # =================================
 
-    nearby_users = find_nearby_users(
+    try:
 
-        latitude=request.latitude,
+        await save_emergency_log({
 
-        longitude=request.longitude,
+            "user_id":
+                user_id,
 
-        current_uid=user_id,
+            "user_name":
+                user_name,
 
-        radius_km=10
-    )
+            "message":
+                request.message,
 
-    community_message = (
+            "latitude":
+                request.latitude,
 
-        build_sos_message(
+            "longitude":
+                request.longitude,
 
-            user_name=user_name,
+            "detected_type":
+                detected_type,
 
-            emergency_type=detected_type,
+            "priority":
+                ai_result.get(
+                    "priority",
+                    "high"
+                ),
 
-            latitude=request.latitude,
+            "notifications":
+                notification_results,
 
-            longitude=request.longitude,
+            "timestamp":
+                datetime.utcnow().isoformat(),
 
-            priority=result.get(
-                "priority",
-                "high"
-            )
+            "source":
+                "backend_sos"
+        })
+
+    except Exception as e:
+
+        print(
+            f"[SOS] Audit logging failed: {e}"
         )
-    )
-
-    broadcast_results = (
-
-        broadcast_sos_alert(
-
-            nearby_users,
-
-            community_message
-        )
-    )
-
-    # =================================
-    # STORE SOS EVENT
-    # =================================
-
-    save_sos_event(
-
-        user_id=user_id,
-
-        emergency_type=detected_type,
-
-        latitude=request.latitude,
-
-        longitude=request.longitude,
-
-        message=request.message,
-
-        source=result.get(
-            "source",
-            "unknown"
-        )
-    )
 
     # =================================
     # FINAL RESPONSE
@@ -366,36 +260,34 @@ async def trigger_sos(
 
         "sos_triggered": True,
 
+        "message":
+            "Emergency SOS triggered successfully.",
+
+        "guidance":
+            ai_result.get(
+                "guidance"
+            ),
+
+        "source":
+            ai_result.get(
+                "source"
+            ),
+
         "detected_type":
             detected_type,
 
         "priority":
-            result.get(
-                "priority"
+            ai_result.get(
+                "priority",
+                "high"
             ),
 
-        "guidance":
-            result.get(
-                "guidance"
-            ),
-
-        "recommended_service":
-            result.get(
-                "recommended_service"
+        "suggested_actions":
+            ai_result.get(
+                "suggested_actions",
+                []
             ),
 
         "notifications":
-            notification_results,
-
-        "nearby_responders":
-            nearby_users,
-
-        "broadcast_results":
-            broadcast_results,
-
-        "offline_support":
-            True,
-
-        "data":
-            result
+            notification_results
     }

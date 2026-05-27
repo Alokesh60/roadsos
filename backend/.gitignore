@@ -12,6 +12,7 @@ venv/
 
 # SQLite
 *.db
+*.sqlite3
 
 # IDE
 .vscode/
@@ -25,3 +26,4 @@ Thumbs.db
 *.log
 
 firebase-service-account.json
+.firebase/
