@@ -62,7 +62,11 @@ fun ProfileScreen(
     }
 
     val userProfile = if (isPreview) {
-        com.example.roadsos.viewmodel.UserProfile(name = "John Doe", phone = "+1234567890", profileUrl = "")
+        com.example.roadsos.viewmodel.UserProfile(
+            name = "John Doe",
+            phone = "+1234567890",
+            profileUrl = ""
+        )
     } else if (profileState is ProfileState.Success) {
         profileState.profile
     } else {
@@ -148,7 +152,12 @@ fun ProfileScreen(
         AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
             title = { Text("Delete Account", color = Color.White) },
-            text = { Text("Are you sure you want to delete your account? This action cannot be undone.", color = TextWhite) },
+            text = {
+                Text(
+                    "Are you sure you want to delete your account? This action cannot be undone.",
+                    color = TextWhite
+                )
+            },
             confirmButton = {
                 TextButton(onClick = {
                     showDeleteDialog = false
@@ -181,7 +190,12 @@ fun ProfileScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text("Profile picture", fontSize = 20.sp, fontWeight = FontWeight.SemiBold, color = TextWhite)
+                    Text(
+                        "Profile picture",
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        color = TextWhite
+                    )
                     IconButton(onClick = {
                         viewModel?.deleteProfilePicture()
                         showBottomSheet = false
@@ -224,7 +238,11 @@ fun ProfileScreen(
                         .padding(vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Icon(Icons.Default.PhotoLibrary, contentDescription = "Gallery", tint = TextWhite)
+                    Icon(
+                        Icons.Default.PhotoLibrary,
+                        contentDescription = "Gallery",
+                        tint = TextWhite
+                    )
                     Spacer(modifier = Modifier.width(16.dp))
                     Text("Gallery", fontSize = 16.sp, color = TextWhite)
                 }
@@ -246,27 +264,53 @@ fun ProfileScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             // TOP BAR
+
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(DarkBackground)
-                    .padding(horizontal = 16.dp, vertical = 16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                IconButton(onClick = onBack) {
-                    Icon(imageVector = Icons.Default.ArrowBack, contentDescription = "Back", tint = TextWhite)
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(
-                    text = name,
+                    .padding(
+                        horizontal = 16.dp,
+                        vertical = 16.dp
+                    ),
 
-                    color = TextWhite,
-                    fontSize = 22.sp,
-                    fontWeight = FontWeight.Medium
+                verticalAlignment =
+                    Alignment.CenterVertically
+            ) {
+
+                IconButton(
+                    onClick = onBack
+                ) {
+
+                    Icon(
+                        imageVector =
+                            Icons.Default.ArrowBack,
+                        contentDescription =
+                            "Back",
+                        tint =
+                            TextWhite
+                    )
+                }
+
+                Spacer(
+                    modifier =
+                        Modifier.width(16.dp)
+                )
+
+                Text(
+                    text = "Profile",
+
+                    color =
+                        TextWhite,
+
+                    fontSize =
+                        22.sp,
+
+                    fontWeight =
+                        FontWeight.SemiBold
                 )
             }
 
-                    fontSize = 26.sp,
 
             // PROFILE ICON
             Box(
@@ -299,7 +343,7 @@ fun ProfileScreen(
                         )
                     }
                 }
-                
+
                 // Yellow Edit FAB
                 Box(
                     modifier = Modifier
@@ -359,88 +403,111 @@ fun ProfileScreen(
                         )
                     }
                     IconButton(onClick = { showNameDialog = true }) {
-                        Icon(imageVector = Icons.Default.Edit, contentDescription = "Edit Name", tint = TextWhite)
+                        Icon(
+                            imageVector = Icons.Default.Edit,
+                            contentDescription = "Edit Name",
+                            tint = TextWhite
+                        )
                     }
                 }
 
-            Spacer(modifier = Modifier.height(26.dp))
+                Spacer(modifier = Modifier.height(26.dp))
 
-            // PERMISSION SETTINGS (keeping this for consistency but updating colors slightly)
-            Card(
-                onClick = onOpenPermissions,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                colors = CardDefaults.cardColors(containerColor = CardBackground),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Row(
+                // PERMISSION SETTINGS (keeping this for consistency but updating colors slightly)
+                Card(
+                    onClick = onOpenPermissions,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(horizontal = 24.dp),
+                    colors = CardDefaults.cardColors(containerColor = CardBackground),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Icon(imageVector = Icons.Default.Lock, contentDescription = null, tint = TextWhite)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(text = "Edit Permission Setting", color = TextWhite, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Lock,
+                            contentDescription = null,
+                            tint = TextWhite
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Edit Permission Setting",
+                                color = TextWhite,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(26.dp))
+                Spacer(modifier = Modifier.height(26.dp))
 
-            // DELETE ACCOUNT
-            Card(
-                onClick = { showDeleteDialog = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp),
-                colors = CardDefaults.cardColors(containerColor = CardBackground),
-                shape = RoundedCornerShape(16.dp)
-            ) {
-                Row(
+                // DELETE ACCOUNT
+                Card(
+                    onClick = { showDeleteDialog = true },
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(horizontal = 24.dp),
+                    colors = CardDefaults.cardColors(containerColor = CardBackground),
+                    shape = RoundedCornerShape(16.dp)
                 ) {
-                    Icon(imageVector = Icons.Default.Delete, contentDescription = null, tint = PrimaryRed)
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text(text = "Delete Account", color = PrimaryRed, fontSize = 16.sp, fontWeight = FontWeight.Medium)
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = null,
+                            tint = PrimaryRed
+                        )
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = "Delete Account",
+                                color = PrimaryRed,
+                                fontSize = 16.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                        }
                     }
                 }
-            }
 
-            Spacer(modifier = Modifier.height(26.dp))
+                Spacer(modifier = Modifier.height(26.dp))
 
-            // LOGOUT
-            OutlinedButton(
-                onClick = { showLogoutDialog = true },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 24.dp)
-                    .height(54.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryRed)
-            ) {
-                Icon(imageVector = Icons.Default.Logout, contentDescription = null)
-                Spacer(modifier = Modifier.width(10.dp))
-                Text(text = "Logout", fontWeight = FontWeight.Medium)
+                // LOGOUT
+                OutlinedButton(
+                    onClick = { showLogoutDialog = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 24.dp)
+                        .height(54.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = PrimaryRed)
+                ) {
+                    Icon(imageVector = Icons.Default.Logout, contentDescription = null)
+                    Spacer(modifier = Modifier.width(10.dp))
+                    Text(text = "Logout", fontWeight = FontWeight.Medium)
+                }
             }
         }
     }
-}
 
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun ProfileScreenPreview() {
-    RoadSoSTheme {
-        ProfileScreen(
-            onBack = {},
-            onOpenPermissions = {},
-            onLogout = {}
-        )
+    @Preview(showBackground = true, showSystemUi = true)
+    @Composable
+    fun ProfileScreenPreview() {
+        RoadSoSTheme {
+            ProfileScreen(
+                onBack = {},
+                onOpenPermissions = {},
+                onLogout = {}
+            )
+        }
     }
 }

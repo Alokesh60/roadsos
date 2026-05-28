@@ -186,29 +186,7 @@ fun HomeScreen(
                     modifier =
                         Modifier.height(22.dp)
                 )
-                Row(
-                    verticalAlignment =
-                        Alignment.CenterVertically
-                ) {
 
-                    Box(
-                        modifier = Modifier
-                            .size(10.dp)
-                            .clip(CircleShape)
-                            .background(Color.Green)
-                    )
-
-                    Spacer(
-                        modifier =
-                            Modifier.width(8.dp)
-                    )
-
-                    Text(
-                        text = "GPS Active",
-                        color = TextGray,
-                        fontSize = 13.sp
-                    )
-                }
 
                 Spacer(
                     modifier =

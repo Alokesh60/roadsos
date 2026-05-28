@@ -32,13 +32,14 @@
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
+        android:networkSecurityConfig="@xml/network_security_config"
         android:icon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.RoadSoS">
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="${mapsApiKey}" />
+            android:value="Api-key" />
 
         <service
             android:name=".CrashDetectionService"

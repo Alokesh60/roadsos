@@ -93,9 +93,9 @@ fun AuthScreenContent(
         mutableStateOf("")
     }
 
-    var countryCode by remember {
-        mutableStateOf("+91")
-    }
+//    var countryCode by remember {
+//        mutableStateOf("+91")
+//    }
     var countryCode by remember {
         mutableStateOf("")
     }
