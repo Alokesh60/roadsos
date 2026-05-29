@@ -1,4 +1,3 @@
-# notification_service.py
 from datetime import datetime
 
 from app.services.twilio_service import (
@@ -11,70 +10,65 @@ from app.services.twilio_service import (
 # =====================================
 
 def build_emergency_alert(
-
     user_name: str,
-
-    emergency_description, service_type: str,
-
+    emergency_description: str,
+    service_type: str,
     latitude: float,
-
     longitude: float,
-
     priority: str
 ):
 
     maps_link = (
-
         f"https://maps.google.com/?q="
         f"{latitude},{longitude}"
     )
 
     timestamp = datetime.now().strftime(
-
         "%d-%m-%Y %I:%M %p"
     )
 
     message = f"""
+🚨 ROADSOS SOS ALERT 🚨
 
-🚨 ROADSOS EMERGENCY ALERT 🚨
-
-User:
-{user_name}
+User: {user_name}
 
 Emergency:
 {emergency_description}
 
-Emergency Service Needed:
+Service Needed:
 {service_type.upper()}
 
 Priority:
 {priority.upper()}
 
-Possible emergency detected.
-
-The user may require
-immediate assistance.
-
 📍 Live Location:
 {maps_link}
-
-Latitude:
-{latitude}
-
-Longitude:
-{longitude}
 
 🕒 Time:
 {timestamp}
 
-Please contact the user or
-emergency services immediately.
-
-RoadSOS Automated Emergency System
-
+Please contact the user
+or emergency services immediately.
 """
 
-    return message
+    return message.strip()
+
+
+# =====================================
+# PHONE VALIDATION
+# =====================================
+
+def is_valid_phone(phone: str):
+
+    if not phone:
+        return False
+
+    phone = phone.strip()
+
+    return (
+        phone.startswith("+")
+        and len(phone) >= 10
+    )
 
 
 # =====================================
@@ -82,49 +76,48 @@ RoadSOS Automated Emergency System
 # =====================================
 
 def trigger_emergency_notifications(
-
     contacts: list,
-
     message: str
 ):
+
+    if not contacts:
+
+        return []
 
     notification_results = []
 
     for contact in contacts:
 
-        phone = contact.get(
-            "phone"
+        phone = (
+            contact.get("phone", "")
+            .strip()
         )
 
-        name = contact.get(
-            "name"
+        name = (
+            contact.get("name", "Unknown")
+            .strip()
         )
 
-        print(
-            "\n========== ALERT =========="
-        )
+        # =============================
+        # INVALID PHONE
+        # =============================
 
-        print(
-            "Sending emergency alert to:"
-        )
+        if not is_valid_phone(phone):
 
-        print(
-            f"Name: {name}"
-        )
+            notification_results.append({
 
-        print(
-            f"Phone: {phone}"
-        )
+                "name": name,
 
-        print(message)
+                "phone": phone,
 
-        print(
-            "===========================\n"
-        )
+                "status": "INVALID_PHONE"
+            })
 
-        # =================================
-        # WHATSAPP ALERT
-        # =================================
+            continue
+
+        # =============================
+        # SEND WHATSAPP ALERT
+        # =============================
 
         try:
 
@@ -140,22 +133,19 @@ def trigger_emergency_notifications(
         except Exception as e:
 
             print(
-                f"WhatsApp failed: {e}"
+                f"[Twilio Error] "
+                f"{phone}: {e}"
             )
 
             status = "WHATSAPP_FAILED"
 
         notification_results.append({
 
-            "name":
-                name,
+            "name": name,
 
-            "phone":
-                phone,
+            "phone": phone,
 
-            "status":
-                status
+            "status": status
         })
 
     return notification_results
-

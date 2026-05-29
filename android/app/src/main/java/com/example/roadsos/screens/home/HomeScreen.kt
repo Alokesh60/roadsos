@@ -184,12 +184,6 @@ fun HomeScreen(
 
                 Spacer(
                     modifier =
-                        Modifier.height(22.dp)
-                )
-
-
-                Spacer(
-                    modifier =
                         Modifier.height(18.dp)
                 )
 

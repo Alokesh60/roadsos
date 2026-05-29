@@ -1,64 +1,76 @@
 from dotenv import load_dotenv
+
 import os
+
+
+# =====================================
+# LOAD ENV
+# =====================================
 
 load_dotenv()
 
 
+# =====================================
+# SETTINGS
+# =====================================
+
 class Settings:
-    """
-    Central backend configuration.
 
-    Current architecture:
+    """
+    RoadSOS Backend Configuration
+
+    Backend responsibilities:
     - Firebase authentication
-    - SQLite local database
-    - Separate ai_module service
-    - Gemini API integration
+    - SOS orchestration
+    - Twilio notifications
+    - AI module communication
     """
 
-    # ================================
+    # =================================
     # FIREBASE
-    # ================================
+    # =================================
 
     FIREBASE_SERVICE_ACCOUNT = os.getenv(
         "FIREBASE_SERVICE_ACCOUNT",
         "firebase-service-account.json"
     )
 
-    # ================================
-    # SQLITE DATABASE
-    # ================================
-
-    SQLITE_DB_PATH = os.getenv(
-        "SQLITE_DB_PATH",
-        "roadsos.db"
-    )
-
-    OFFLINE_DB_PATH = os.getenv(
-        "OFFLINE_DB_PATH",
-        "roadsos_offline.db"
-    )
-
-    # ================================
+    # =================================
     # AI MODULE
-    # ================================
+    # =================================
 
     AI_MODULE_URL = os.getenv(
         "AI_MODULE_URL",
         "http://127.0.0.1:8000"
     )
 
-    # ================================
-    # GEMINI
-    # ================================
+    # =================================
+    # TWILIO
+    # =================================
 
-    GEMINI_API_KEY = os.getenv(
-        "GEMINI_API_KEY",
+    TWILIO_ACCOUNT_SID = os.getenv(
+        "TWILIO_ACCOUNT_SID",
         ""
     )
 
-    # ================================
+    TWILIO_AUTH_TOKEN = os.getenv(
+        "TWILIO_AUTH_TOKEN",
+        ""
+    )
+
+    TWILIO_WHATSAPP_NUMBER = os.getenv(
+        "TWILIO_WHATSAPP_NUMBER",
+        ""
+    )
+
+    TWILIO_CALL_NUMBER = os.getenv(
+        "TWILIO_CALL_NUMBER",
+        ""
+    )
+
+    # =================================
     # ENVIRONMENT
-    # ================================
+    # =================================
 
     ENVIRONMENT = os.getenv(
         "ENVIRONMENT",
@@ -70,5 +82,9 @@ class Settings:
         "true"
     ).lower() == "true"
 
+
+# =====================================
+# SETTINGS INSTANCE
+# =====================================
 
 settings = Settings()

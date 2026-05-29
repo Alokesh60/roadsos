@@ -298,10 +298,7 @@ fun ProfileScreen(
                 )
 
                 Text(
-                    text = "Profile",
-
-                    color =
-                        TextWhite,
+                    text = userProfile.name,
 
                     fontSize =
                         22.sp,
@@ -410,6 +407,7 @@ fun ProfileScreen(
                         )
                     }
                 }
+            }
 
                 Spacer(modifier = Modifier.height(26.dp))
 

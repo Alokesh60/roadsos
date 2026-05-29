@@ -30,6 +30,17 @@ TWILIO_CALL_NUMBER = os.getenv(
 
 
 # =====================================
+# VALIDATE CONFIG
+# =====================================
+
+if not ACCOUNT_SID or not AUTH_TOKEN:
+
+    raise Exception(
+        "Twilio credentials missing in .env"
+    )
+
+
+# =====================================
 # TWILIO CLIENT
 # =====================================
 
@@ -39,6 +50,28 @@ client = Client(
 
     AUTH_TOKEN
 )
+
+
+# =====================================
+# PHONE VALIDATION
+# =====================================
+
+def is_valid_phone_number(
+    phone_number: str
+):
+
+    if not phone_number:
+
+        return False
+
+    phone_number = (
+        phone_number.strip()
+    )
+
+    return (
+        phone_number.startswith("+")
+        and len(phone_number) >= 10
+    )
 
 
 # =====================================
@@ -54,56 +87,70 @@ def send_whatsapp_alert(
 
     try:
 
-        if not phone_number.startswith("+"):
+        # =============================
+        # VALIDATE PHONE
+        # =============================
+
+        if not is_valid_phone_number(
+            phone_number
+        ):
 
             return {
 
                 "success": False,
 
+                "type": "whatsapp",
+
                 "error":
-                    "Phone number must include country code"
+                    "Invalid phone number"
             }
+
+        # =============================
+        # SEND MESSAGE
+        # =============================
 
         response = client.messages.create(
 
             body=message,
 
-            from_=f"whatsapp:{TWILIO_WHATSAPP_NUMBER}",
+            from_=(
+                f"whatsapp:"
+                f"{TWILIO_WHATSAPP_NUMBER}"
+            ),
 
-            to=f"whatsapp:{phone_number}"
+            to=(
+                f"whatsapp:"
+                f"{phone_number}"
+            )
         )
 
         return {
 
             "success": True,
 
-            "type":
-                "whatsapp",
+            "type": "whatsapp",
 
-            "sid":
-                response.sid
+            "sid": response.sid
         }
 
     except Exception as e:
 
         print(
-            f"WhatsApp Error: {e}"
+            f"[Twilio WhatsApp Error] {e}"
         )
 
         return {
 
             "success": False,
 
-            "type":
-                "whatsapp",
+            "type": "whatsapp",
 
-            "error":
-                str(e)
+            "error": str(e)
         }
 
 
 # =====================================
-# EMERGENCY VOICE CALL
+# MAKE EMERGENCY VOICE CALL
 # =====================================
 
 def make_emergency_call(
@@ -115,29 +162,39 @@ def make_emergency_call(
 
     try:
 
-        if not phone_number.startswith("+"):
+        # =============================
+        # VALIDATE PHONE
+        # =============================
+
+        if not is_valid_phone_number(
+            phone_number
+        ):
 
             return {
 
                 "success": False,
 
+                "type": "voice_call",
+
                 "error":
-                    "Phone number must include country code"
+                    "Invalid phone number"
             }
 
+        # =============================
+        # TWIML RESPONSE
+        # =============================
+
         twiml = f"""
-
 <Response>
-
 <Say voice="alice">
-
 {message}
-
 </Say>
-
 </Response>
-
 """
+
+        # =============================
+        # CREATE CALL
+        # =============================
 
         call = client.calls.create(
 
@@ -152,26 +209,22 @@ def make_emergency_call(
 
             "success": True,
 
-            "type":
-                "voice_call",
+            "type": "voice_call",
 
-            "call_sid":
-                call.sid
+            "call_sid": call.sid
         }
 
     except Exception as e:
 
         print(
-            f"Call Error: {e}"
+            f"[Twilio Call Error] {e}"
         )
 
         return {
 
             "success": False,
 
-            "type":
-                "voice_call",
+            "type": "voice_call",
 
-            "error":
-                str(e)
+            "error": str(e)
         }
