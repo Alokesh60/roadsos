@@ -9,7 +9,7 @@ object ApiClient {
 
     // REPLACE THIS WITH YOUR PC IPV4
     private const val BASE_URL =
-        "http://10.89.131.127:8000/"
+        "http://10.72.233.35:8000/"
 
     private val logging =
         HttpLoggingInterceptor().apply {

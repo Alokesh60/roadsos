@@ -116,7 +116,7 @@ if GEMINI_API_KEY:
     )
 
     gemini_client = genai.GenerativeModel(
-        "gemini-1.5-flash"
+        "models/gemini-2.0-flash"
     )
 
     log.info(
