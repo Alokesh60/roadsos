@@ -1,4 +1,13 @@
-from firebase_admin import messaging
+from firebase_admin import (
+    messaging,
+    firestore
+)
+
+# =====================================
+# FIRESTORE
+# =====================================
+
+db = firestore.client()
 
 
 # =====================================
@@ -106,12 +115,107 @@ def send_push_notification(
 
 
 # =====================================
-# EMERGENCY ALERT
+# GET USER FCM TOKEN
 # =====================================
 
-def send_emergency_alert(
+def get_user_fcm_token(
+    uid: str
+):
+
+    try:
+
+        user_doc = (
+
+            db.collection("users")
+            .document(uid)
+            .get()
+        )
+
+        if not user_doc.exists:
+
+            return None
+
+        data = user_doc.to_dict()
+
+        return data.get(
+            "fcm_token"
+        )
+
+    except Exception as e:
+
+        print(
+            f"[FCM_TOKEN_ERROR] {e}"
+        )
+
+        return None
+
+
+# =====================================
+# EMERGENCY CONTACT ALERT
+# =====================================
+
+def send_contact_alert(
 
     token: str,
+
+    sender_uid: str,
+
+    sender_name: str,
+
+    latitude: float,
+
+    longitude: float
+):
+
+    maps_link = (
+
+        f"https://maps.google.com/?q="
+        f"{latitude},{longitude}"
+    )
+
+    return send_push_notification(
+
+        token=token,
+
+        title="🚨 Emergency Contact Alert",
+
+        body=(
+            f"{sender_name} may "
+            f"need immediate assistance."
+        ),
+
+        data={
+
+            "type":
+                "emergency_contact",
+
+            "sender_uid":
+                sender_uid,
+
+            "sender_name":
+                sender_name,
+
+            "latitude":
+                str(latitude),
+
+            "longitude":
+                str(longitude),
+
+            "maps_link":
+                maps_link
+        }
+    )
+
+
+# =====================================
+# NEARBY SOS ALERT
+# =====================================
+
+def send_nearby_sos_alert(
+
+    token: str,
+
+    sender_uid: str,
 
     emergency_type: str,
 
@@ -130,17 +234,20 @@ def send_emergency_alert(
 
         token=token,
 
-        title="🚨 Emergency Nearby",
+        title="🚨 SOS Nearby",
 
         body=(
-            f"{emergency_type.upper()} "
-            f"reported nearby."
+            "A RoadSOS user nearby "
+            "may require assistance."
         ),
 
         data={
 
             "type":
-                "emergency_alert",
+                "nearby_sos",
+
+            "sender_uid":
+                sender_uid,
 
             "emergency_type":
                 emergency_type,
@@ -153,43 +260,5 @@ def send_emergency_alert(
 
             "maps_link":
                 maps_link
-        }
-    )
-
-
-# =====================================
-# DISASTER ALERT
-# =====================================
-
-def send_disaster_alert(
-
-    token: str,
-
-    disaster_type: str,
-
-    location: str
-):
-
-    return send_push_notification(
-
-        token=token,
-
-        title="⚠ Disaster Warning",
-
-        body=(
-            f"{disaster_type} "
-            f"alert in {location}"
-        ),
-
-        data={
-
-            "type":
-                "disaster_alert",
-
-            "disaster_type":
-                disaster_type,
-
-            "location":
-                location
         }
     )

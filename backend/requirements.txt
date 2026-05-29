@@ -7,10 +7,6 @@ python-dotenv
 
 httpx
 
-twilio
-
-pydantic
-
 python-multipart
 
 gunicorn

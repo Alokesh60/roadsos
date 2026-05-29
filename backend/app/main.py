@@ -106,8 +106,9 @@ async def root():
 
             "backend":
                 (
-                    "SOS orchestration "
-                    "and notifications"
+                    "SOS orchestration, "
+                    "FCM notifications "
+                    "and Firestore logging"
                 ),
 
             "ai_module":
@@ -118,10 +119,16 @@ async def root():
 
             "SOS Alerts",
 
-            "Twilio Notifications",
+            "FCM Notifications",
+
+            "Emergency Contact Alerts",
+
+            "Nearby Responder Alerts",
 
             "AI Emergency Guidance",
 
-            "Firebase Authentication"
+            "Firebase Authentication",
+
+            "Firestore Audit Logging"
         ]
     }

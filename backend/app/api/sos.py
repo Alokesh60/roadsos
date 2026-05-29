@@ -17,9 +17,18 @@ from app.services.chatbot_service import (
     get_ai_guidance
 )
 
-from app.services.notification_service import (
-    build_emergency_alert,
-    trigger_emergency_notifications
+from app.services.contact_service import (
+    get_emergency_contacts,
+    get_user_details
+)
+
+from app.services.fcm_service import (
+    send_contact_alert,
+    send_nearby_sos_alert
+)
+
+from app.services.responder_service import (
+    find_nearby_users
 )
 
 from app.services.audit_service import (
@@ -32,56 +41,24 @@ router = APIRouter()
 # =====================================
 # SOS ENDPOINT
 # =====================================
-#
-# PURPOSE:
-# Main emergency orchestration endpoint.
-#
-# RESPONSIBILITY:
-# ✅ Receive SOS requests
-# ✅ Verify Firebase user
-# ✅ Fetch AI emergency guidance
-# ✅ Trigger emergency notifications
-# ✅ Store emergency audit logs
-# ✅ Return emergency response
-#
-# REMOVED:
-# ❌ SQLite logging
-# ❌ Nearby responder broadcast
-# ❌ Offline queue system
-# ❌ Local NLP classification
-# ❌ Duplicate AI processing
-# ❌ Nearby services search
-#
-# WHY:
-# Android already handles:
-# - Google Maps
-# - Nearby services
-# - Directions
-# - Live location
-#
-# AI processing now belongs to:
-# ai_module/chatbot
-#
-# Backend should ONLY:
-# - orchestrate SOS
-# - trigger notifications
-# - communicate with AI module
-#
-# =====================================
-
 
 @router.post("/sos")
-
 async def trigger_sos(
 
     request: EmergencyRequest,
 
     user=Depends(get_current_user)
+
 ):
 
     # =================================
     # USER DETAILS
     # =================================
+
+    user_id = user.get(
+        "uid",
+        "unknown_user"
+    )
 
     user_name = (
 
@@ -96,29 +73,6 @@ async def trigger_sos(
         "RoadSOS User"
     )
 
-    user_id = user.get(
-        "uid",
-        "unknown_user"
-    )
-
-    # =================================
-    # CONTACT VALIDATION
-    # =================================
-
-    emergency_contacts = (
-        request.contacts or []
-    )
-
-    if len(emergency_contacts) > 5:
-
-        return {
-
-            "success": False,
-
-            "message":
-                "Maximum 5 emergency contacts allowed."
-        }
-
     # =================================
     # AI GUIDANCE
     # =================================
@@ -129,12 +83,10 @@ async def trigger_sos(
 
         latitude=request.latitude,
 
-        longitude=request.longitude
-    )
+        longitude=request.longitude,
 
-    # =================================
-    # DETECTED TYPE
-    # =================================
+        nearby_services=request.nearby_services
+    )
 
     detected_type = ai_result.get(
         "detected_type",
@@ -142,68 +94,151 @@ async def trigger_sos(
     )
 
     # =================================
-    # BUILD ALERT MESSAGE
+    # EMERGENCY CONTACT ALERTS
     # =================================
 
-    alert_message = (
+    emergency_notifications = []
 
-        build_emergency_alert(
+    try:
 
-            user_name=user_name,
+        contacts = await get_emergency_contacts(
+            user_id
+        )
 
-            emergency_description=(
-                request.message
-            ),
+        for contact in contacts:
 
-            service_type=(
-                detected_type
-            ),
+            contact_uid = contact.get(
+                "uid"
+            )
 
-            latitude=(
-                request.latitude
-            ),
+            if not contact_uid:
 
-            longitude=(
-                request.longitude
-            ),
+                continue
 
-            priority=(
-                ai_result.get(
-                    "priority",
-                    "high"
+            contact_data = (
+
+                await get_user_details(
+                    contact_uid
                 )
+            )
+
+            if not contact_data:
+
+                continue
+
+            token = contact_data.get(
+                "fcm_token"
+            )
+
+            if not token:
+
+                continue
+
+            result = send_contact_alert(
+
+                token=token,
+
+                sender_uid=user_id,
+
+                sender_name=user_name,
+
+                latitude=request.latitude,
+
+                longitude=request.longitude
+            )
+
+            emergency_notifications.append({
+
+                "uid":
+                    contact_uid,
+
+                "type":
+                    "emergency_contact",
+
+                "result":
+                    result
+            })
+
+    except Exception as e:
+
+        print(
+            f"[SOS_CONTACT_ALERT] {e}"
+        )
+
+    # =================================
+    # NEARBY RESPONDER ALERTS
+    # =================================
+
+    responder_notifications = []
+
+    try:
+
+        nearby_users = (
+
+            await find_nearby_users(
+
+                latitude=request.latitude,
+
+                longitude=request.longitude
             )
         )
-    )
 
-    # =================================
-    # SEND EMERGENCY ALERTS
-    # =================================
+        for responder in nearby_users:
 
-    notification_results = []
-
-    if emergency_contacts:
-
-        try:
-
-            notification_results = (
-
-                trigger_emergency_notifications(
-
-                    emergency_contacts,
-
-                    alert_message
-                )
+            responder_uid = responder.get(
+                "uid"
             )
 
-        except Exception as e:
+            if responder_uid == user_id:
 
-            print(
-                f"[SOS] Notification failed: {e}"
+                continue
+
+            token = responder.get(
+                "fcm_token"
             )
 
+            if not token:
+
+                continue
+
+            result = send_nearby_sos_alert(
+
+                token=token,
+
+                sender_uid=user_id,
+
+                emergency_type=detected_type,
+
+                latitude=request.latitude,
+
+                longitude=request.longitude
+            )
+
+            responder_notifications.append({
+
+                "uid":
+                    responder_uid,
+
+                "distance_km":
+                    responder.get(
+                        "distance_km"
+                    ),
+
+                "type":
+                    "nearby_responder",
+
+                "result":
+                    result
+            })
+
+    except Exception as e:
+
+        print(
+            f"[SOS_RESPONDER_ALERT] {e}"
+        )
+
     # =================================
-    # SAVE AUDIT LOG
+    # AUDIT LOG
     # =================================
 
     try:
@@ -234,24 +269,38 @@ async def trigger_sos(
                     "high"
                 ),
 
-            "notifications":
-                notification_results,
-
-            "timestamp":
-                datetime.utcnow().isoformat(),
+            "guidance":
+                ai_result.get(
+                    "guidance"
+                ),
 
             "source":
-                "backend_sos"
+                ai_result.get(
+                    "source"
+                ),
+
+            "emergency_notifications":
+                len(
+                    emergency_notifications
+                ),
+
+            "responder_notifications":
+                len(
+                    responder_notifications
+                ),
+
+            "timestamp":
+                datetime.utcnow().isoformat()
         })
 
     except Exception as e:
 
         print(
-            f"[SOS] Audit logging failed: {e}"
+            f"[SOS_AUDIT_LOG] {e}"
         )
 
     # =================================
-    # FINAL RESPONSE
+    # RESPONSE
     # =================================
 
     return {
@@ -288,6 +337,9 @@ async def trigger_sos(
                 []
             ),
 
-        "notifications":
-            notification_results
+        "emergency_contact_notifications":
+            emergency_notifications,
+
+        "nearby_responder_notifications":
+            responder_notifications
     }
