@@ -3,8 +3,6 @@ api.py
 ------
 RoadSOS AI Module — Secure FastAPI AI service.
 
-Run from:
-D:\\roadsos\\ai_module
 
 Command:
 py -m uvicorn chatbot.api:app --reload --port 8000
