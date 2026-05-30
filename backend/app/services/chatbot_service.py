@@ -64,7 +64,9 @@ async def get_ai_guidance(
 
     latitude: float,
 
-    longitude: float
+    longitude: float,
+
+    nearby_places: list | None = None
 ):
 
     """
@@ -102,7 +104,10 @@ async def get_ai_guidance(
                             longitude,
 
                         "is_sos_active":
-                            True
+                            True,
+
+                        "nearby_places":
+                            nearby_places or []
                     },
 
                     "history":

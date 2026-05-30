@@ -22,6 +22,31 @@ class EmergencyContact(
 # =====================================
 # EMERGENCY REQUEST
 # =====================================
+class NearbyPlace(
+    BaseModel
+):
+
+    id: str
+
+    category: str
+
+    name: str
+
+    phone: str
+
+    latitude: float
+
+    longitude: float
+
+    rating: float | None = None
+
+    isOpenNow: bool | None = None
+
+    distanceMeters: float
+
+    estimatedEtaMinutes: int | None = None
+
+
 
 class EmergencyRequest(
     BaseModel
@@ -40,6 +65,9 @@ class EmergencyRequest(
     latitude: float
 
     longitude: float
+    nearby_places: List[NearbyPlace] = Field(
+        default_factory=list
+    )
 
     country: str = "India"
 

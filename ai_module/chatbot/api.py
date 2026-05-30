@@ -4,8 +4,6 @@ api.py
 RoadSOS AI Module — Secure FastAPI AI service.
 
 
-Command:
-py -m uvicorn chatbot.api:app --reload --port 8000
 """
 
 from __future__ import annotations
@@ -48,6 +46,8 @@ from chatbot.intent_classifier import (
 from chatbot.response_templates import (
     get_template
 )
+
+from chatbot.retrieval import retrieve_top_k
 
 # =====================================================
 # LOAD ENV
@@ -153,6 +153,10 @@ class Context(BaseModel):
     nearest_police_phone: Optional[str] = None
 
     is_sos_active: bool = False
+
+    nearby_places: list[dict] = Field(
+    default_factory=list
+)
 
 
 # =====================================================
@@ -511,6 +515,17 @@ async def chat(
     if GEMINI_API_KEY and gemini_client:
 
         try:
+            retrieved_places = retrieve_top_k(
+                request.user_message,
+                ctx.nearby_places,
+                k=3
+            )
+            log.info(
+                f"Retrieved places count: {len(retrieved_places)}"
+            )
+            log.info(
+                f"Retrieved places: {retrieved_places}"
+            )
 
             system_prompt = (
 
@@ -542,7 +557,9 @@ async def chat(
 
                     is_sos_active=(
                         ctx.is_sos_active
-                    )
+                    ),
+                    nearby_places=retrieved_places
+
                 )
             )
 

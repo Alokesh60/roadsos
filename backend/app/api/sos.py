@@ -125,12 +125,17 @@ async def trigger_sos(
 
     ai_result = await get_ai_guidance(
 
-        message=request.message,
+    message=request.message,
 
-        latitude=request.latitude,
+    latitude=request.latitude,
 
-        longitude=request.longitude
-    )
+    longitude=request.longitude,
+
+    nearby_places=[
+        place.model_dump()
+        for place in request.nearby_places
+    ]
+)
 
     # =================================
     # DETECTED TYPE
