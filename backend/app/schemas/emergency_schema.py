@@ -1,5 +1,38 @@
 from typing import Optional
-from pydantic import BaseModel
+
+from pydantic import (
+    BaseModel,
+    Field
+)
+
+
+# =====================================
+# NEARBY PLACE
+# =====================================
+
+class NearbyPlace(
+    BaseModel
+):
+
+    id: Optional[str] = None
+
+    category: str
+
+    name: str
+
+    phone: Optional[str] = None
+
+    latitude: float
+
+    longitude: float
+
+    rating: Optional[float] = None
+
+    isOpenNow: Optional[bool] = None
+
+    distanceMeters: Optional[float] = None
+
+    estimatedEtaMinutes: Optional[int] = None
 
 
 # =====================================
@@ -37,6 +70,10 @@ class EmergencyRequest(
 
     nearby_services: NearbyServices = (
         NearbyServices()
+    )
+
+    nearby_places: list[NearbyPlace] = Field(
+        default_factory=list
     )
 
     source: str = "mobile_app"
