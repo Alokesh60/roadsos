@@ -21,7 +21,12 @@ object EmergencyDispatcher {
         val auth = FirebaseAuth.getInstance()
         val appContext = context.applicationContext
 
+        var hasDispatched = false
+
         LocationUtils.getCurrentLocation(appContext) { lat, lng ->
+            if (hasDispatched) return@getCurrentLocation
+            hasDispatched = true
+
             CoroutineScope(Dispatchers.IO).launch {
                 val hasInternet = NetworkUtils.isNetworkAvailable(appContext)
 

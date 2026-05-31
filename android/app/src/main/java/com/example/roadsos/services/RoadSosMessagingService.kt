@@ -36,13 +36,20 @@ class RoadSosMessagingService : FirebaseMessagingService() {
         val data = message.data
         if (data.isNotEmpty()) {
             val type = data["type"]
-            val title = message.notification?.title ?: "Emergency Alert"
-            val body = message.notification?.body ?: "Someone requires immediate assistance."
+            val senderName = data["sender_name"] ?: "A RoadSOS user"
+            val title = data["title"] ?: message.notification?.title ?: "Emergency Alert"
+            val body = data["body"] ?: message.notification?.body ?: "$senderName requires immediate assistance."
             val latitude = data["latitude"]?.toDoubleOrNull()
             val longitude = data["longitude"]?.toDoubleOrNull()
             val mapsLink = data["maps_link"]
-            val senderName = data["sender_name"] ?: "A RoadSOS user"
             val emergencyType = data["emergency_type"] ?: "Emergency"
+            val senderUid = data["sender_uid"]
+
+            // Prevent the sender from receiving their own notification if backend doesn't filter it
+            val currentUid = FirebaseAuth.getInstance().currentUser?.uid
+            if (currentUid != null && currentUid == senderUid) {
+                return
+            }
 
             showNotification(title, body, type, latitude, longitude, mapsLink, senderName, emergencyType)
         }
@@ -70,9 +77,11 @@ class RoadSosMessagingService : FirebaseMessagingService() {
             putExtra("emergencyType", emergencyType)
         }
 
+        val notificationId = senderName.hashCode()
+
         val pendingIntent = PendingIntent.getActivity(
             this,
-            Random.nextInt(),
+            notificationId,
             intent,
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
@@ -88,6 +97,6 @@ class RoadSosMessagingService : FirebaseMessagingService() {
             .build()
 
         val manager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        manager.notify(Random.nextInt(), notification)
+        manager.notify(notificationId, notification)
     }
 }
