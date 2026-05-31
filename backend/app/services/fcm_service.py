@@ -73,10 +73,6 @@ def send_push_notification(
         )
 
         print(
-            f"Token: {token}"
-        )
-
-        print(
             f"Message ID: {response}"
         )
 
