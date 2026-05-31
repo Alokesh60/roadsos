@@ -385,9 +385,9 @@ async def _call_gemini(
         # This is the ONLY way system_instruction reaches Gemini —
         # it cannot be set on start_chat() or send_message().
         model = genai.GenerativeModel(
-            model_name="gemini-2.5-flash",
-            system_instruction=system_prompt,   # ← FIX #6 core change
-        )
+          model_name="gemini-2.5-flash",
+          system_instruction=system_prompt,
+      )
 
         # history = all turns except the final user message
         # last user message is sent via send_message()
