@@ -47,7 +47,8 @@ def send_push_notification(
 
             android=messaging.AndroidConfig(
 
-                priority="high"
+                priority="high",
+                ttl = 86400
             )
         )
 
