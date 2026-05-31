@@ -7,7 +7,8 @@ from firebase_admin import (
 # FIRESTORE
 # =====================================
 
-db = firestore.client()
+def _db():
+    return firestore.client()
 
 
 # =====================================
@@ -126,7 +127,7 @@ def get_user_fcm_token(
 
         user_doc = (
 
-            db.collection("users")
+            _db().collection("users")
             .document(uid)
             .get()
         )

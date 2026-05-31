@@ -1,6 +1,8 @@
 from firebase_admin import firestore
 
-db = firestore.client()
+
+def _db():
+    return firestore.client()
 
 
 # =====================================
@@ -15,7 +17,7 @@ async def get_emergency_contacts(
 
         user_doc = (
 
-            db.collection("users")
+            _db().collection("users")
             .document(uid)
             .get()
         )
@@ -52,7 +54,7 @@ async def get_user_details(
 
         user_doc = (
 
-            db.collection("users")
+            _db().collection("users")
             .document(uid)
             .get()
         )

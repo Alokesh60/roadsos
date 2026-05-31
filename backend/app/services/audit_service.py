@@ -1,6 +1,8 @@
 from firebase_admin import firestore
 
-db = firestore.client()
+
+def _db():
+    return firestore.client()
 
 
 # =====================================
@@ -9,7 +11,7 @@ db = firestore.client()
 
 async def save_emergency_log(data: dict):
 
-    db.collection(
+    _db().collection(
         "emergency_logs"
     ).add(data)
 
@@ -21,7 +23,7 @@ async def save_emergency_log(data: dict):
 async def get_emergency_history():
 
     docs = (
-        db.collection("emergency_logs")
+        _db().collection("emergency_logs")
         .order_by("timestamp", direction=firestore.Query.DESCENDING)
         .stream()
     )

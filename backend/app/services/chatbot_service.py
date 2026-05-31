@@ -11,9 +11,15 @@ import httpx
 # =====================================
 
 AI_MODULE_URL = os.getenv(
-    "AI_MODULE_URL",
-    "http://127.0.0.1:8000"
+    "AI_MODULE_URL"
 )
+
+if not AI_MODULE_URL:
+
+    raise RuntimeError(
+
+        "AI_MODULE_URL environment variable is required."
+    )
 
 AI_MODULE_API_KEY = os.getenv(
     "AI_MODULE_API_KEY"

@@ -5,9 +5,14 @@ from fastapi import (
     HTTPException
 )
 
+import logging
+
 from app.services.firebase_auth_service import (
     verify_firebase_token
 )
+
+
+log = logging.getLogger(__name__)
 
 
 # =====================================
@@ -98,9 +103,14 @@ def get_current_user(
 
     except Exception as e:
 
+        log.warning(
+            "Firebase token verification failed: %s",
+            e
+        )
+
         raise HTTPException(
 
             status_code=401,
 
-            detail=f"Invalid token: {e}"
+            detail="Invalid authentication token"
         )
