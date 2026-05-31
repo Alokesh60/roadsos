@@ -20,6 +20,10 @@ from app.api.sos import (
     router as sos_router
 )
 
+from app.api.chat import (
+    router as chat_router
+)
+
 
 # =====================================
 # FASTAPI APP
@@ -77,6 +81,8 @@ setup_cors(app)
 app.include_router(health_router)
 
 app.include_router(sos_router)
+
+app.include_router(chat_router)
 
 
 # =====================================
