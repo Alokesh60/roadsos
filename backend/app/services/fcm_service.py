@@ -28,38 +28,27 @@ def send_push_notification(
 
     try:
 
+        payload = {
+
+            "title": title,
+
+            "body": body
+        }
+
+        if data:
+
+            payload.update(data)
+
         message = messaging.Message(
 
-            notification=messaging.Notification(
+            token=token,
 
-                title=title,
-
-                body=body
-            ),
-
-            data=(
-                data
-                if data
-                else {}
-            ),
+            data=payload,
 
             android=messaging.AndroidConfig(
 
-                priority="high",
-
-                notification=(
-                    messaging.AndroidNotification(
-
-                        sound="default",
-
-                        channel_id="roadsos_emergency",
-
-                        priority="high"
-                    )
-                )
-            ),
-
-            token=token
+                priority="high"
+            )
         )
 
         response = messaging.send(
@@ -174,23 +163,26 @@ def send_contact_alert(
 
         token=token,
 
-        title="🚨 Emergency Contact Alert",
+        title="🚨 Emergency Alert",
 
         body=(
-            f"{sender_name} may "
-            f"need immediate assistance."
+            f"{sender_name} requires "
+            f"immediate assistance."
         ),
 
         data={
 
             "type":
-                "emergency_contact",
+                "sos_alert",
 
             "sender_uid":
                 sender_uid,
 
             "sender_name":
                 sender_name,
+
+            "emergency_type":
+                "Emergency",
 
             "latitude":
                 str(latitude),
@@ -214,6 +206,8 @@ def send_nearby_sos_alert(
 
     sender_uid: str,
 
+    sender_name: str,
+
     emergency_type: str,
 
     latitude: float,
@@ -231,20 +225,23 @@ def send_nearby_sos_alert(
 
         token=token,
 
-        title="🚨 SOS Nearby",
+        title="🚨 Emergency Alert",
 
         body=(
-            "A RoadSOS user nearby "
-            "may require assistance."
+            f"{sender_name} requires "
+            f"immediate assistance."
         ),
 
         data={
 
             "type":
-                "nearby_sos",
+                "sos_alert",
 
             "sender_uid":
                 sender_uid,
+
+            "sender_name":
+                sender_name,
 
             "emergency_type":
                 emergency_type,

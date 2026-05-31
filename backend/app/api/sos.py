@@ -77,21 +77,47 @@ async def trigger_sos(
     # AI GUIDANCE
     # =================================
 
-    ai_result = await get_ai_guidance(
+    try:
 
-    message=request.message,
+        ai_result = await get_ai_guidance(
 
-    latitude=request.latitude,
+            message=request.message,
 
-    longitude=request.longitude,
+            latitude=request.latitude,
 
-    nearby_places=[
-        place.model_dump()
-        for place in request.nearby_places
-    ],
+            longitude=request.longitude,
 
-    nearby_services=request.nearby_services
-    )
+            nearby_places=[
+                place.model_dump()
+                for place in request.nearby_places
+            ],
+
+            nearby_services=request.nearby_services
+        )
+
+    except Exception as e:
+
+        print(
+            f"[AI_GUIDANCE_ERROR] {e}"
+        )
+
+        ai_result = {
+
+            "guidance":
+                "Emergency services have been notified.",
+
+            "detected_type":
+                "emergency",
+
+            "priority":
+                "high",
+
+            "source":
+                request.source,
+
+            "suggested_actions":
+                []
+        }
 
     detected_type = ai_result.get(
         "detected_type",
@@ -212,6 +238,8 @@ async def trigger_sos(
 
                 sender_uid=user_id,
 
+                sender_name=user_name,
+
                 emergency_type=detected_type,
 
                 latitude=request.latitude,
@@ -280,9 +308,7 @@ async def trigger_sos(
                 ),
 
             "source":
-                ai_result.get(
-                    "source"
-                ),
+                request.source,
 
             "emergency_notifications":
                 len(
@@ -323,9 +349,7 @@ async def trigger_sos(
             ),
 
         "source":
-            ai_result.get(
-                "source"
-            ),
+            request.source,
 
         "detected_type":
             detected_type,
