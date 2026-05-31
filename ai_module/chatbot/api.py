@@ -463,6 +463,35 @@ async def test_gemini():
             "error_type": type(e).__name__
         }
 
+@app.get("/list-models")
+async def list_models():
+
+    try:
+        import google.generativeai as genai
+        import os
+
+        genai.configure(
+            api_key=os.getenv("GEMINI_API_KEY")
+        )
+
+        models = []
+
+        for m in genai.list_models():
+            models.append(m.name)
+
+        return {
+            "success": True,
+            "models": models
+        }
+
+    except Exception as e:
+
+        return {
+            "success": False,
+            "error": str(e),
+            "error_type": type(e).__name__
+        }        
+
 @app.post(
     "/chat",
     response_model=ChatResponse
