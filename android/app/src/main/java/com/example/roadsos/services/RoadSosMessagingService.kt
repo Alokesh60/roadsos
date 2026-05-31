@@ -37,8 +37,9 @@ class RoadSosMessagingService : FirebaseMessagingService() {
         if (data.isNotEmpty()) {
             val type = data["type"]
             val senderName = data["sender_name"] ?: "A RoadSOS user"
+            val senderPhone = data["sender_phone"] ?: "No Phone Number"
             val title = data["title"] ?: message.notification?.title ?: "Emergency Alert"
-            val body = data["body"] ?: message.notification?.body ?: "$senderName requires immediate assistance."
+            val body = data["body"] ?: message.notification?.body ?: "$senderName ($senderPhone) requires immediate assistance."
             val latitude = data["latitude"]?.toDoubleOrNull()
             val longitude = data["longitude"]?.toDoubleOrNull()
             val mapsLink = data["maps_link"]
