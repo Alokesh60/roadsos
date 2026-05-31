@@ -11,6 +11,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlin.math.*
+import com.example.roadsos.models.BackendPlace
+import com.example.roadsos.models.UpdatePlacesRequest
+import com.example.roadsos.repository.AIRepository
+import java.time.Instant
 
 data class NearbyPlaceItem(
     val name: String,
@@ -23,6 +27,7 @@ data class NearbyPlaceItem(
 )
 
 class NearbyPlacesViewModel : ViewModel() {
+    private val aiRepository = AIRepository()
 
     private val _nearbyPlaces = MutableStateFlow<List<NearbyPlaceItem>>(emptyList())
     val nearbyPlaces: StateFlow<List<NearbyPlaceItem>> = _nearbyPlaces
@@ -135,9 +140,55 @@ class NearbyPlacesViewModel : ViewModel() {
                 }
 
                 android.util.Log.d("NearbyPlaces", "Total places found: ${allPlaces.size}")
-                _nearbyPlaces.value = allPlaces
-                lastFetchLat = lat
-                lastFetchLon = lon
+                android.util.Log.d(
+    "NearbyPlaces",
+    "Total places found: ${allPlaces.size}"
+)
+
+_nearbyPlaces.value = allPlaces
+
+try {
+
+    val backendPlaces = allPlaces.map { place ->
+
+        BackendPlace(
+            id = "${place.name}_${place.latitude}_${place.longitude}",
+            name = place.name,
+            category = place.category.label,
+            phone = place.phone,
+            address = place.address,
+            latitude = place.latitude,
+            longitude = place.longitude,
+            distance_km = place.distanceKm
+        )
+    }
+
+    val updateRequest = UpdatePlacesRequest(
+        user_id = "demo_user",
+        latitude = lat,
+        longitude = lon,
+        timestamp = Instant.now().toString(),
+        places = backendPlaces
+    )
+
+    val backendResponse =
+        aiRepository.updatePlaces(updateRequest)
+
+    android.util.Log.d(
+        "RoadSOS_AI",
+        "Backend sync success = ${backendResponse.isSuccessful}"
+    )
+
+} catch (e: Exception) {
+
+    android.util.Log.e(
+        "RoadSOS_AI",
+        "Backend sync failed: ${e.message}"
+    )
+}
+
+lastFetchLat = lat
+lastFetchLon = lon
             } catch (e: Exception) {
                 android.util.Log.e("NearbyPlaces", "Fatal error: ${e.message}")
                 e.printStackTrace()

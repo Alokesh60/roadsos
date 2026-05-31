@@ -1,26 +1,56 @@
-from typing import List, Optional
+from typing import Optional
 
 from pydantic import (
-    BaseModel
+    BaseModel,
+    Field
 )
 
 
 # =====================================
-# EMERGENCY CONTACT
+# NEARBY PLACE
 # =====================================
 
-class EmergencyContact(
+class NearbyPlace(
     BaseModel
 ):
 
+    id: Optional[str] = None
+
+    category: str
+
     name: str
 
-    phone: str
+    phone: Optional[str] = None
+
+    latitude: float
+
+    longitude: float
+
+    rating: Optional[float] = None
+
+    isOpenNow: Optional[bool] = None
+
+    distanceMeters: Optional[float] = None
+
+    estimatedEtaMinutes: Optional[int] = None
 
 
 # =====================================
-# EMERGENCY REQUEST
+# NEARBY SERVICES
 # =====================================
+
+class NearbyServices(
+    BaseModel
+):
+
+    police_phone: Optional[str] = None
+
+    hospital_phone: Optional[str] = None
+
+    ambulance_phone: Optional[str] = None
+
+    towing_phone: Optional[str] = None
+
 
 class EmergencyRequest(
     BaseModel
@@ -34,65 +64,14 @@ class EmergencyRequest(
 
     country: str = "India"
 
-    # =============================
-    # ANDROID CONTACTS
-    # =============================
+    nearby_services: NearbyServices = (
+        NearbyServices()
+    )
 
-    contacts: List[
-        EmergencyContact
-    ] = []
-
-    # =============================
-    # SOURCE TRACKING
-    # =============================
+    nearby_places: list[NearbyPlace] = Field(
+        default_factory=list
+    )
 
     source: str = "mobile_app"
 
-    # =============================
-    # OFFLINE MODE FLAG
-    # =============================
-
     offline_mode: bool = False
-
-
-# =====================================
-# EMERGENCY RESPONSE
-# =====================================
-
-class EmergencyResponse(
-    BaseModel
-):
-
-    classification_status: str
-
-    classification_reason: str
-
-    proceed: bool
-
-    detected_type: str
-
-    priority: str
-
-    confidence: float
-
-    recommended_service: dict
-
-    guidance: str
-
-    # =============================
-    # SOURCE INFO
-    # =============================
-
-    source: Optional[str] = None
-
-    # =============================
-    # OFFLINE SUPPORT
-    # =============================
-
-    offline_support: bool = True
-
-    # =============================
-    # DISASTER ALERTS
-    # =============================
-
-    disaster_alerts: list = []

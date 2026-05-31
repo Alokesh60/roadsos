@@ -1,17 +1,11 @@
 from fastapi import FastAPI
 
-from app.core.firebase_admin import *
+from app.core.firebase_admin import (
+    initialize_firebase
+)
 
 from app.middleware.cors import (
     setup_cors
-)
-
-from app.db.sqlite_db import (
-    initialize_database
-)
-
-from app.services.sqlite_service import (
-    get_all_services
 )
 
 # =====================================
@@ -22,48 +16,12 @@ from app.api.health import (
     router as health_router
 )
 
-from app.api.nearby import (
-    router as nearby_router
-)
-
-from app.api.search import (
-    router as search_router
-)
-
-from app.api.download import (
-    router as download_router
-)
-
-from app.api.emergency import (
-    router as emergency_router
-)
-
-from app.api.ai_emergency import (
-    router as ai_emergency_router
-)
-
-from app.api.chatbot import (
-    router as chatbot_router
-)
-
 from app.api.sos import (
     router as sos_router
 )
 
-from app.api.contacts import (
-    router as contacts_router
-)
-
-from app.api.live_location import (
-    router as live_location_router
-)
-
-from app.api.test_twilio import (
-    router as test_twilio_router
-)
-
-from tests.test_auth import (
-    router as test_auth_router
+from app.api.chat import (
+    router as chat_router
 )
 
 
@@ -76,11 +34,10 @@ app = FastAPI(
     title="RoadSOS API",
 
     description=(
-        "Emergency Response "
-        "and Offline Safety Platform"
+        "RoadSOS Emergency Backend"
     ),
 
-    version="2.0.0"
+    version="3.0.0"
 )
 
 
@@ -91,29 +48,22 @@ app = FastAPI(
 @app.on_event("startup")
 async def startup_event():
 
-    print(
-        "\n[Startup] Initializing database..."
-    )
+    # =================================
+    # FIREBASE INITIALIZATION
+    # =================================
 
-    initialize_database()
-
-    print(
-        "[Startup] Database initialized."
-    )
+    initialize_firebase()
 
     print(
-        "\n[Startup] Loading service points..."
-    )
-
-    services = get_all_services()
-
-    print(
-        f"[Startup] Loaded "
-        f"{len(services)} service points."
+        "\n[Startup] RoadSOS backend starting..."
     )
 
     print(
-        "\n[Startup] RoadSOS backend ready.\n"
+        "[Startup] Firebase initialized."
+    )
+
+    print(
+        "[Startup] Backend ready.\n"
     )
 
 
@@ -130,27 +80,9 @@ setup_cors(app)
 
 app.include_router(health_router)
 
-app.include_router(nearby_router)
-
-app.include_router(search_router)
-
-app.include_router(download_router)
-
-app.include_router(emergency_router)
-
-app.include_router(ai_emergency_router)
-
-app.include_router(chatbot_router)
-
 app.include_router(sos_router)
 
-app.include_router(contacts_router)
-
-app.include_router(test_auth_router)
-
-app.include_router(live_location_router)
-
-app.include_router(test_twilio_router)
+app.include_router(chat_router)
 
 
 # =====================================
@@ -168,18 +100,41 @@ async def root():
             "RoadSOS Backend Running",
 
         "version":
-            "2.0.0",
+            "3.0.0",
+
+        "architecture": {
+
+            "frontend":
+                (
+                    "Android handles "
+                    "Maps, Places, Routing"
+                ),
+
+            "backend":
+                (
+                    "SOS orchestration, "
+                    "FCM notifications "
+                    "and Firestore logging"
+                ),
+
+            "ai_module":
+                "Emergency AI guidance"
+        },
 
         "features": [
 
-            "WhatsApp SOS",
+            "SOS Alerts",
 
-            "Nearby User Broadcast",
+            "FCM Notifications",
 
-            "Offline Emergency Database",
+            "Emergency Contact Alerts",
 
-            "Google Places Integration",
+            "Nearby Responder Alerts",
 
-            "Disaster Alert Support"
+            "AI Emergency Guidance",
+
+            "Firebase Authentication",
+
+            "Firestore Audit Logging"
         ]
     }

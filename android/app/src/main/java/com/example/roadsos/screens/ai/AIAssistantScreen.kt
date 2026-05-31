@@ -35,8 +35,6 @@ import com.example.roadsos.theme.ChatBackgroundBrush
 import com.example.roadsos.theme.PrimaryRed
 import com.example.roadsos.theme.TextGray
 import com.example.roadsos.theme.TextWhite
-import androidx.compose.foundation.layout.imePadding
-
 import com.example.roadsos.ui.components.ErrorBanner
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.roadsos.theme.RoadSoSTheme
@@ -52,6 +50,15 @@ data class AIChatMessage(
     val isUser: Boolean,
     val time: String
 )
+fun currentTime(): String {
+
+    return SimpleDateFormat(
+        "hh:mm a",
+        Locale.getDefault()
+    ).format(
+        Date()
+    )
+}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -71,6 +78,20 @@ fun AIAssistantScreen(
     var messageText by remember {
         mutableStateOf("")
     }
+    var aiMode by remember {
+
+        mutableStateOf(
+            "Offline Mode"
+        )
+    }
+    val scope =
+        rememberCoroutineScope()
+
+    val chatRepository =
+        remember {
+
+            ChatRepository()
+        }
 
     val messages by viewModel.messages.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
@@ -120,8 +141,10 @@ fun AIAssistantScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        horizontal = 16.dp,
-                        vertical = 38.dp
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 14.dp,
+                        bottom = 18.dp
                     ),
 
                 verticalAlignment =
@@ -182,15 +205,21 @@ fun AIAssistantScreen(
                     )
 
                     Text(
-                        text = "Online",
+                        text = aiMode,
                         color =
-                            Color(0xFF4DFF88),
+                            if (
+                                aiMode == "Online"
+                            )
+                                Color(0xFF4DFF88)
+                            else
+                                Color(0xFFFFC857),
                         fontSize = 13.sp
                     )
                 }
             }
 
             // SECURITY BANNER
+            // AI STATUS CARD
 
             Card(
                 modifier = Modifier
@@ -207,14 +236,15 @@ fun AIAssistantScreen(
 
                 shape =
                     RoundedCornerShape(
-                        22.dp
+                        18.dp
                     )
             ) {
 
                 Row(
                     modifier =
                         Modifier.padding(
-                            16.dp
+                            horizontal = 16.dp,
+                            vertical = 12.dp
                         ),
 
                     verticalAlignment =
@@ -224,26 +254,14 @@ fun AIAssistantScreen(
                     Box(
                         modifier =
                             Modifier
-                                .size(40.dp)
+                                .size(12.dp)
                                 .clip(
                                     CircleShape
                                 )
                                 .background(
-                                    PrimaryRed.copy(
-                                        alpha =
-                                            0.15f
-                                    )
-                                ),
-
-                        contentAlignment =
-                            Alignment.Center
-                    ) {
-
-                        Text(
-                            text = "🛡",
-                            fontSize = 18.sp
-                        )
-                    }
+                                    Color(0xFF4DFF88)
+                                )
+                    )
 
                     Spacer(
                         modifier =
@@ -256,11 +274,16 @@ fun AIAssistantScreen(
 
                         Text(
                             text =
-                                "Emergency AI is active",
+                                "AI Protection Active",
+
                             color =
                                 TextWhite,
+
                             fontWeight =
-                                FontWeight.SemiBold
+                                FontWeight.SemiBold,
+
+                            fontSize =
+                                15.sp
                         )
 
                         Spacer(
@@ -272,10 +295,13 @@ fun AIAssistantScreen(
 
                         Text(
                             text =
-                                "Do not share sensitive personal data.",
+                                "Private & emergency-safe assistance",
+
                             color =
                                 TextGray,
-                            fontSize = 13.sp
+
+                            fontSize =
+                                12.sp
                         )
                     }
                 }
@@ -336,11 +362,10 @@ fun AIAssistantScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .imePadding()
                     .padding(
-                        horizontal =
-                            16.dp,
-                        vertical =
-                            12.dp
+                        horizontal = 16.dp,
+                        vertical = 12.dp
                     ),
 
                 verticalAlignment =

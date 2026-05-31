@@ -40,6 +40,9 @@ class CrashDetectionService :
         val sosDispatchState = MutableStateFlow<String>("IDLE")
         val sosResponseData = MutableStateFlow<com.example.roadsos.models.SosResponse?>(null)
 
+        var emergencyStartTime =
+            0L
+
         var mediaPlayerInstance:
                 MediaPlayer? = null
 
@@ -346,6 +349,9 @@ class CrashDetectionService :
 
             emergencyActive =
                 true
+
+            emergencyStartTime =
+                System.currentTimeMillis()
 
             triggerEmergencyAlert()
 

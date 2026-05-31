@@ -1,39 +1,74 @@
-def create_contact(data: dict):
-
-    print(
-        "[INFO] create_contact called"
-    )
-
-    return data
+from firebase_admin import firestore
 
 
-def get_contacts(user_id: str):
-
-    print(
-        f"[INFO] get_contacts called for {user_id}"
-    )
-
-    # Temporary mock contacts
-    return [
-
-        {
-            "id": 1,
-            "name": "Emergency Contact",
-            "phone": "+911234567890",
-            "relationship": "Family"
-        }
-    ]
+def _db():
+    return firestore.client()
 
 
-def delete_contact(contact_id: int):
+# =====================================
+# GET EMERGENCY CONTACTS
+# =====================================
 
-    print(
-        f"[INFO] delete_contact called for {contact_id}"
-    )
+async def get_emergency_contacts(
+    uid: str
+):
 
-    return {
+    try:
 
-        "success": True,
+        user_doc = (
 
-        "deleted_contact_id": contact_id
-    }
+            _db().collection("users")
+            .document(uid)
+            .get()
+        )
+
+        if not user_doc.exists:
+
+            return []
+
+        data = user_doc.to_dict()
+
+        return data.get(
+            "emergency_contacts",
+            []
+        )
+
+    except Exception as e:
+
+        print(
+            f"[CONTACT_SERVICE] {e}"
+        )
+
+        return []
+
+
+# =====================================
+# GET USER DETAILS
+# =====================================
+
+async def get_user_details(
+    uid: str
+):
+
+    try:
+
+        user_doc = (
+
+            _db().collection("users")
+            .document(uid)
+            .get()
+        )
+
+        if not user_doc.exists:
+
+            return None
+
+        return user_doc.to_dict()
+
+    except Exception as e:
+
+        print(
+            f"[USER_DETAILS] {e}"
+        )
+
+        return None

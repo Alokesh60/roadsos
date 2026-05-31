@@ -6,8 +6,16 @@ import retrofit2.Response
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Query
+import com.example.roadsos.models.UpdatePlacesRequest
+import com.example.roadsos.models.UpdatePlacesResponse
+import retrofit2.http.Body
+import retrofit2.http.POST
 
 interface ApiService {
+    @POST("update_places")
+    suspend fun updatePlaces(
+        @Body request: UpdatePlacesRequest
+    ): Response<UpdatePlacesResponse>
 
     @GET("nearby")
     suspend fun getNearbyServices(
