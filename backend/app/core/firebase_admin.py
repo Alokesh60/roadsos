@@ -1,8 +1,17 @@
 import os
 
+from dotenv import load_dotenv
+
 import firebase_admin
 
 from firebase_admin import credentials
+
+
+# =====================================
+# LOAD ENV
+# =====================================
+
+load_dotenv()
 
 
 # =====================================
@@ -21,7 +30,6 @@ from firebase_admin import credentials
 # FIREBASE_SERVICE_ACCOUNT=./firebase-service-account.json
 #
 # =====================================
-
 
 def initialize_firebase():
 
@@ -86,11 +94,4 @@ def initialize_firebase():
             f"[Firebase Init Error] {e}"
         )
 
-        raise e
-
-
-# =====================================
-# AUTO INITIALIZE
-# =====================================
-
-initialize_firebase()
+        raise
