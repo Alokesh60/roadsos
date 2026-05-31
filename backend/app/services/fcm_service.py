@@ -43,6 +43,12 @@ def send_push_notification(
 
             token=token,
 
+            notification=messaging.Notification(
+                title=title,
+
+                body=body
+            ),
+
             data=payload,
 
             android=messaging.AndroidConfig(
