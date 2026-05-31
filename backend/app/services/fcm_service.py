@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from firebase_admin import (
     messaging,
     firestore
@@ -54,7 +56,12 @@ def send_push_notification(
             android=messaging.AndroidConfig(
 
                 priority="high",
-                ttl = 86400
+                ttl=timedelta(hours=24),
+                notification=messaging.AndroidNotification(
+                    channel_id="roadsos_emergency",
+                    sound="default",
+                    priority="high"
+                )
             )
         )
 
