@@ -41,6 +41,9 @@ import com.example.roadsos.theme.TextGray
 import com.example.roadsos.theme.TextWhite
 import com.example.roadsos.models.EmergencyService
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.platform.LocalContext
+import com.example.roadsos.LocationUtils
+import com.example.roadsos.utils.EmergencyNumbersProvider
 
 import com.example.roadsos.viewmodel.ServiceViewModel
 
@@ -66,19 +69,29 @@ fun ServicesScreen(
     viewModel: ServiceViewModel = viewModel()
 ) {
 
-    val services by
-    viewModel.services.collectAsState()
+    val services by viewModel.services.collectAsState()
+    val searchText by viewModel.searchText.collectAsState()
+    val selectedFilter by viewModel.selectedFilter.collectAsState()
+    
+    val context = LocalContext.current
 
     LaunchedEffect(Unit) {
-
-        viewModel.fetchNearbyServices()
+        LocationUtils.getCurrentLocation(context) { lat, lon ->
+            if (lat != 0.0 && lon != 0.0) {
+                viewModel.fetchNearbyServices(lat, lon, context)
+            }
+        }
     }
 
     ServicesScreenContent(
         currentScreen = currentScreen,
         onTabSelected = onTabSelected,
         onServiceClick = onServiceClick,
-        services = services
+        services = services,
+        searchText = searchText,
+        selectedFilter = selectedFilter,
+        onSearchChange = { viewModel.setSearchText(it) },
+        onFilterChange = { viewModel.setFilter(it) }
     )
 }
 
@@ -87,16 +100,14 @@ fun ServicesScreenContent(
     currentScreen: BottomNavScreen,
     onTabSelected: (BottomNavScreen) -> Unit,
     onServiceClick: (EmergencyService) -> Unit,
-    services: List<EmergencyService>
+    services: List<EmergencyService>,
+    searchText: String,
+    selectedFilter: String,
+    onSearchChange: (String) -> Unit,
+    onFilterChange: (String) -> Unit
 ) {
 
-    var searchText by remember {
-        mutableStateOf("")
-    }
-
-    var selectedFilter by remember {
-        mutableStateOf("All")
-    }
+    // Removed local state, using hoisted state
 
 //    val services = listOf(
 //
@@ -227,7 +238,7 @@ fun ServicesScreenContent(
 
                     onValueChange = {
 
-                        searchText = it
+                        onSearchChange(it)
                     },
 
                     modifier =
@@ -310,8 +321,7 @@ fun ServicesScreenContent(
 
                             onClick = {
 
-                                selectedFilter =
-                                    filter
+                                onFilterChange(filter)
                             },
 
                             label = {
@@ -556,8 +566,34 @@ fun ServiceCard(
 
             // CALL BUTTON
 
+            val context = LocalContext.current
+
             IconButton(
-                onClick = { },
+                onClick = {
+                    val cleaned = EmergencyNumbersProvider.cleanPhoneNumber(service.phone)
+                    if (cleaned.isEmpty()) {
+                        android.widget.Toast.makeText(context, "Phone number not available for this location.", android.widget.Toast.LENGTH_SHORT).show()
+                    } else {
+                        try {
+                            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                                    context, android.Manifest.permission.CALL_PHONE
+                                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+                            ) {
+                                context.startActivity(
+                                    android.content.Intent(android.content.Intent.ACTION_CALL, android.net.Uri.parse("tel:$cleaned"))
+                                )
+                            } else {
+                                context.startActivity(
+                                    android.content.Intent(android.content.Intent.ACTION_DIAL, android.net.Uri.parse("tel:$cleaned"))
+                                )
+                            }
+                        } catch (e: Exception) {
+                            context.startActivity(
+                                android.content.Intent(android.content.Intent.ACTION_DIAL, android.net.Uri.parse("tel:$cleaned"))
+                            )
+                        }
+                    }
+                },
 
                 modifier = Modifier
                     .clip(CircleShape)
@@ -633,7 +669,11 @@ fun ServicesScreenPreview() {
             currentScreen = BottomNavScreen.SERVICES,
             onTabSelected = {},
             onServiceClick = {},
-            services = previewServices
+            services = previewServices,
+            searchText = "",
+            selectedFilter = "All",
+            onSearchChange = {},
+            onFilterChange = {}
         )
     }
 }

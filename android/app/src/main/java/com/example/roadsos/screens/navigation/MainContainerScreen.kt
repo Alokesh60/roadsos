@@ -1,9 +1,11 @@
 package com.example.roadsos.screens.navigation
 
+import android.widget.Toast
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import com.example.roadsos.screens.ai.AIAssistantScreen
 import com.example.roadsos.screens.contacts.AddContactScreen
 import com.example.roadsos.screens.contacts.ContactsScreen
@@ -16,8 +18,10 @@ import com.example.roadsos.screens.services.ServiceDetailScreen
 import com.example.roadsos.screens.services.ServicesScreen
 import com.example.roadsos.screens.profile.ProfileScreen
 import com.example.roadsos.screens.permissions.PermissionScreen
+import com.example.roadsos.viewmodel.ContactsViewModel
 import androidx.activity.compose.BackHandler
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.roadsos.theme.RoadSoSTheme
 
 enum class BottomNavScreen {
@@ -54,43 +58,24 @@ fun MainContainerScreen(
         mutableStateOf<EmergencyService?>(null)
     }
 
-    // CONTACTS STATE
+    // CONTACTS VIEWMODEL
 
-    var contacts by remember {
+    val contactsViewModel: ContactsViewModel = viewModel()
+    val contacts by contactsViewModel.contacts.collectAsState()
+    val toastMessage by contactsViewModel.toastMessage.collectAsState()
+    val context = LocalContext.current
 
-        mutableStateOf(
+    // Fetch contacts when screen first loads
+    LaunchedEffect(Unit) {
+        contactsViewModel.fetchContacts()
+    }
 
-            listOf(
-
-                EmergencyContact(
-                    name = "Rahul Sharma",
-                    relation = "Brother",
-                    number = "+91 9876543210",
-                    priority = "Primary"
-                ),
-
-                EmergencyContact(
-                    name = "Ananya Das",
-                    relation = "Friend",
-                    number = "+91 9123456780",
-                    priority = "Secondary"
-                ),
-
-                EmergencyContact(
-                    name = "Dr. Mehta",
-                    relation = "Family Doctor",
-                    number = "+91 9988776655",
-                    priority = "Medical"
-                ),
-
-                EmergencyContact(
-                    name = "Police Helpline",
-                    relation = "Emergency",
-                    number = "100",
-                    priority = "SOS"
-                )
-            )
-        )
+    // Show toast messages from ViewModel
+    LaunchedEffect(toastMessage) {
+        toastMessage?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            contactsViewModel.clearToast()
+        }
     }
     
     var initialMapCategory by remember { mutableStateOf<PlaceCategory?>(null) }
@@ -191,16 +176,21 @@ fun MainContainerScreen(
 
                     onAddContact = {
 
-                        currentScreen =
-                            BottomNavScreen.ADD_CONTACT
+                        if (contacts.size >= 5) {
+                            Toast.makeText(
+                                context,
+                                "Maximum 5 emergency contacts allowed",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            currentScreen =
+                                BottomNavScreen.ADD_CONTACT
+                        }
                     },
 
                     onDeleteContact = { contact ->
 
-                        contacts =
-                            contacts.filter {
-                                it != contact
-                            }
+                        contactsViewModel.deleteContact(contact)
                     }
                 )
             }
@@ -219,11 +209,10 @@ fun MainContainerScreen(
 
                     onSave = { newContact ->
 
-                        contacts =
-                            contacts + newContact
-
-                        currentScreen =
-                            BottomNavScreen.CONTACTS
+                        contactsViewModel.addContact(newContact) {
+                            currentScreen =
+                                BottomNavScreen.CONTACTS
+                        }
                     }
                 )
             }
@@ -286,4 +275,4 @@ fun MainContainerScreenPreview() {
     RoadSoSTheme {
         MainContainerScreen(onLogout = {})
     }
-}
+}

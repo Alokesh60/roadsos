@@ -12,7 +12,16 @@ data class GooglePlace(
     val location: GoogleLocation?,
     val types: List<String>?,
     val formattedAddress: String?,
-    @SerializedName("nationalPhoneNumber") val nationalPhoneNumber: String?
+    @SerializedName("nationalPhoneNumber") val nationalPhoneNumber: String?,
+    @SerializedName("internationalPhoneNumber") val internationalPhoneNumber: String?,
+    val rating: Double?,
+    val userRatingCount: Int?,
+    val businessStatus: String?,
+    val currentOpeningHours: GoogleOpeningHours?
+)
+
+data class GoogleOpeningHours(
+    val openNow: Boolean?
 )
 
 data class GoogleDisplayName(

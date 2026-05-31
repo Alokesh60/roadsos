@@ -118,7 +118,7 @@ class NearbyPlacesViewModel : ViewModel() {
                                     latitude = placeLat,
                                     longitude = placeLon,
                                     category = category,
-                                    phone = place.nationalPhoneNumber ?: "",
+                                    phone = place.nationalPhoneNumber ?: place.internationalPhoneNumber ?: "",
                                     address = place.formattedAddress ?: "",
                                     distanceKm = haversineKm(lat, lon, placeLat, placeLon)
                                 )

@@ -48,23 +48,38 @@ fun PermissionScreen(
 
     val context = LocalContext.current
 
-    var locationChecked by remember { 
-        mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) 
-    }
-    var callChecked by remember { 
-        mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) 
-    }
-    var smsChecked by remember { 
-        mutableStateOf(ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED) 
-    }
-    var notificationChecked by remember { 
-        mutableStateOf(
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
-            } else {
-                true
+    var locationChecked by remember { mutableStateOf(false) }
+    var callChecked by remember { mutableStateOf(false) }
+    var smsChecked by remember { mutableStateOf(false) }
+    var notificationChecked by remember { mutableStateOf(false) }
+
+    val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
+
+    DisposableEffect(lifecycleOwner) {
+        val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
+            if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+                locationChecked = ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
+                callChecked = ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
+                smsChecked = ContextCompat.checkSelfPermission(context, Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED
+                notificationChecked = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+                } else {
+                    true
+                }
             }
-        ) 
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+
+    val openSettings = {
+        val intent = android.content.Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+            data = android.net.Uri.fromParts("package", context.packageName, null)
+        }
+        context.startActivity(intent)
+        Toast.makeText(context, "Please revoke the permission here", Toast.LENGTH_LONG).show()
     }
 
     val locationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -152,8 +167,7 @@ fun PermissionScreen(
                 if (isChecked) {
                     locationLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
                 } else {
-                    Toast.makeText(context, "Permissions can only be revoked from Settings", Toast.LENGTH_SHORT).show()
-                    locationChecked = true
+                    openSettings()
                 }
             }
         )
@@ -176,8 +190,7 @@ fun PermissionScreen(
                 if (isChecked) {
                     callLauncher.launch(Manifest.permission.CALL_PHONE)
                 } else {
-                    Toast.makeText(context, "Permissions can only be revoked from Settings", Toast.LENGTH_SHORT).show()
-                    callChecked = true
+                    openSettings()
                 }
             }
         )
@@ -200,8 +213,7 @@ fun PermissionScreen(
                 if (isChecked) {
                     smsLauncher.launch(Manifest.permission.SEND_SMS)
                 } else {
-                    Toast.makeText(context, "Permissions can only be revoked from Settings", Toast.LENGTH_SHORT).show()
-                    smsChecked = true
+                    openSettings()
                 }
             }
         )
@@ -228,8 +240,7 @@ fun PermissionScreen(
                         notificationChecked = true
                     }
                 } else {
-                    Toast.makeText(context, "Permissions can only be revoked from Settings", Toast.LENGTH_SHORT).show()
-                    notificationChecked = true
+                    openSettings()
                 }
             }
         )

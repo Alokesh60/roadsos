@@ -7,6 +7,10 @@ import android.content.pm.PackageManager
 import android.location.LocationManager
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.LocationServices
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 object LocationUtils {
 
@@ -22,21 +26,39 @@ object LocationUtils {
 
         val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
 
-        // Initial location
-        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-            if (location != null) onLocationReceived(location.latitude, location.longitude)
-            else onLocationReceived(0.0, 0.0)
-        }.addOnFailureListener { onLocationReceived(0.0, 0.0) }
+        // Try to get fresh location instead of relying on cached lastLocation
+        fusedLocationClient.getCurrentLocation(com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, null)
+            .addOnSuccessListener { location ->
+                if (location != null) {
+                    onLocationReceived(location.latitude, location.longitude)
+                    
+                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                        try {
+                            com.example.roadsos.utils.PlacesSyncManager.syncNearbyServices(context, location.latitude, location.longitude)
+                        } catch (e: Exception) {
+                            android.util.Log.e("LocationUtils", "Failed to sync nearby services", e)
+                        }
+                    }
+                } else {
+                    // Fallback to 0.0 only if even fresh location fails
+                    onLocationReceived(0.0, 0.0)
+                }
+            }.addOnFailureListener { onLocationReceived(0.0, 0.0) }
 
-        // Continuous updates if displacement > 10km (10000 meters)
+        // Continuous updates if displacement > 15km (15000 meters)
         val locationRequest = com.google.android.gms.location.LocationRequest.Builder(
             com.google.android.gms.location.Priority.PRIORITY_HIGH_ACCURACY, 10000
-        ).setMinUpdateDistanceMeters(10000f).build()
+        ).setMinUpdateDistanceMeters(15000f).build()
 
         val locationCallback = object : com.google.android.gms.location.LocationCallback() {
             override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
                 locationResult.lastLocation?.let { location ->
-                    onLocationReceived(location.latitude, location.longitude)
+                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                        com.example.roadsos.utils.PlacesSyncManager.syncNearbyServices(context, location.latitude, location.longitude)
+                        kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
+                            onLocationReceived(location.latitude, location.longitude)
+                        }
+                    }
                 }
             }
         }

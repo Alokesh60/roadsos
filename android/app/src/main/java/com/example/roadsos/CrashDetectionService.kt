@@ -19,6 +19,13 @@ import android.os.Looper
 import android.os.VibrationEffect
 import android.os.Vibrator
 import androidx.core.app.NotificationCompat
+import com.example.roadsos.utils.EmergencyDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.launch
 import kotlin.math.abs
 import kotlin.math.sqrt
 
@@ -29,13 +36,20 @@ class CrashDetectionService :
     companion object {
 
         var emergencyActive = false
+        val crashCountdown = MutableStateFlow<Int?>(null)
+        val sosDispatchState = MutableStateFlow<String>("IDLE")
+        val sosResponseData = MutableStateFlow<com.example.roadsos.models.SosResponse?>(null)
 
         var mediaPlayerInstance:
                 MediaPlayer? = null
 
-        fun resetEmergency() {
+        var countdownJob: Job? = null
 
+        fun resetEmergency() {
             emergencyActive = false
+            crashCountdown.value = null
+            sosDispatchState.value = "IDLE"
+            sosResponseData.value = null
         }
 
         fun stopAlarm() {
@@ -51,6 +65,44 @@ class CrashDetectionService :
             } catch (_: Exception) {
 
             }
+        }
+        fun startCrashCountdown(context: android.content.Context) {
+            countdownJob?.cancel()
+            crashCountdown.value = 15
+            sosDispatchState.value = "IDLE"
+            
+            countdownJob = CoroutineScope(Dispatchers.Default).launch {
+                while (crashCountdown.value != null && crashCountdown.value!! > 0) {
+                    delay(1000)
+                    if (crashCountdown.value != null) {
+                        crashCountdown.value = crashCountdown.value!! - 1
+                    }
+                }
+                
+                if (crashCountdown.value == 0) {
+                    // Timer finished! Dispatch SOS from background.
+                    stopAlarm()
+                    val manager = context.getSystemService(android.app.NotificationManager::class.java)
+                    manager.cancel(200) // Clear the local crash notification
+                    
+                    com.example.roadsos.utils.EmergencyDispatcher.dispatchEmergency(context, "crash_detection") { response ->
+                        if (response != null) {
+                            sosResponseData.value = response
+                            sosDispatchState.value = "SUCCESS"
+                        } else {
+                            sosDispatchState.value = "SUCCESS" // Still SUCCESS because SMS was dispatched
+                        }
+                    }
+                }
+            }
+        }
+
+        fun cancelCrashCountdown(context: android.content.Context) {
+            countdownJob?.cancel()
+            resetEmergency()
+            stopAlarm()
+            val manager = context.getSystemService(android.app.NotificationManager::class.java)
+            manager.cancel(200)
         }
     }
 
@@ -297,7 +349,11 @@ class CrashDetectionService :
 
             triggerEmergencyAlert()
 
-            showEmergencyNotification()
+            if (!MainActivity.isAppOpen) {
+                showEmergencyNotification()
+            }
+
+            startCrashCountdown(this)
 
             if (
                 MainActivity.isAppOpen

@@ -39,6 +39,24 @@ import com.example.roadsos.theme.TextWhite
 import androidx.activity.compose.BackHandler
 import com.example.roadsos.models.EmergencyService
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalContext
+import com.example.roadsos.LocationUtils
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.*
+import androidx.compose.material.icons.filled.Layers
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
+import com.example.roadsos.utils.EmergencyNumbersProvider
+import android.content.Intent
+import android.net.Uri
+import androidx.core.content.ContextCompat
+import android.Manifest
+import android.content.pm.PackageManager
+import com.example.roadsos.network.GoogleDirectionsApiClient
+import kotlinx.coroutines.launch
+import android.widget.Toast
 
 @Composable
 fun ServiceDetailScreen(
@@ -52,13 +70,54 @@ fun ServiceDetailScreen(
         onBack()
     }
 
-    val facilities = listOf(
-        "Emergency",
-        "ICU",
-        "24/7",
-        "Trauma Care",
-        "Ambulance"
-    )
+    val facilities = when (service.type) {
+        "Hospital" -> listOf("Emergency", "ICU", "24/7", "Trauma Care", "Ambulance")
+        "Police" -> listOf("24/7", "Patrol", "F.I.R", "Emergency Response", "Security")
+        "Towing" -> listOf("24/7", "Flatbed", "Jump Start", "Winch", "Roadside Assist")
+        "Ambulance" -> listOf("24/7", "Life Support", "Paramedics", "Oxygen")
+        else -> listOf("24/7", "Emergency Support")
+    }
+
+    val context = LocalContext.current
+    val coroutineScope = rememberCoroutineScope()
+    var isSatellite by remember { mutableStateOf(false) }
+    var routeDuration by remember { mutableStateOf<String?>(null) }
+    var routeDistance by remember { mutableStateOf<String?>(null) }
+
+    val serviceLocation = LatLng(service.latitude, service.longitude)
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(serviceLocation, 15f)
+    }
+
+    LaunchedEffect(service) {
+        LocationUtils.getCurrentLocation(context) { lat, lon ->
+            if (lat != 0.0 && lon != 0.0) {
+                coroutineScope.launch {
+                    try {
+                        val ai = context.packageManager.getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
+                        val apiKey = ai.metaData?.getString("com.google.android.geo.API_KEY") ?: ""
+                        if (apiKey.isNotEmpty()) {
+                            val origin = "$lat,$lon"
+                            val destination = "${service.latitude},${service.longitude}"
+                            val response = GoogleDirectionsApiClient.api.getDirections(origin, destination, apiKey)
+                            if (response.isSuccessful) {
+                                val route = response.body()?.routes?.firstOrNull()
+                                if (route != null) {
+                                    val leg = route.legs.firstOrNull()
+                                    if (leg != null) {
+                                        routeDuration = leg.duration.text
+                                        routeDistance = leg.distance.text
+                                    }
+                                }
+                            }
+                        }
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+            }
+        }
+    }
 
     Box(
         modifier = Modifier
@@ -75,106 +134,32 @@ fun ServiceDetailScreen(
         ) {
 
             // MAP HEADER
-
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(300.dp)
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xFF132238),
-                                Color(0xFF08111F)
-                            )
-                        )
-                    )
             ) {
-
-                // GRID
-
-                Column(
-                    modifier = Modifier.fillMaxSize()
+                GoogleMap(
+                    modifier = Modifier.fillMaxSize(),
+                    cameraPositionState = cameraPositionState,
+                    properties = MapProperties(
+                        isMyLocationEnabled = false,
+                        mapType = if (isSatellite) MapType.SATELLITE else MapType.NORMAL
+                    ),
+                    uiSettings = MapUiSettings(
+                        zoomControlsEnabled = false,
+                        compassEnabled = false,
+                        mapToolbarEnabled = false
+                    )
                 ) {
-
-                    repeat(7) {
-
-                        Row(
-                            modifier = Modifier.weight(1f)
-                        ) {
-
-                            repeat(5) {
-
-                                Box(
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .fillMaxHeight()
-                                ) {
-
-                                    Box(
-                                        modifier = Modifier
-                                            .fillMaxWidth()
-                                            .height(1.dp)
-                                            .background(
-                                                Color.White.copy(alpha = 0.05f)
-                                            )
-                                    )
-
-                                    Box(
-                                        modifier = Modifier
-                                            .width(1.dp)
-                                            .fillMaxHeight()
-                                            .background(
-                                                Color.White.copy(alpha = 0.05f)
-                                            )
-                                    )
-                                }
-                            }
-                        }
-                    }
+                    Marker(
+                        state = MarkerState(position = serviceLocation),
+                        title = service.name,
+                        icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+                    )
                 }
 
-                // ROUTE PATH
-
-                Box(
-                    modifier = Modifier
-                        .offset(
-                            x = 95.dp,
-                            y = 150.dp
-                        )
-                        .width(150.dp)
-                        .height(5.dp)
-                        .clip(RoundedCornerShape(50.dp))
-                        .background(PrimaryRed)
-                )
-
-                // USER DOT
-
-                Box(
-                    modifier = Modifier
-                        .offset(
-                            x = 72.dp,
-                            y = 138.dp
-                        )
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(Color(0xFF4DA3FF))
-                )
-
-                // DESTINATION
-
-                Box(
-                    modifier = Modifier
-                        .offset(
-                            x = 230.dp,
-                            y = 128.dp
-                        )
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(PrimaryRed)
-                )
-
                 // TOP BAR
-
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -182,27 +167,38 @@ fun ServiceDetailScreen(
                             horizontal = 20.dp,
                             vertical = 52.dp
                         ),
-
+                    horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
 
-                    IconButton(
-                        onClick = onBack
-                    ) {
-
+                    IconButton(onClick = onBack) {
                         Box(
                             modifier = Modifier
                                 .size(46.dp)
                                 .clip(CircleShape)
-                                .background(Color(0xFF1A2433)),
-
+                                .background(Color(0xFF1A2433).copy(alpha = 0.9f)),
                             contentAlignment = Alignment.Center
                         ) {
-
                             Icon(
                                 imageVector = Icons.Default.ArrowBack,
-                                contentDescription = null,
+                                contentDescription = "Back",
                                 tint = Color.White
+                            )
+                        }
+                    }
+
+                    IconButton(onClick = { isSatellite = !isSatellite }) {
+                        Box(
+                            modifier = Modifier
+                                .size(46.dp)
+                                .clip(CircleShape)
+                                .background(Color(0xFF1A2433).copy(alpha = 0.9f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Layers,
+                                contentDescription = "Toggle Map Type",
+                                tint = if (isSatellite) Color(0xFF4CAF50) else Color.White
                             )
                         }
                     }
@@ -242,7 +238,7 @@ fun ServiceDetailScreen(
                         Spacer(modifier = Modifier.width(10.dp))
 
                         Text(
-                            text = "${"Live"} away",
+                            text = if (routeDuration != null) "$routeDuration away" else "Calculating ETA...",
                             color = Color.White,
                             fontWeight = FontWeight.SemiBold
                         )
@@ -273,6 +269,17 @@ fun ServiceDetailScreen(
 
                 // STATUS
 
+                val statusColor = when (service.isOpenNow) {
+                    true -> Color.Green
+                    false -> Color.Red
+                    else -> Color.Gray
+                }
+                val statusText = when (service.isOpenNow) {
+                    true -> "Open Now"
+                    false -> "Closed"
+                    else -> "Hours Not Available"
+                }
+
                 Row(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -281,14 +288,14 @@ fun ServiceDetailScreen(
                         modifier = Modifier
                             .size(10.dp)
                             .clip(CircleShape)
-                            .background(Color.Green)
+                            .background(statusColor)
                     )
 
                     Spacer(modifier = Modifier.width(8.dp))
 
                     Text(
-                        text = "Open 24/7",
-                        color = Color.Green,
+                        text = statusText,
+                        color = statusColor,
                         fontSize = 15.sp,
                         fontWeight = FontWeight.Medium
                     )
@@ -307,13 +314,13 @@ fun ServiceDetailScreen(
 
                     DetailInfoCard(
                         title = "Distance",
-                        value = "${service.distance_km} km",
+                        value = routeDistance ?: "${service.distance_km} km",
                         modifier = Modifier.weight(1f)
                     )
 
                     DetailInfoCard(
                         title = "ETA",
-                        value = "Live",
+                        value = routeDuration ?: "Live",
                         modifier = Modifier.weight(1f)
                     )
 
@@ -339,7 +346,18 @@ fun ServiceDetailScreen(
                         text = "Directions",
                         background = Color(0xFF1A2433),
                         icon = Icons.Default.Directions,
-
+                        onClick = {
+                            val uri = Uri.parse("google.navigation:q=${service.latitude},${service.longitude}&mode=d")
+                            val mapIntent = Intent(Intent.ACTION_VIEW, uri)
+                            mapIntent.setPackage("com.google.android.apps.maps")
+                            try {
+                                context.startActivity(mapIntent)
+                            } catch (e: Exception) {
+                                // Fallback if Google Maps is not installed
+                                val browserUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=${service.latitude},${service.longitude}")
+                                context.startActivity(Intent(Intent.ACTION_VIEW, browserUri))
+                            }
+                        },
                         modifier = Modifier.weight(1f)
                     )
 
@@ -347,7 +365,22 @@ fun ServiceDetailScreen(
                         text = "Call Now",
                         background = PrimaryRed,
                         icon = Icons.Default.Call,
-
+                        onClick = {
+                            val cleaned = EmergencyNumbersProvider.cleanPhoneNumber(service.phone)
+                            if (cleaned.isEmpty()) {
+                                Toast.makeText(context, "Phone number not available for this location.", Toast.LENGTH_SHORT).show()
+                            } else {
+                                try {
+                                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
+                                        context.startActivity(Intent(Intent.ACTION_CALL, Uri.parse("tel:$cleaned")))
+                                    } else {
+                                        context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$cleaned")))
+                                    }
+                                } catch (e: Exception) {
+                                    context.startActivity(Intent(Intent.ACTION_DIAL, Uri.parse("tel:$cleaned")))
+                                }
+                            }
+                        },
                         modifier = Modifier.weight(1f)
                     )
                 }
@@ -376,7 +409,7 @@ fun ServiceDetailScreen(
                     Spacer(modifier = Modifier.width(12.dp))
 
                     Text(
-                        text = "New Delhi, India",
+                        text = if (service.address.isNotBlank()) service.address else service.city,
                         color = TextGray,
                         fontSize = 15.sp,
                         lineHeight = 24.sp
@@ -465,7 +498,7 @@ fun ServiceDetailScreen(
                             Spacer(modifier = Modifier.width(12.dp))
 
                             Text(
-                                text = "+91 98765 43210",
+                                text = if (service.phone.isNotBlank()) service.phone else "Not available",
                                 color = TextGray,
                                 fontSize = 15.sp
                             )
@@ -563,10 +596,12 @@ fun ActionButton(
     text: String,
     background: Color,
     icon: ImageVector,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
 
     Card(
+        onClick = onClick,
         modifier = modifier.height(58.dp),
 
         colors = CardDefaults.cardColors(

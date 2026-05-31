@@ -345,6 +345,7 @@ fun AddContactScreen(
                             name = name,
                             relation = relation,
                             number = number,
+                            countryCode = countryCode,
                             priority = priority
                         )
 
