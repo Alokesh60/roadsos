@@ -3,8 +3,6 @@ api.py
 ------
 RoadSOS AI Module — Secure FastAPI AI service.
 
-Run from:
-D:\\roadsos\\ai_module
 
 Command:
 py -m uvicorn chatbot.api:app --reload --port 8000
@@ -82,6 +80,8 @@ from chatbot.intent_classifier import (
 from chatbot.response_templates import (
     get_template
 )
+
+from chatbot.retrieval import retrieve_top_k
 
 # =====================================================
 # LOAD ENV
@@ -209,6 +209,10 @@ class Context(BaseModel):
     nearest_towing_phone: Optional[str] = None
 
     is_sos_active: bool = False
+
+    nearby_places: list[dict] = Field(
+    default_factory=list
+)
 
 
 # =====================================================
@@ -493,7 +497,52 @@ async def chat(
     if _gemini_ready:   # ← FIX #8: was `if GEMINI_API_KEY and gemini_client`
 
         try:
+            retrieved_places = retrieve_top_k(
+                request.user_message,
+                ctx.nearby_places,
+                k=3
+            )
+            log.info(
+                f"Retrieved places count: {len(retrieved_places)}"
+            )
+            log.info(
+                f"Retrieved places: {retrieved_places}"
+            )
 
+            system_prompt = (
+
+                build_system_prompt(
+
+                    lat=ctx.lat,
+
+                    lng=ctx.lng,
+
+                    state=ctx.state,
+
+                    district=ctx.district,
+
+                    nearest_highway=(
+                        ctx.nearest_highway
+                    ),
+
+                    nearest_hospital=(
+                        ctx.nearest_hospital
+                    ),
+
+                    nearest_hospital_phone=(
+                        ctx.nearest_hospital_phone
+                    ),
+
+                    nearest_police_phone=(
+                        ctx.nearest_police_phone
+                    ),
+
+                    is_sos_active=(
+                        ctx.is_sos_active
+                    ),
+                    nearby_places=retrieved_places
+
+                )
             system_prompt = build_system_prompt(
                 lat=ctx.lat,
                 lng=ctx.lng,
@@ -506,6 +555,7 @@ async def chat(
                 nearest_ambulance_phone=ctx.nearest_ambulance_phone,
                 nearest_towing_phone=ctx.nearest_towing_phone,
                 is_sos_active=ctx.is_sos_active,
+                nearby_places=retrieved_places
             )
 
             history_dicts = [
