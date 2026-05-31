@@ -35,17 +35,31 @@ import com.example.roadsos.theme.ChatBackgroundBrush
 import com.example.roadsos.theme.PrimaryRed
 import com.example.roadsos.theme.TextGray
 import com.example.roadsos.theme.TextWhite
-import androidx.compose.foundation.layout.imePadding
-
 import com.example.roadsos.ui.components.ErrorBanner
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.roadsos.theme.RoadSoSTheme
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import com.example.roadsos.repository.ChatRepository
+import com.example.roadsos.models.ChatRequest
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 data class AIChatMessage(
     val text: String,
     val isUser: Boolean,
     val time: String
 )
+fun currentTime(): String {
+
+    return SimpleDateFormat(
+        "hh:mm a",
+        Locale.getDefault()
+    ).format(
+        Date()
+    )
+}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -64,6 +78,20 @@ fun AIAssistantScreen(
     var aiError by remember {
         mutableStateOf("")
     }
+    var aiMode by remember {
+
+        mutableStateOf(
+            "Offline Mode"
+        )
+    }
+    val scope =
+        rememberCoroutineScope()
+
+    val chatRepository =
+        remember {
+
+            ChatRepository()
+        }
 
     val messages = remember {
 
@@ -121,8 +149,10 @@ fun AIAssistantScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(
-                        horizontal = 16.dp,
-                        vertical = 38.dp
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = 14.dp,
+                        bottom = 18.dp
                     ),
 
                 verticalAlignment =
@@ -183,15 +213,21 @@ fun AIAssistantScreen(
                     )
 
                     Text(
-                        text = "Online",
+                        text = aiMode,
                         color =
-                            Color(0xFF4DFF88),
+                            if (
+                                aiMode == "Online"
+                            )
+                                Color(0xFF4DFF88)
+                            else
+                                Color(0xFFFFC857),
                         fontSize = 13.sp
                     )
                 }
             }
 
             // SECURITY BANNER
+            // AI STATUS CARD
 
             Card(
                 modifier = Modifier
@@ -208,14 +244,15 @@ fun AIAssistantScreen(
 
                 shape =
                     RoundedCornerShape(
-                        22.dp
+                        18.dp
                     )
             ) {
 
                 Row(
                     modifier =
                         Modifier.padding(
-                            16.dp
+                            horizontal = 16.dp,
+                            vertical = 12.dp
                         ),
 
                     verticalAlignment =
@@ -225,26 +262,14 @@ fun AIAssistantScreen(
                     Box(
                         modifier =
                             Modifier
-                                .size(40.dp)
+                                .size(12.dp)
                                 .clip(
                                     CircleShape
                                 )
                                 .background(
-                                    PrimaryRed.copy(
-                                        alpha =
-                                            0.15f
-                                    )
-                                ),
-
-                        contentAlignment =
-                            Alignment.Center
-                    ) {
-
-                        Text(
-                            text = "🛡",
-                            fontSize = 18.sp
-                        )
-                    }
+                                    Color(0xFF4DFF88)
+                                )
+                    )
 
                     Spacer(
                         modifier =
@@ -257,11 +282,16 @@ fun AIAssistantScreen(
 
                         Text(
                             text =
-                                "Emergency AI is active",
+                                "AI Protection Active",
+
                             color =
                                 TextWhite,
+
                             fontWeight =
-                                FontWeight.SemiBold
+                                FontWeight.SemiBold,
+
+                            fontSize =
+                                15.sp
                         )
 
                         Spacer(
@@ -273,10 +303,13 @@ fun AIAssistantScreen(
 
                         Text(
                             text =
-                                "Do not share sensitive personal data.",
+                                "Private & emergency-safe assistance",
+
                             color =
                                 TextGray,
-                            fontSize = 13.sp
+
+                            fontSize =
+                                12.sp
                         )
                     }
                 }
@@ -349,11 +382,10 @@ fun AIAssistantScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .imePadding()
                     .padding(
-                        horizontal =
-                            16.dp,
-                        vertical =
-                            12.dp
+                        horizontal = 16.dp,
+                        vertical = 12.dp
                     ),
 
                 verticalAlignment =
@@ -444,31 +476,70 @@ fun AIAssistantScreen(
                             messages.add(
 
                                 AIChatMessage(
-                                    text =
-                                        userMessage,
-                                    isUser =
-                                        true,
-                                    time =
-                                        "Now"
+                                    text = userMessage,
+                                    isUser = true,
+                                    time = currentTime()
                                 )
+
                             )
+
 
                             messageText = ""
 
-                            aiError =
-                                "AI service temporarily unavailable"
+                            aiError = ""
 
-                            messages.add(
+                            scope.launch {
 
-                                AIChatMessage(
-                                    text =
-                                        "RoadSOS AI received your message:\n\"$userMessage\"\n\nEmergency assistance suggestions will appear here.",
-                                    isUser =
-                                        false,
-                                    time =
-                                        "Now"
-                                )
-                            )
+                                val result =
+
+                                    chatRepository
+                                        .sendMessage(
+
+                                            ChatRequest(
+
+                                                user_message =
+                                                    userMessage
+                                            )
+                                        )
+
+                                result
+                                    .onSuccess {
+
+                                            response ->
+
+                                        messages.add(
+
+                                            AIChatMessage(
+                                                text =
+                                                    response.reply,
+                                                isUser =
+                                                    false,
+                                                time =
+                                                     currentTime()
+                                            )
+                                        )
+                                    }
+
+                                    .onFailure {
+
+                                            error ->
+
+                                        aiError =
+                                            error.message
+                                                ?: "AI unavailable"
+
+                                        messages.add(
+
+                                            AIChatMessage(
+                                                text =
+                                                    "Unable to contact RoadSOS AI.",
+                                                isUser =
+                                                    false,
+                                                time = currentTime()
+                                            )
+                                        )
+                                    }
+                            }
                         }
                     }
                 ) {

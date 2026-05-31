@@ -30,12 +30,17 @@ class CrashDetectionService :
 
         var emergencyActive = false
 
+        var emergencyStartTime =
+            0L
+
         var mediaPlayerInstance:
                 MediaPlayer? = null
 
         fun resetEmergency() {
 
             emergencyActive = false
+
+            emergencyStartTime = 0L
         }
 
         fun stopAlarm() {
@@ -294,6 +299,9 @@ class CrashDetectionService :
 
             emergencyActive =
                 true
+
+            emergencyStartTime =
+                System.currentTimeMillis()
 
             triggerEmergencyAlert()
 

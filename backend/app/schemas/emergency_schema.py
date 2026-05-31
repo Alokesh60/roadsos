@@ -1,22 +1,22 @@
-from typing import List
-
-from pydantic import (
-    BaseModel,
-    Field
-)
+from typing import Optional
+from pydantic import BaseModel
 
 
 # =====================================
-# EMERGENCY CONTACT
+# NEARBY SERVICES
 # =====================================
 
-class EmergencyContact(
+class NearbyServices(
     BaseModel
 ):
 
-    name: str
+    police_phone: Optional[str] = None
 
-    phone: str
+    hospital_phone: Optional[str] = None
+
+    ambulance_phone: Optional[str] = None
+
+    towing_phone: Optional[str] = None
 
 
 # =====================================
@@ -52,15 +52,7 @@ class EmergencyRequest(
     BaseModel
 ):
 
-    # =================================
-    # USER MESSAGE
-    # =================================
-
     message: str
-
-    # =================================
-    # LOCATION
-    # =================================
 
     latitude: float
 
@@ -71,51 +63,10 @@ class EmergencyRequest(
 
     country: str = "India"
 
-    # =================================
-    # EMERGENCY CONTACTS
-    # =================================
-
-    contacts: List[
-        EmergencyContact
-    ] = Field(
-        default_factory=list
+    nearby_services: NearbyServices = (
+        NearbyServices()
     )
-
-    # =================================
-    # SOURCE INFO
-    # =================================
 
     source: str = "mobile_app"
 
-    # =================================
-    # OFFLINE FLAG
-    # =================================
-
     offline_mode: bool = False
-
-
-# =====================================
-# EMERGENCY RESPONSE
-# =====================================
-
-class EmergencyResponse(
-    BaseModel
-):
-
-    success: bool
-
-    sos_triggered: bool
-
-    message: str
-
-    guidance: str
-
-    source: str
-
-    suggested_actions: list = Field(
-        default_factory=list
-    )
-
-    notifications: list = Field(
-        default_factory=list
-    )

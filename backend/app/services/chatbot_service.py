@@ -1,3 +1,6 @@
+from dotenv import load_dotenv
+load_dotenv()
+
 import os
 
 import httpx
@@ -6,42 +9,6 @@ import httpx
 # =====================================
 # AI GUIDANCE SERVICE
 # =====================================
-#
-# PURPOSE:
-# Backend ↔ ai_module integration layer.
-#
-# RESPONSIBILITY:
-# ✅ Send emergency context to ai_module
-# ✅ Receive AI emergency guidance
-# ✅ Handle AI failures safely
-# ✅ Provide fallback emergency guidance
-#
-# ARCHITECTURE:
-#
-# Android:
-# - Maps
-# - Places
-# - GPS
-# - Routing
-#
-# Backend:
-# - SOS orchestration
-# - Notifications
-# - Firebase auth
-# - AI integration
-#
-# ai_module:
-# - Emergency intelligence
-# - AI guidance
-# - Intent classification
-# - Offline fallback logic
-#
-# =====================================
-
-
-# =====================================
-# ENV CONFIG
-# =====================================
 
 AI_MODULE_URL = os.getenv(
     "AI_MODULE_URL",
@@ -49,9 +16,16 @@ AI_MODULE_URL = os.getenv(
 )
 
 AI_MODULE_API_KEY = os.getenv(
-    "AI_MODULE_API_KEY",
-    ""
+    "AI_MODULE_API_KEY"
 )
+
+if not AI_MODULE_API_KEY:
+
+    raise RuntimeError(
+
+        "AI_MODULE_API_KEY "
+        "environment variable is required."
+    )
 
 
 # =====================================
@@ -66,18 +40,17 @@ async def get_ai_guidance(
 
     longitude: float,
 
-    nearby_places: list | None = None
-):
+    nearby_places: list | None = None,
 
-    """
-    Fetch AI emergency guidance
-    from ai_module service.
-    """
+    nearby_services=None
+):
 
     try:
 
         async with httpx.AsyncClient(
+
             timeout=8.0
+
         ) as client:
 
             response = await client.post(
@@ -102,6 +75,34 @@ async def get_ai_guidance(
 
                         "lng":
                             longitude,
+
+                        "nearest_police_phone":
+                            (
+                                nearby_services.police_phone
+                                if nearby_services
+                                else None
+                            ),
+
+                        "nearest_hospital_phone":
+                            (
+                                nearby_services.hospital_phone
+                                if nearby_services
+                                else None
+                            ),
+
+                        "nearest_ambulance_phone":
+                            (
+                                nearby_services.ambulance_phone
+                                if nearby_services
+                                else None
+                            ),
+
+                        "nearest_towing_phone":
+                            (
+                                nearby_services.towing_phone
+                                if nearby_services
+                                else None
+                            ),
 
                         "is_sos_active":
                             True,
@@ -135,7 +136,7 @@ async def get_ai_guidance(
 
                 "detected_type":
                     data.get(
-                        "detected_type",
+                        "intent_detected",
                         "emergency"
                     ),
 
@@ -196,12 +197,47 @@ async def get_ai_guidance(
 
         "suggested_actions": [
 
-            "Call emergency services",
+            {
 
-            "Share your live location",
+                "label":
+                    "Call Emergency Services",
 
-            "Move to a safe area",
+                "number":
+                    "112"
+            },
 
-            "Contact trusted emergency contacts"
+            {
+
+                "label":
+                    "Call Ambulance",
+
+                "number":
+                    (
+                        nearby_services.ambulance_phone
+                        if (
+                            nearby_services
+                            and
+                            nearby_services.ambulance_phone
+                        )
+                        else "108"
+                    )
+            },
+
+            {
+
+                "label":
+                    "Call Police",
+
+                "number":
+                    (
+                        nearby_services.police_phone
+                        if (
+                            nearby_services
+                            and
+                            nearby_services.police_phone
+                        )
+                        else "100"
+                    )
+            }
         ]
     }

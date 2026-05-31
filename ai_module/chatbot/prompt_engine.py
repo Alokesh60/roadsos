@@ -53,6 +53,8 @@ def build_system_prompt(
     nearest_hospital: Optional[str] = None,
     nearest_hospital_phone: Optional[str] = None,
     nearest_police_phone: Optional[str] = None,
+    nearest_ambulance_phone: Optional[str] = None,
+    nearest_towing_phone: Optional[str] = None,
     is_sos_active: bool = False,
     nearby_places: Optional[list] = None,
 ) -> str:
@@ -60,16 +62,18 @@ def build_system_prompt(
     Build a system prompt for the Gemini LLM.
 
     Args:
-        lat, lng            : User's GPS coordinates (float, can be None).
-                              NOTE: use `is not None` checks — 0.0 is a
-                              valid coordinate but evaluates falsy.
-        state               : State name e.g. "Assam"
-        district            : District name e.g. "Barpeta"
-        nearest_highway     : e.g. "NH-27"
-        nearest_hospital    : Name of nearest hospital from Places API
+        lat, lng               : User's GPS coordinates (float, can be None).
+                                 NOTE: use `is not None` checks — 0.0 is a
+                                 valid coordinate but evaluates falsy.
+        state                  : State name e.g. "Assam"
+        district               : District name e.g. "Barpeta"
+        nearest_highway        : e.g. "NH-27"
+        nearest_hospital       : Name of nearest hospital from Places API
         nearest_hospital_phone : Phone number of nearest hospital
         nearest_police_phone   : Phone number of nearest police station
-        is_sos_active       : Whether the user has already triggered SOS
+        nearest_ambulance_phone: Phone number of nearest ambulance service
+        nearest_towing_phone   : Phone number of nearest towing service
+        is_sos_active          : Whether the user has already triggered SOS
 
     Returns:
         System prompt string
@@ -97,6 +101,14 @@ def build_system_prompt(
     police_str = ""
     if nearest_police_phone:
         police_str = f"\n- Nearest police: {nearest_police_phone}"
+
+    ambulance_str = ""
+    if nearest_ambulance_phone:
+        ambulance_str = f"\n- Nearest ambulance: {nearest_ambulance_phone}"
+
+    towing_str = ""
+    if nearest_towing_phone:
+        towing_str = f"\n- Nearest towing: {nearest_towing_phone}"
 
     sos_note = ""
     if is_sos_active:
@@ -183,7 +195,7 @@ AVAILABLE EMERGENCY CONTACTS:
 - Police (national): 100
 - Fire (national): 101
 - NHAI Highway Helpline: 1033
-- Unified Emergency: 112{hosp_str}{police_str}{sos_note}
+- Unified Emergency: 112{hosp_str}{police_str}{ambulance_str}{towing_str}{sos_note}
 
 {services_context}
 
