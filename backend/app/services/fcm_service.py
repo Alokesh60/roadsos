@@ -148,6 +148,8 @@ def send_contact_alert(
 
     sender_name: str,
 
+    sender_phone: str,
+
     latitude: float,
 
     longitude: float
@@ -166,7 +168,7 @@ def send_contact_alert(
         title="🚨 Emergency Alert",
 
         body=(
-            f"{sender_name} requires "
+            f"{sender_name} ({sender_phone}) requires "
             f"immediate assistance."
         ),
 
@@ -180,6 +182,9 @@ def send_contact_alert(
 
             "sender_name":
                 sender_name,
+
+            "sender_phone":
+                sender_phone,
 
             "emergency_type":
                 "Emergency",
@@ -208,6 +213,8 @@ def send_nearby_sos_alert(
 
     sender_name: str,
 
+    sender_phone: str,
+
     emergency_type: str,
 
     latitude: float,
@@ -228,8 +235,7 @@ def send_nearby_sos_alert(
         title="🚨 Emergency Alert",
 
         body=(
-            f"{sender_name} requires "
-            f"immediate assistance."
+            f"{sender_name} ({sender_phone}) requires immediate assistance."
         ),
 
         data={
@@ -242,6 +248,9 @@ def send_nearby_sos_alert(
 
             "sender_name":
                 sender_name,
+
+            "sender_phone":
+                sender_phone,
 
             "emergency_type":
                 emergency_type,

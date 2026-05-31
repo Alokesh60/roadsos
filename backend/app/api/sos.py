@@ -60,17 +60,41 @@ async def trigger_sos(
         "unknown_user"
     )
 
+    sender_data = await get_user_details(
+        user_id 
+    )
+
     user_name = (
 
-        user.get("name")
+        sender_data.get("name")
 
-        or
+        if sender_data
 
-        user.get("email")
+        else None
+    )
 
-        or
+    if not user_name:
 
-        "RoadSOS User"
+        user_name = (
+
+            user.get("name")
+
+            or
+
+            user.get("email")
+
+            or
+
+            "RoadSOS User"
+        )
+
+    sender_phone = (
+
+        sender_data.get("phone")
+
+        if sender_data
+
+        else ""
     )
 
     # =================================
@@ -173,6 +197,8 @@ async def trigger_sos(
 
                 sender_name=user_name,
 
+                sender_phone=sender_phone,
+
                 latitude=request.latitude,
 
                 longitude=request.longitude
@@ -214,6 +240,8 @@ async def trigger_sos(
             )
         )
 
+        seen_tokens = set()
+
         for responder in nearby_users:
 
             responder_uid = responder.get(
@@ -229,8 +257,13 @@ async def trigger_sos(
             )
 
             if not token:
+                continue
+
+            if token in seen_tokens:
 
                 continue
+
+            seen_tokens.add(token)
 
             result = send_nearby_sos_alert(
 
@@ -239,6 +272,8 @@ async def trigger_sos(
                 sender_uid=user_id,
 
                 sender_name=user_name,
+
+                sender_phone=sender_phone,
 
                 emergency_type=detected_type,
 

@@ -134,9 +134,7 @@ async def find_nearby_users(
                 nearby_users.append({
 
                     "uid":
-                        data.get(
-                            "uid"
-                        ),
+                        user.id,
 
                     "name":
                         data.get(
