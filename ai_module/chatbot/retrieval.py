@@ -32,12 +32,25 @@ def detect_category(message: str):
 
     msg = message.lower()
 
+    msg = message.lower()
+
+    msg = msg.replace("medical", "hospital")
+    msg = msg.replace("clinic", "hospital")
+    msg = msg.replace("health centre", "hospital")
+    msg = msg.replace("health center", "hospital")
+
     if any(
         word in msg
         for word in [
             "hospital",
             "doctor",
             "medical",
+            "medicine",
+            "clinic",
+            "health",
+            "healthcare",
+            "pharmacy",
+            "treatement",
             "injury",
             "injured",
             "ambulance",
