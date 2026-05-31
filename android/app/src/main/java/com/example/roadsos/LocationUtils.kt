@@ -82,10 +82,13 @@ object LocationUtils {
     private fun updateFirestoreLocation(lat: Double, lng: Double) {
         val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
         if (user != null) {
-            val data = mapOf(
+            val locationData = mapOf(
                 "latitude" to lat,
                 "longitude" to lng,
                 "last_location_update" to System.currentTimeMillis()
+            )
+            val data = mapOf(
+                "location" to locationData
             )
             com.google.firebase.firestore.FirebaseFirestore.getInstance()
                 .collection("users").document(user.uid)
