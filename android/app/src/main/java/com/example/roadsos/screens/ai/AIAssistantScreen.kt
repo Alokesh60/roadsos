@@ -38,10 +38,9 @@ import com.example.roadsos.theme.TextWhite
 import com.example.roadsos.ui.components.ErrorBanner
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.roadsos.theme.RoadSoSTheme
-import androidx.compose.runtime.rememberCoroutineScope
-import kotlinx.coroutines.launch
-import com.example.roadsos.repository.ChatRepository
-import com.example.roadsos.models.ChatRequest
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.roadsos.viewmodel.AIViewModel
+import com.example.roadsos.viewmodel.ChatMessage
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -64,18 +63,19 @@ fun currentTime(): String {
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun AIAssistantScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: AIViewModel = viewModel()
 ) {
 
     BackHandler {
         onBack()
     }
 
-    var messageText by remember {
-        mutableStateOf("")
+    LaunchedEffect(Unit) {
+        viewModel.syncPlaces()
     }
 
-    var aiError by remember {
+    var messageText by remember {
         mutableStateOf("")
     }
     var aiMode by remember {
@@ -93,18 +93,9 @@ fun AIAssistantScreen(
             ChatRepository()
         }
 
-    val messages = remember {
-
-        mutableStateListOf(
-
-            AIChatMessage(
-                text =
-                    "Hello 👋\nI’m your RoadSOS AI assistant.\nHow can I help you today?",
-                isUser = false,
-                time = "9:41 AM"
-            )
-        )
-    }
+    val messages by viewModel.messages.collectAsState()
+    val isLoading by viewModel.isLoading.collectAsState()
+    val placesSynced by viewModel.placesSynced.collectAsState()
 
     val listState =
         rememberLazyListState()
@@ -141,6 +132,7 @@ fun AIAssistantScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .systemBarsPadding()
+                .imePadding()
         ) {
 
             // TOP BAR
@@ -322,21 +314,9 @@ fun AIAssistantScreen(
                     )
             )
 
-            if (
-                aiError.isNotEmpty()
-            ) {
-
-                ErrorBanner(
-                    message =
-                        aiError
-                )
-
-                Spacer(
-                    modifier =
-                        Modifier.height(
-                            10.dp
-                        )
-                )
+            if (!placesSynced) {
+                ErrorBanner(message = "Syncing local places data...")
+                Spacer(modifier = Modifier.height(10.dp))
             }
 
             // CHAT AREA
@@ -465,83 +445,23 @@ fun AIAssistantScreen(
                 IconButton(
 
                     onClick = {
-
                         if (
-                            messageText.isNotBlank()
+                            messageText.isNotBlank() && !isLoading && placesSynced
                         ) {
-
-                            val userMessage =
+                            val text =
                                 messageText
-
-                            messages.add(
-
-                                AIChatMessage(
-                                    text = userMessage,
-                                    isUser = true,
-                                    time = currentTime()
-                                )
-
-                            )
-
-
                             messageText = ""
-
-                            aiError = ""
-
-                            scope.launch {
-
-                                val result =
-
-                                    chatRepository
-                                        .sendMessage(
-
-                                            ChatRequest(
-
-                                                user_message =
-                                                    userMessage
-                                            )
-                                        )
-
-                                result
-                                    .onSuccess {
-
-                                            response ->
-
-                                        messages.add(
-
-                                            AIChatMessage(
-                                                text =
-                                                    response.reply,
-                                                isUser =
-                                                    false,
-                                                time =
-                                                     currentTime()
-                                            )
-                                        )
-                                    }
-
-                                    .onFailure {
-
-                                            error ->
-
-                                        aiError =
-                                            error.message
-                                                ?: "AI unavailable"
-
-                                        messages.add(
-
-                                            AIChatMessage(
-                                                text =
-                                                    "Unable to contact RoadSOS AI.",
-                                                isUser =
-                                                    false,
-                                                time = currentTime()
-                                            )
-                                        )
-                                    }
-                            }
+                            viewModel.sendMessage(
+                                text
+                            )
                         }
-                    }
+                    },
+                    enabled = placesSynced,
+                    colors =
+                        androidx.compose.material3.IconButtonDefaults.iconButtonColors(
+                            containerColor =
+                                PrimaryRed
+                        )
                 ) {
 
                     Box(
@@ -583,8 +503,10 @@ fun AIAssistantScreen(
 }
 @Composable
 fun ChatMessageItem(
-    message: AIChatMessage
+    message: ChatMessage
 ) {
+    val formatter = remember { SimpleDateFormat("h:mm a", Locale.getDefault()) }
+    val timeString = formatter.format(Date(message.timestamp))
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -714,7 +636,7 @@ fun ChatMessageItem(
 
                     Text(
                         text =
-                            message.time,
+                            timeString,
 
                         color =
                             Color.White.copy(

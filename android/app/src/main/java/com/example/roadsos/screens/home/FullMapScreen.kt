@@ -27,6 +27,8 @@ import com.example.roadsos.theme.DarkBackground
 import com.example.roadsos.theme.PrimaryRed
 import com.example.roadsos.theme.TextGray
 import com.example.roadsos.theme.TextWhite
+import android.content.Intent
+import android.net.Uri
 import com.example.roadsos.viewmodel.NearbyPlaceItem
 import com.example.roadsos.viewmodel.NearbyPlacesViewModel
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -311,7 +313,15 @@ fun FullMapScreen(
 
                     Button(
                         onClick = {
-                            // Already drawing route, could launch intent to Google Maps app here if desired
+                            val uri = Uri.parse("google.navigation:q=${selectedPlace!!.latitude},${selectedPlace!!.longitude}&mode=d")
+                            val mapIntent = Intent(Intent.ACTION_VIEW, uri)
+                            mapIntent.setPackage("com.google.android.apps.maps")
+                            try {
+                                context.startActivity(mapIntent)
+                            } catch (e: Exception) {
+                                val browserUri = Uri.parse("https://www.google.com/maps/dir/?api=1&destination=${selectedPlace!!.latitude},${selectedPlace!!.longitude}")
+                                context.startActivity(Intent(Intent.ACTION_VIEW, browserUri))
+                            }
                         },
                         modifier = Modifier
                             .fillMaxWidth()

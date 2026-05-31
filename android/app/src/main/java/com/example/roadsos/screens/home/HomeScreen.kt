@@ -204,7 +204,11 @@ fun HomeScreen(
                         Modifier.height(26.dp)
                 )
 
-                QuickActionsSection()
+                QuickActionsSection(
+                    latitude = latitude,
+                    longitude = longitude,
+                    nearbyPlaces = nearbyPlaces
+                )
 
                 Spacer(
                     modifier =
@@ -768,89 +772,354 @@ fun LocationMapCard(
     }
 }
 @Composable
-fun QuickActionsSection() {
+fun QuickActionsSection(
+    latitude: Double = 0.0,
+    longitude: Double = 0.0,
+    nearbyPlaces: List<NearbyPlaceItem> = emptyList()
+) {
+    val context = LocalContext.current
+
+    // Get guaranteed-working country-level emergency numbers
+    val emergencyNumbers = remember(latitude, longitude) {
+        com.example.roadsos.utils.EmergencyNumbersProvider.getEmergencyNumbers(
+            context, latitude, longitude
+        )
+    }
+
+    // Find the nearest place per category (for distance display — any place, phone or not)
+    val nearestHospital = remember(nearbyPlaces) {
+        nearbyPlaces.filter { it.category == PlaceCategory.HOSPITAL }.minByOrNull { it.distanceKm }
+    }
+    val nearestPolice = remember(nearbyPlaces) {
+        nearbyPlaces.filter { it.category == PlaceCategory.POLICE }.minByOrNull { it.distanceKm }
+    }
+    val nearestGarage = remember(nearbyPlaces) {
+        nearbyPlaces.filter { it.category == PlaceCategory.GARAGE }.minByOrNull { it.distanceKm }
+    }
+
+    // Find the closest place with a VALID phone number (for dialing)
+    val closestPolice = remember(nearbyPlaces) {
+        nearbyPlaces
+            .filter { it.category == PlaceCategory.POLICE && com.example.roadsos.utils.EmergencyNumbersProvider.isValidPhoneNumber(it.phone) }
+            .minByOrNull { it.distanceKm }
+    }
+    val closestHospital = remember(nearbyPlaces) {
+        nearbyPlaces
+            .filter { it.category == PlaceCategory.HOSPITAL && com.example.roadsos.utils.EmergencyNumbersProvider.isValidPhoneNumber(it.phone) }
+            .minByOrNull { it.distanceKm }
+    }
+    val closestGarage = remember(nearbyPlaces) {
+        nearbyPlaces
+            .filter { it.category == PlaceCategory.GARAGE && com.example.roadsos.utils.EmergencyNumbersProvider.isValidPhoneNumber(it.phone) }
+            .minByOrNull { it.distanceKm }
+    }
+    
+    val policePhone = closestPolice?.phone ?: emergencyNumbers.police
+    val hospitalPhone = closestHospital?.phone ?: emergencyNumbers.hospital
+    val garagePhone = closestGarage?.phone ?: emergencyNumbers.towing
+
+    // Derive the locality name from the closest place's address
+    val localityName = remember(nearbyPlaces) {
+        val firstPlaceWithAddress = nearbyPlaces.firstOrNull { it.address.isNotBlank() }
+        if (firstPlaceWithAddress != null) {
+            val parts = firstPlaceWithAddress.address.split(",").map { it.trim() }
+            if (parts.size >= 3) parts[parts.size - 3] else if (parts.size >= 2) parts[parts.size - 2] else parts.firstOrNull() ?: ""
+        } else ""
+    }
+
+    // Helper to dial a number
+    fun dialNumber(number: String) {
+        val cleaned = com.example.roadsos.utils.EmergencyNumbersProvider.cleanPhoneNumber(number)
+        try {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(
+                    context, android.Manifest.permission.CALL_PHONE
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            ) {
+                context.startActivity(
+                    android.content.Intent(android.content.Intent.ACTION_CALL, android.net.Uri.parse("tel:$cleaned"))
+                )
+            } else {
+                context.startActivity(
+                    android.content.Intent(android.content.Intent.ACTION_DIAL, android.net.Uri.parse("tel:$cleaned"))
+                )
+            }
+        } catch (e: Exception) {
+            context.startActivity(
+                android.content.Intent(android.content.Intent.ACTION_DIAL, android.net.Uri.parse("tel:$cleaned"))
+            )
+        }
+    }
+
+    // --- Header ---
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = "Quick Actions",
+            color = TextWhite,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold
+        )
+        if (localityName.isNotBlank()) {
+            Surface(
+                color = Color(0xFF1565C0).copy(alpha = 0.15f),
+                shape = RoundedCornerShape(16.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.LocationOn,
+                        contentDescription = null,
+                        tint = Color(0xFF42A5F5),
+                        modifier = Modifier.size(14.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = localityName,
+                        color = Color(0xFF42A5F5),
+                        fontSize = 12.sp,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 1
+                    )
+                }
+            }
+        }
+    }
+
+    Spacer(modifier = Modifier.height(6.dp))
 
     Text(
-        text = "Quick Actions",
-        color = TextWhite,
-        fontSize = 24.sp,
-        fontWeight = FontWeight.Bold
+        text = "Tap to call · Emergency numbers always work",
+        color = TextGray,
+        fontSize = 13.sp
     )
 
-    Spacer(modifier = Modifier.height(20.dp))
+    Spacer(modifier = Modifier.height(18.dp))
+
+    // --- Data model ---
+    data class QuickAction(
+        val label: String,
+        val primaryNumber: String,       // The number that gets called on tap
+        val primaryLabel: String,        // Label for the primary number (e.g. "108" or place name)
+        val secondaryNumber: String?,    // Optional secondary number (shown as alternate)
+        val secondaryLabel: String?,     // Label for secondary (e.g. "Emergency: 108")
+        val icon: ImageVector,
+        val accentColor: Color,
+        val bgGradient: List<Color>,
+        val distanceKm: Double?
+    )
 
     val actions = listOf(
-        Triple("Ambulance", "108", Icons.Default.Call),
-        Triple("Police", "100", Icons.Default.LocalPolice),
-        Triple("Hospitals", "104", Icons.Default.LocalHospital),
-        Triple("Towing", "103", Icons.Default.DirectionsCar)
+        // AMBULANCE: Always use government emergency number — ambulances are dispatched centrally
+        QuickAction(
+            label = "Ambulance",
+            primaryNumber = emergencyNumbers.ambulance,
+            primaryLabel = "Emergency",
+            secondaryNumber = null,
+            secondaryLabel = null,
+            icon = Icons.Default.Call,
+            accentColor = Color(0xFF4CAF50),
+            bgGradient = listOf(Color(0xFF1B3A1B), Color(0xFF2E7D32).copy(alpha = 0.3f)),
+            distanceKm = nearestHospital?.distanceKm
+        ),
+        // POLICE: Local station number if available, otherwise emergency number
+        QuickAction(
+            label = "Police",
+            primaryNumber = policePhone,
+            primaryLabel = closestPolice?.name ?: "Emergency",
+            secondaryNumber = if (closestPolice != null && policePhone != emergencyNumbers.police) emergencyNumbers.police else null,
+            secondaryLabel = if (closestPolice != null && policePhone != emergencyNumbers.police) "Emergency: ${emergencyNumbers.police}" else null,
+            icon = Icons.Default.LocalPolice,
+            accentColor = Color(0xFF1E88E5),
+            bgGradient = listOf(Color(0xFF0D2744), Color(0xFF1565C0).copy(alpha = 0.3f)),
+            distanceKm = closestPolice?.distanceKm
+        ),
+        // HOSPITAL: Local hospital number if available, otherwise emergency number
+        QuickAction(
+            label = "Hospital",
+            primaryNumber = hospitalPhone,
+            primaryLabel = closestHospital?.name ?: "Emergency",
+            secondaryNumber = if (closestHospital != null && hospitalPhone != emergencyNumbers.hospital) emergencyNumbers.hospital else null,
+            secondaryLabel = if (closestHospital != null && hospitalPhone != emergencyNumbers.hospital) "Emergency: ${emergencyNumbers.hospital}" else null,
+            icon = Icons.Default.LocalHospital,
+            accentColor = PrimaryRed,
+            bgGradient = listOf(Color(0xFF3A1111), Color(0xFFC62828).copy(alpha = 0.3f)),
+            distanceKm = closestHospital?.distanceKm
+        ),
+        // TOWING: Local garage number if available, otherwise emergency number
+        QuickAction(
+            label = "Towing",
+            primaryNumber = garagePhone,
+            primaryLabel = closestGarage?.name ?: "Emergency",
+            secondaryNumber = if (closestGarage != null && garagePhone != emergencyNumbers.towing) emergencyNumbers.towing else null,
+            secondaryLabel = if (closestGarage != null && garagePhone != emergencyNumbers.towing) "Emergency: ${emergencyNumbers.towing}" else null,
+            icon = Icons.Default.DirectionsCar,
+            accentColor = Color(0xFFFF9800),
+            bgGradient = listOf(Color(0xFF3A2A0D), Color(0xFFE65100).copy(alpha = 0.3f)),
+            distanceKm = closestGarage?.distanceKm
+        )
     )
 
-    LazyRow {
-
+    // --- Cards ---
+    LazyRow(
+        horizontalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
         items(actions) { item ->
+            val hasLocalNumber = item.secondaryNumber != null
 
             Card(
                 modifier = Modifier
-                    .padding(end = 16.dp)
                     .shadow(
-                        elevation = 10.dp,
+                        elevation = 12.dp,
                         shape = RoundedCornerShape(28.dp),
-                        ambientColor = PrimaryRed.copy(alpha = 0.08f)
+                        ambientColor = item.accentColor.copy(alpha = 0.15f)
                     )
-                    .width(118.dp)
-                    .height(150.dp),
-
+                    .width(150.dp),
                 colors = CardDefaults.cardColors(
                     containerColor = CardBackground
                 ),
-
-                shape = RoundedCornerShape(28.dp)
+                shape = RoundedCornerShape(28.dp),
+                onClick = { dialNumber(item.primaryNumber) }
             ) {
-
-                Column(
+                Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 20.dp),
-
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .background(Brush.verticalGradient(item.bgGradient))
                 ) {
-
-                    Box(
+                    Column(
                         modifier = Modifier
-                            .size(58.dp)
-                            .clip(CircleShape)
-                            .background(
-                                PrimaryRed.copy(alpha = 0.12f)
-                            ),
-
-                        contentAlignment = Alignment.Center
+                            .fillMaxWidth()
+                            .padding(horizontal = 10.dp, vertical = 14.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        // Icon
+                        Box(
+                            modifier = Modifier
+                                .size(46.dp)
+                                .clip(CircleShape)
+                                .background(item.accentColor.copy(alpha = 0.18f)),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = item.icon,
+                                contentDescription = item.label,
+                                tint = item.accentColor,
+                                modifier = Modifier.size(22.dp)
+                            )
+                        }
 
-                        Icon(
-                            imageVector = item.third,
-                            contentDescription = null,
-                            tint = PrimaryRed,
-                            modifier = Modifier.size(28.dp)
+                        Spacer(modifier = Modifier.height(10.dp))
+
+                        // Service type
+                        Text(
+                            text = item.label,
+                            color = TextWhite,
+                            fontSize = 14.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        // Place name (if local) or "Emergency"
+                        Text(
+                            text = item.primaryLabel,
+                            color = TextGray.copy(alpha = 0.8f),
+                            fontSize = 10.sp,
+                            maxLines = 2,
+                            lineHeight = 13.sp,
+                            modifier = Modifier.padding(horizontal = 2.dp),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                        )
+
+                        Spacer(modifier = Modifier.height(6.dp))
+
+                        // Primary phone number — this gets called on tap
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Call,
+                                contentDescription = null,
+                                tint = item.accentColor,
+                                modifier = Modifier.size(12.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(
+                                text = item.primaryNumber,
+                                color = item.accentColor,
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1
+                            )
+                        }
+
+                        // Distance badge — always show when we know distance
+                        if (item.distanceKm != null) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Surface(
+                                color = item.accentColor.copy(alpha = 0.12f),
+                                shape = RoundedCornerShape(8.dp)
+                            ) {
+                                Text(
+                                    text = "%.1f km away".format(item.distanceKm),
+                                    color = item.accentColor.copy(alpha = 0.8f),
+                                    fontSize = 9.sp,
+                                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                                )
+                            }
+                        }
+
+                        // Secondary emergency number — tappable fallback
+                        if (hasLocalNumber && item.secondaryNumber != null && item.secondaryLabel != null) {
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            // Divider
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth(0.7f)
+                                    .height(0.5.dp)
+                                    .background(TextGray.copy(alpha = 0.2f))
+                            )
+
+                            Spacer(modifier = Modifier.height(6.dp))
+
+                            // Emergency fallback — tappable
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Center,
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(10.dp))
+                                    .clickable { dialNumber(item.secondaryNumber) }
+                                    .padding(horizontal = 6.dp, vertical = 3.dp)
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Call,
+                                    contentDescription = null,
+                                    tint = TextGray.copy(alpha = 0.7f),
+                                    modifier = Modifier.size(10.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = item.secondaryLabel,
+                                    color = TextGray.copy(alpha = 0.7f),
+                                    fontSize = 10.sp,
+                                    maxLines = 1
+                                )
+                            }
+                        } else if (!hasLocalNumber) {
+                            Spacer(modifier = Modifier.height(4.dp))
+                            Text(
+                                text = "Tap to call",
+                                color = TextGray.copy(alpha = 0.5f),
+                                fontSize = 10.sp
+                            )
+                        }
                     }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Text(
-                        text = item.first,
-                        color = TextWhite,
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-
-                    Spacer(modifier = Modifier.height(6.dp))
-
-                    Text(
-                        text = item.second,
-                        color = PrimaryRed,
-                        fontSize = 14.sp
-                    )
                 }
             }
         }
@@ -913,6 +1182,7 @@ fun SOSSection() {
                 )
             }
 
+            val context = androidx.compose.ui.platform.LocalContext.current
             Box(
                 modifier = Modifier
                     .padding(end = 26.dp)
@@ -925,7 +1195,13 @@ fun SOSSection() {
                         spotColor = PrimaryRed
                     )
                     .clip(CircleShape)
-                    .background(PrimaryRed),
+                    .background(PrimaryRed)
+                    .clickable {
+                        context.startActivity(android.content.Intent(context, com.example.roadsos.EmergencyAlertActivity::class.java).apply {
+                            putExtra("isManual", true)
+                            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                        })
+                    },
 
                 contentAlignment = Alignment.Center
             ) {
@@ -949,11 +1225,14 @@ fun NearbyServicesSection(latitude: Double, longitude: Double) {
 
     val services by viewModel.services.collectAsState()
 
+    val context = androidx.compose.ui.platform.LocalContext.current
+
     LaunchedEffect(latitude, longitude) {
         if (latitude != 0.0 && longitude != 0.0) {
             viewModel.fetchNearbyServices(
                 lat = latitude,
-                lon = longitude
+                lon = longitude,
+                context = context
             )
         }
     }
@@ -1177,84 +1456,19 @@ fun BottomNavBar(
                 .offset(y = 8.dp)
         ) {
 
+            val context = androidx.compose.ui.platform.LocalContext.current
             SOSNavButton(
-
                 onClick = {
-
-                    showSOSDialog = true
+                    context.startActivity(android.content.Intent(context, com.example.roadsos.EmergencyAlertActivity::class.java).apply {
+                        putExtra("isManual", true)
+                        addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                    })
                 }
             )
         }
     }
 
-    // SOS DIALOG
-
-    if (showSOSDialog) {
-
-        AlertDialog(
-
-            onDismissRequest = {
-
-                showSOSDialog = false
-            },
-
-            confirmButton = {
-
-                Button(
-
-                    onClick = {
-
-                        showSOSDialog = false
-
-                        onSOSError(
-                            "Emergency alert failed. Check internet connection."
-                        )
-                    },
-
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = PrimaryRed
-                    )
-                ) {
-
-                    Text("Send SOS")
-                }
-            },
-
-            dismissButton = {
-
-                OutlinedButton(
-
-                    onClick = {
-
-                        showSOSDialog = false
-                    }
-                ) {
-
-                    Text("Cancel")
-                }
-            },
-
-            title = {
-
-                Text(
-                    text = "Emergency SOS",
-                    color = TextWhite
-                )
-            },
-
-            text = {
-
-                Text(
-                    text =
-                        "Send emergency alert to nearby hospitals and emergency contacts?",
-
-                    color = TextGray
-                )
-            },
-
-            containerColor = CardBackground
-        )
-    }
+    // No extra SOS Dialog needed, handled by EmergencyAlertActivity
 }
 @Composable
 fun BottomNavItem(

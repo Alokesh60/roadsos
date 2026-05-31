@@ -20,5 +20,7 @@ data class EmergencyService(
 
     val rating: Double,
 
-    val distance_km: Double
+    val distance_km: Double,
+
+    val isOpenNow: Boolean? = null
 )

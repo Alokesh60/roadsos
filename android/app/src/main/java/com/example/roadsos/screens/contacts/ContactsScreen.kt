@@ -37,10 +37,12 @@ import com.example.roadsos.theme.TextWhite
 import com.example.roadsos.ui.components.EmptyStateCard
 
 data class EmergencyContact(
-    val name: String,
-    val relation: String,
-    val number: String,
-    val priority: String
+    val id: String = "",
+    val name: String = "",
+    val relation: String = "",
+    val number: String = "",
+    val countryCode: String = "",
+    val priority: String = ""
 )
 
 @Composable
@@ -471,7 +473,10 @@ fun ContactCard(
                     Spacer(modifier = Modifier.height(6.dp))
 
                     Text(
-                        text = contact.number,
+                        text = if (contact.countryCode.isNotBlank())
+                            "${contact.countryCode} ${contact.number}"
+                        else
+                            contact.number,
                         color = TextWhite,
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Medium

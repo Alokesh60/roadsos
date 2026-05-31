@@ -8,9 +8,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Box
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -19,6 +22,7 @@ import com.example.roadsos.screens.navigation.MainContainerScreen
 import com.example.roadsos.screens.permissions.PermissionScreen
 import com.example.roadsos.screens.splash.SplashScreen
 import com.example.roadsos.theme.RoadSoSTheme
+import com.example.roadsos.theme.PrimaryRed
 import kotlinx.coroutines.delay
 class MainActivity : ComponentActivity() {
     companion object {
@@ -139,6 +143,9 @@ fun RoadSoSApp() {
         mutableStateOf(false)
     }
 
+    var showPhoneEntry by remember { mutableStateOf(false) }
+    var isCheckingPhone by remember { mutableStateOf(false) }
+
     // SPLASH DELAY
 
     LaunchedEffect(Unit) {
@@ -156,6 +163,12 @@ fun RoadSoSApp() {
 
             SplashScreen()
         }
+        
+        isCheckingPhone -> {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = PrimaryRed)
+            }
+        }
 
         // PERMISSION SCREEN
 
@@ -169,9 +182,39 @@ fun RoadSoSApp() {
                 },
 
                 onContinue = {
-
+                    isCheckingPhone = true
                     showPermissions = false
-
+                    val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                    if (user != null) {
+                        com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                            .collection("users")
+                            .document(user.uid)
+                            .get()
+                            .addOnSuccessListener { doc ->
+                                val phone = doc.getString("phone")
+                                if (phone.isNullOrBlank()) {
+                                    showPhoneEntry = true
+                                } else {
+                                    isLoggedIn = true
+                                }
+                                isCheckingPhone = false
+                            }
+                            .addOnFailureListener {
+                                isLoggedIn = true
+                                isCheckingPhone = false
+                            }
+                    } else {
+                        isLoggedIn = true
+                        isCheckingPhone = false
+                    }
+                }
+            )
+        }
+        
+        showPhoneEntry -> {
+            com.example.roadsos.screens.auth.PhoneEntryScreen(
+                onContinue = {
+                    showPhoneEntry = false
                     isLoggedIn = true
                 }
             )
@@ -180,6 +223,24 @@ fun RoadSoSApp() {
         // MAIN APP
 
         isLoggedIn -> {
+            LaunchedEffect(Unit) {
+                try {
+                    com.google.firebase.messaging.FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                        if (task.isSuccessful) {
+                            val token = task.result
+                            val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+                            if (user != null) {
+                                val data = mapOf("fcm_token" to token)
+                                com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                                    .collection("users").document(user.uid)
+                                    .set(data, com.google.firebase.firestore.SetOptions.merge())
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            }
 
             MainContainerScreen(
 
