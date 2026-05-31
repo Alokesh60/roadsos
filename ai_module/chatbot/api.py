@@ -146,7 +146,31 @@ ALLOWED_ORIGINS = os.getenv(
 # We only configure the API key once at module load and track
 # readiness with a boolean flag.
 
+# =====================================================
+# GEMINI SETUP
+# =====================================================
+
 _gemini_ready = False
+
+if GEMINI_API_KEY:
+
+    genai.configure(
+        api_key=GEMINI_API_KEY
+    )
+
+    _gemini_ready = True
+
+    log.info(
+        "Gemini API key configured. "
+        "Models will be created per-request."
+    )
+
+else:
+
+    log.warning(
+        "GEMINI_API_KEY not found. "
+        "Offline fallback enabled."
+    )
 
 if GEMINI_API_KEY:
     genai.configure(api_key=GEMINI_API_KEY)

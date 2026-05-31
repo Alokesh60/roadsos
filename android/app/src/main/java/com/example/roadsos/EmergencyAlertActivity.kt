@@ -124,9 +124,21 @@ fun EmergencyAlertScreen(
         () -> Unit
 ) {
 
+    val elapsed = (
+
+            System.currentTimeMillis()
+                    - CrashDetectionService
+                .emergencyStartTime
+
+            ) / 1000
+
     var countdown by remember {
 
-        mutableIntStateOf(15)
+        mutableIntStateOf(
+
+            (30 - elapsed.toInt())
+                .coerceAtLeast(0)
+        )
     }
 
     var sosSent by remember {
