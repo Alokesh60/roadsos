@@ -385,7 +385,7 @@ async def _call_gemini(
         # This is the ONLY way system_instruction reaches Gemini —
         # it cannot be set on start_chat() or send_message().
         model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
+            model_name="gemini-2.5-flash",
             system_instruction=system_prompt,   # ← FIX #6 core change
         )
 
@@ -447,7 +447,7 @@ async def test_gemini():
 
         genai.configure(api_key=api_key)
 
-        model = genai.GenerativeModel("gemini-1.5-flash")
+        model = genai.GenerativeModel("gemini-2.5-flash")
 
         response = model.generate_content("Say hello")
 
