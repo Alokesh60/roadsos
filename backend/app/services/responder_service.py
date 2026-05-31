@@ -73,7 +73,7 @@ async def find_nearby_users(
 
     longitude: float,
 
-    radius_km: float = 18.0
+    radius_km: float = 50.0
 ):
 
     nearby_users = []
