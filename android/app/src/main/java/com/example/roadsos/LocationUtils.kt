@@ -31,6 +31,7 @@ object LocationUtils {
             .addOnSuccessListener { location ->
                 if (location != null) {
                     onLocationReceived(location.latitude, location.longitude)
+                    updateFirestoreLocation(location.latitude, location.longitude)
                     
                     kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
                         try {
@@ -53,6 +54,7 @@ object LocationUtils {
         val locationCallback = object : com.google.android.gms.location.LocationCallback() {
             override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
                 locationResult.lastLocation?.let { location ->
+                    updateFirestoreLocation(location.latitude, location.longitude)
                     kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
                         com.example.roadsos.utils.PlacesSyncManager.syncNearbyServices(context, location.latitude, location.longitude)
                         kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Main) {
@@ -74,6 +76,20 @@ object LocationUtils {
             locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
         } catch (e: Exception) {
             false
+        }
+    }
+
+    private fun updateFirestoreLocation(lat: Double, lng: Double) {
+        val user = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser
+        if (user != null) {
+            val data = mapOf(
+                "latitude" to lat,
+                "longitude" to lng,
+                "last_location_update" to System.currentTimeMillis()
+            )
+            com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                .collection("users").document(user.uid)
+                .set(data, com.google.firebase.firestore.SetOptions.merge())
         }
     }
 }
