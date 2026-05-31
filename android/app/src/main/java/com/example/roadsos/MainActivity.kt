@@ -59,6 +59,16 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        // HANDLE SYSTEM NOTIFICATION CLICKS (When app was killed/background)
+        if (intent?.extras?.getString("type") == "sos_alert") {
+            val alertIntent = Intent(this, EmergencyResponderActivity::class.java).apply {
+                putExtras(intent.extras!!)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+            }
+            startActivity(alertIntent)
+            // Continue loading MainActivity underneath so they have something to return to
+        }
+
         // START CRASH DETECTION SERVICE
 
         val serviceIntent =
