@@ -56,6 +56,7 @@ def build_system_prompt(
     nearest_ambulance_phone: Optional[str] = None,
     nearest_towing_phone: Optional[str] = None,
     is_sos_active: bool = False,
+    nearby_places: Optional[list] = None,
 ) -> str:
     """
     Build a system prompt for the Gemini LLM.
@@ -118,6 +119,29 @@ def build_system_prompt(
             "while help is on the way."
         )
 
+        # ── NEARBY SERVICES CONTEXT ───────────────────────────
+
+    services_context = ""
+
+    if nearby_places:
+
+        services_context = "\n\nNEARBY SERVICES:\n"
+
+        for idx, place in enumerate(
+            nearby_places[:5],
+            start=1
+        ):
+
+            services_context += (
+                f"\n{idx}. {place.get('name', 'Unknown')}"
+                f"\nCategory: {place.get('category', 'Unknown')}"
+                f"\nDistance: {place.get('distanceMeters', '?')} meters"
+                f"\nETA: {place.get('estimatedEtaMinutes', 'N/A')} minutes"
+                f"\nRating: {place.get('rating', 'N/A')}"
+                f"\nOpen Now: {place.get('isOpenNow', 'Unknown')}"
+                f"\nPhone: {place.get('phone', 'N/A')}\n"
+            )
+
     # ── FIX #2: explicit language lock ─────────────────────────────────────
     # Old: "Respond in the SAME LANGUAGE the user writes in"
     # Problem: LLMs drift — especially on Assamese and mixed Hindi/English.
@@ -173,14 +197,21 @@ AVAILABLE EMERGENCY CONTACTS:
 - NHAI Highway Helpline: 1033
 - Unified Emergency: 112{hosp_str}{police_str}{ambulance_str}{towing_str}{sos_note}
 
+{services_context}
+
 {role_section}
 
 STRICT RULES:
 - Do NOT give medical diagnoses.
 - Do NOT make up phone numbers — only use the numbers listed above.
+- Use ONLY the nearby services listed in the NEARBY SERVICES section.
+- Never invent hospitals, police stations, garages, food points, addresses or contact numbers.
+- If a requested category is unavailable, clearly state that no nearby service of that type is available.
+- When the user asks for the nearest or closest service, prioritize distance.
+- When the user asks for the best, top, recommended, or highest rated service, prioritize rating.
+- When mentioning a service, include its distance if available.
 {hallucination_rule}
 - If the situation is life-threatening, lead with "Call 108 NOW." on the first line.
-
 {language_rule}
 """
 
