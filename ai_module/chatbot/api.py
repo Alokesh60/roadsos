@@ -437,6 +437,32 @@ async def health():
 # MAIN CHAT ENDPOINT
 # =====================================================
 
+@app.get("/test-gemini")
+async def test_gemini():
+    try:
+        import google.generativeai as genai
+        import os
+
+        api_key = os.getenv("GEMINI_API_KEY")
+
+        genai.configure(api_key=api_key)
+
+        model = genai.GenerativeModel("gemini-1.5-flash")
+
+        response = model.generate_content("Say hello")
+
+        return {
+            "success": True,
+            "reply": response.text
+        }
+
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "error_type": type(e).__name__
+        }
+
 @app.post(
     "/chat",
     response_model=ChatResponse
