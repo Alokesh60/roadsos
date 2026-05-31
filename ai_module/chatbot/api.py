@@ -140,15 +140,6 @@ ALLOWED_ORIGINS = os.getenv(
 # =====================================================
 # GEMINI SETUP
 # =====================================================
-# FIX #6: Do NOT create a bare global GenerativeModel here.
-# system_instruction must be passed at construction time, so we
-# instantiate a fresh model per-request inside _call_gemini().
-# We only configure the API key once at module load and track
-# readiness with a boolean flag.
-
-# =====================================================
-# GEMINI SETUP
-# =====================================================
 
 _gemini_ready = False
 
@@ -167,16 +158,6 @@ if GEMINI_API_KEY:
 
 else:
 
-    log.warning(
-        "GEMINI_API_KEY not found. "
-        "Offline fallback enabled."
-    )
-
-if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    _gemini_ready = True
-    log.info("Gemini API key configured. Models will be created per-request.")
-else:
     log.warning(
         "GEMINI_API_KEY not found. "
         "Offline fallback enabled."
@@ -509,40 +490,6 @@ async def chat(
                 f"Retrieved places: {retrieved_places}"
             )
 
-            system_prompt = (
-
-                build_system_prompt(
-
-                    lat=ctx.lat,
-
-                    lng=ctx.lng,
-
-                    state=ctx.state,
-
-                    district=ctx.district,
-
-                    nearest_highway=(
-                        ctx.nearest_highway
-                    ),
-
-                    nearest_hospital=(
-                        ctx.nearest_hospital
-                    ),
-
-                    nearest_hospital_phone=(
-                        ctx.nearest_hospital_phone
-                    ),
-
-                    nearest_police_phone=(
-                        ctx.nearest_police_phone
-                    ),
-
-                    is_sos_active=(
-                        ctx.is_sos_active
-                    ),
-                    nearby_places=retrieved_places
-
-                )
             system_prompt = build_system_prompt(
                 lat=ctx.lat,
                 lng=ctx.lng,

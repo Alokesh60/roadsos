@@ -1,7 +1,9 @@
 from firebase_admin import firestore
 from math import radians, sin, cos, sqrt, atan2
 
-db = firestore.client()
+
+def _db():
+    return firestore.client()
 
 
 # =====================================
@@ -80,7 +82,7 @@ async def find_nearby_users(
 
         users = (
 
-            db.collection(
+            _db().collection(
                 "users"
             ).stream()
         )
