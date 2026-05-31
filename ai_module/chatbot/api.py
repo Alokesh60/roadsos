@@ -421,12 +421,15 @@ async def _call_gemini(
 # FIX #8: Use `_gemini_ready` flag instead of checking
 # the (now-removed) global gemini_client object.
 
-@app.get("/health")
+@app.api_route(
+    "/health",
+    methods=["GET", "HEAD"]
+)
 async def health():
     return {
         "status": "ok",
         "version": "2.0.0",
-        "gemini_enabled": _gemini_ready,   # ← FIX #8
+        "gemini_enabled": _gemini_ready,
     }
 
 
